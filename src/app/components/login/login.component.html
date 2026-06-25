@@ -1,0 +1,46 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="logo-icon">🏢</span>
+      <h2>Artdecon</h2>
+      <p class="subtitle">Gestión de Perfiles de Cargo</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
+      <div *ngIf="errorMessage" class="error-alert">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">{{ errorMessage }}</span>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input 
+          type="text" 
+          id="username" 
+          name="username" 
+          [(ngModel)]="username" 
+          required 
+          placeholder="Ingresa tu usuario" 
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          [(ngModel)]="password" 
+          required 
+          placeholder="Ingresa tu contraseña"
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-login" [disabled]="loading || !loginForm.form.valid">
+        {{ loading ? 'Iniciando sesión...' : 'Ingresar' }}
+      </button>
+    </form>
+  </div>
+</div>

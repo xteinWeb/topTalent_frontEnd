@@ -1,1 +1,44 @@
 /* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Brand Palette from Manejo Colores Institucionales */
+  --brand-black: #222222;
+  --brand-white: #ffffff;
+  --brand-gold: #B39C70;
+  
+  /* Terciarios */
+  --brand-beige-dark: #D9C5B2;
+  --brand-beige-light: #F1EDE1;
+  --brand-terracotta: #A35E3E;
+  --brand-clay: #C6531A;
+  
+  /* Terciarios - Extra */
+  --brand-green-olive: #5E6738;
+  --brand-green-pine: #344F2C;
+  --brand-navy: #16313A;
+  --brand-violet: #211659;
+
+  /* Theme mappings */
+  --color-bg-app: var(--brand-beige-light);
+  --color-bg-card: var(--brand-white);
+  --color-text-main: var(--brand-navy);
+  --color-text-body: var(--brand-black);
+  
+  --color-primary: var(--brand-navy);
+  --color-primary-hover: #10242b;
+  
+  --color-accent: var(--brand-gold);
+  --color-accent-hover: #a2895d;
+  
+  --color-highlight: var(--brand-terracotta);
+  --color-border: var(--brand-beige-dark);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-body);
+  font-family: 'Outfit', 'Segoe UI', Roboto, sans-serif;
+}

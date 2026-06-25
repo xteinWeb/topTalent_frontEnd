@@ -1,0 +1,323 @@
+<div class="form-container">
+  <header class="form-header">
+    <div class="header-left">
+      <button class="back-link" routerLink="/">← Volver al Listado</button>
+      <h1>{{ isEditMode ? 'Editar Perfil de Cargo' : 'Nuevo Perfil de Cargo' }}</h1>
+    </div>
+    <div class="header-actions" *ngIf="isEditMode">
+      <button type="button" class="btn btn-secondary" style="margin-right: 0.5rem;" (click)="downloadWord()">
+        📝 Descargar Word
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando datos del perfil...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-state">
+    <p>{{ errorMsg }}</p>
+    <button class="btn btn-secondary" routerLink="/">Volver</button>
+  </div>
+
+  <form *ngIf="!loading && !errorMsg" (ngSubmit)="onSubmit()" #perfilForm="ngForm" class="profile-form">
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'general'" (click)="setTab('general')">
+        Identificación
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'proposito'" (click)="setTab('proposito')">
+        Propósito & Autoridad
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'funciones'" (click)="setTab('funciones')">
+        Funciones y Responsabilidades
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'requisitos'" (click)="setTab('requisitos')">
+        Requisitos
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'indicadores'"
+        (click)="setTab('indicadores')">
+        Indicadores
+      </button>
+    </nav>
+
+    <!-- Tab Contents -->
+    <div class="tab-content">
+
+      <!-- Tab 1: General Info -->
+      <section *ngIf="activeTab === 'general'" class="form-section">
+        <h2 class="section-title">Identificación del Cargo</h2>
+        <div class="form-grid">
+          <div class="form-group required">
+            <label for="cargo">Nombre del Cargo</label>
+            <input type="text" id="cargo" name="cargo" [(ngModel)]="cargo" required
+              placeholder="Ej. Analista Contable" />
+          </div>
+
+          <div class="form-group required">
+            <label for="area">Área</label>
+            <input type="text" id="area" name="area" [(ngModel)]="area" required placeholder="Ej. Finanzas" />
+          </div>
+
+          <div class="form-group">
+            <label for="contractual">Clasificación Contractual</label>
+            <input type="text" id="contractual" name="contractual" [(ngModel)]="contractual"
+              placeholder="Ej. Gestor Administrativo" />
+          </div>
+
+          <div class="form-group">
+            <label for="reporta_a">Reporta a</label>
+            <input type="text" id="reporta_a" name="reporta_a" [(ngModel)]="reporta_a"
+              placeholder="Ej. Contador / Tesorería" />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="supervisa">Supervisa</label>
+            <input type="text" id="supervisa" name="supervisa" [(ngModel)]="supervisa"
+              placeholder="Ej. No aplica / Asistente contable" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Proposito & Autoridad -->
+      <section *ngIf="activeTab === 'proposito'" class="form-section">
+        <div class="form-group full-width">
+          <h2 class="section-title">Propósito del Cargo</h2>
+          <label for="proposito">Descripción general del rol</label>
+          <textarea id="proposito" name="proposito" rows="5" [(ngModel)]="proposito"
+            placeholder="Describe el objetivo estratégico de este puesto..."></textarea>
+        </div>
+
+        <div class="form-group full-width mt-4">
+          <h2 class="section-title">Autoridad</h2>
+          <label for="autoridad">Límites y niveles de autoridad asignados</label>
+          <textarea id="autoridad" name="autoridad" rows="3" [(ngModel)]="autoridad"
+            placeholder="Ej. No requiere autoridad especial o describe las aprobaciones delegadas..."></textarea>
+        </div>
+      </section>
+
+      <!-- Tab 3: Funciones -->
+      <section *ngIf="activeTab === 'funciones'" class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">Funciones y Responsabilidades</h2>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addFunc()">+ Agregar Función</button>
+        </div>
+
+        <div class="list-entries mt-3">
+          <div class="list-item-row" *ngFor="let fn of funciones; let i = index; trackBy: trackByIndex">
+            <span class="row-num">{{ i + 1 }}</span>
+            <input type="text" name="funciones_{{i}}" [(ngModel)]="funciones[i]"
+              placeholder="Describa una función del cargo..." class="list-input" />
+            <button type="button" class="remove-row-btn" (click)="removeFunc(i)" *ngIf="funciones.length > 1">✕</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Requisitos -->
+      <section *ngIf="activeTab === 'requisitos'" class="form-section">
+        <h2 class="section-title">Perfil Requerido (Conocimientos & Competencias)</h2>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="formacion">Formación Académica</label>
+            <input type="text" id="formacion" name="formacion" [(ngModel)]="formacion"
+              placeholder="Ej. Profesional en Contaduría Pública o Estudiante" />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="experiencia">Experiencia Laboral Requerida</label>
+            <input type="text" id="experiencia" name="experiencia" [(ngModel)]="experiencia"
+              placeholder="Ej. Mínimo 2 años en cargos contables o financieros" />
+          </div>
+        </div>
+
+        <div class="dynamic-lists-grid mt-4">
+          <!-- Conocimientos basicos -->
+          <div class="list-column">
+            <div class="column-header">
+              <h3>Conocimientos Básicos / Técnicos</h3>
+              <button type="button" class="btn btn-secondary btn-xs" (click)="addConocimiento()">+ Añadir</button>
+            </div>
+            <div class="list-item-row" *ngFor="let cn of conocimientos_basicos; let i = index; trackBy: trackByIndex">
+              <input type="text" name="conocimiento_{{i}}" [(ngModel)]="conocimientos_basicos[i]"
+                placeholder="Ej. Excel intermedio" class="list-input-sm" />
+              <button type="button" class="remove-row-btn" (click)="removeConocimiento(i)"
+                *ngIf="conocimientos_basicos.length > 1">✕</button>
+            </div>
+          </div>
+
+          <!-- Competencias -->
+          <div class="list-column">
+            <div class="column-header">
+              <h3>Competencias / Habilidades</h3>
+              <button type="button" class="btn btn-secondary btn-xs" (click)="addCompetencia()">+ Añadir</button>
+            </div>
+            <div class="list-item-row" *ngFor="let cp of competencias; let i = index; trackBy: trackByIndex">
+              <input type="text" name="competencia_{{i}}" [(ngModel)]="competencias[i]"
+                placeholder="Ej. Atención al detalle" class="list-input-sm" />
+              <button type="button" class="remove-row-btn" (click)="removeCompetencia(i)"
+                *ngIf="competencias.length > 1">✕</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 5: Indicadores -->
+      <section *ngIf="activeTab === 'indicadores'" class="form-section">
+        <div class="section-header">
+          <h2 class="section-title">Indicadores de Medición</h2>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addIndicador()">+ Agregar Indicador</button>
+        </div>
+
+        <table class="indicators-table mt-3">
+          <thead>
+            <tr>
+              <th width="35%">Nombre del Indicador</th>
+              <th width="20%">Nivel / Meta</th>
+              <th width="35%">Fórmula / Criterio</th>
+              <th width="10%">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ind of indicadores; let i = index; trackBy: trackByIndex">
+              <td>
+                <input type="text" name="ind_nombre_{{i}}" [(ngModel)]="ind.nombre"
+                  placeholder="Ej. Facturas registradas" class="table-input" />
+              </td>
+              <td>
+                <input type="text" name="ind_nivel_{{i}}" [(ngModel)]="ind.nivel" placeholder="Ej. ≥ 98%"
+                  class="table-input" />
+              </td>
+              <td>
+                <input type="text" name="ind_formula_{{i}}" [(ngModel)]="ind.formula"
+                  placeholder="Ej. (Facturas correctas / Total) * 100" class="table-input" />
+              </td>
+              <td class="text-center">
+                <button type="button" class="btn-delete-row" (click)="removeIndicador(i)"
+                  *ngIf="indicadores.length > 1">Eliminar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions-footer">
+      <button type="button" class="btn btn-secondary" routerLink="/">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="submitting || !perfilForm.form.valid">
+        {{ submitting ? 'Guardando...' : 'Guardar Perfil de Cargo' }}
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- Print-Only Document Layout -->
+<div class="print-document-layout">
+  <div class="print-header">
+    <div class="print-logo">🏢 Artdecon</div>
+    <div class="print-title-area">
+      <h1>ROL {{ cargo | uppercase }}</h1>
+      <p class="print-doc-subtitle">PERFIL DE CARGO OFICIAL</p>
+    </div>
+  </div>
+
+  <table class="print-table-identification">
+    <thead>
+      <tr>
+        <th colspan="2">IDENTIFICACIÓN DEL CARGO</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label">Nombre del cargo</td>
+        <td>{{ cargo }}</td>
+      </tr>
+      <tr>
+        <td class="label">Contractual</td>
+        <td>{{ contractual || 'No especificado' }}</td>
+      </tr>
+      <tr>
+        <td class="label">Área</td>
+        <td>{{ area }}</td>
+      </tr>
+      <tr>
+        <td class="label">Reporta a</td>
+        <td>{{ reporta_a || 'No especificado' }}</td>
+      </tr>
+      <tr>
+        <td class="label">Supervisa</td>
+        <td>{{ supervisa || 'No aplica' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="print-section" *ngIf="proposito">
+    <h2 class="print-section-title">PROPÓSITO DEL CARGO</h2>
+    <p class="print-section-content">{{ proposito }}</p>
+  </div>
+
+  <div class="print-section" *ngIf="funciones && funciones[0]">
+    <h2 class="print-section-title">DESCRIPCIÓN DE FUNCIONES Y RESPONSABILIDADES</h2>
+    <ul class="print-list">
+      <li *ngFor="let fn of funciones">{{ fn }}</li>
+    </ul>
+  </div>
+
+  <div class="print-section" *ngIf="autoridad">
+    <h2 class="print-section-title">AUTORIDAD</h2>
+    <p class="print-section-content">{{ autoridad }}</p>
+  </div>
+
+  <div class="print-section" *ngIf="formacion || experiencia || conocimientos_basicos[0] || competencias[0]">
+    <h2 class="print-section-title">CONOCIMIENTOS, COMPETENCIAS Y/O APTITUDES</h2>
+
+    <div class="print-sub-section" *ngIf="formacion">
+      <h3>Formación académica</h3>
+      <p>{{ formacion }}</p>
+    </div>
+
+    <div class="print-sub-section" *ngIf="experiencia">
+      <h3>Experiencia</h3>
+      <p>{{ experiencia }}</p>
+    </div>
+
+    <div class="print-sub-section" *ngIf="conocimientos_basicos && conocimientos_basicos[0]">
+      <h3>Conocimientos básicos</h3>
+      <ul class="print-list-inline">
+        <li *ngFor="let cn of conocimientos_basicos">{{ cn }}</li>
+      </ul>
+    </div>
+
+    <div class="print-sub-section" *ngIf="competencias && competencias[0]">
+      <h3>Competencias / Habilidades</h3>
+      <ul class="print-list-inline">
+        <li *ngFor="let cp of competencias">{{ cp }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="print-section" *ngIf="indicadores && indicadores[0] && (indicadores[0].nombre || indicadores[0].nivel)">
+    <h2 class="print-section-title">INDICADORES DE MEDICIÓN</h2>
+    <table class="print-table-indicators">
+      <thead>
+        <tr>
+          <th>NOMBRE DEL INDICADOR</th>
+          <th>NIVEL / META</th>
+          <th>FÓRMULA / CRITERIO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ind of indicadores">
+          <td>{{ ind.nombre }}</td>
+          <td>{{ ind.nivel }}</td>
+          <td>{{ ind.formula }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

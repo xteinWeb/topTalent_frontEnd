@@ -1,0 +1,60 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-title">
+      <h1>Perfiles de Cargo</h1>
+      <p class="subtitle">Gestiona y consulta los perfiles definidos para los puestos de trabajo</p>
+    </div>
+    <button class="btn btn-primary" routerLink="/nuevo">
+      <span class="icon">+</span> Nuevo Perfil
+    </button>
+  </header>
+
+  <div class="search-bar-container">
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="Buscar por cargo o área..." 
+      [(ngModel)]="searchTerm" 
+      (input)="filterPerfiles()"
+    />
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando perfiles...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-state">
+    <p>{{ errorMsg }}</p>
+    <button class="btn btn-secondary" (click)="loadPerfiles()">Reintentar</button>
+  </div>
+
+  <div *ngIf="!loading && !errorMsg && filteredPerfiles.length === 0" class="empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>No se encontraron perfiles de cargo</h3>
+    <p>Comienza creando un nuevo perfil de cargo para esta área.</p>
+    <button class="btn btn-primary" routerLink="/nuevo">Crear primer perfil</button>
+  </div>
+
+  <div *ngIf="!loading && !errorMsg && filteredPerfiles.length > 0" class="profiles-grid">
+    <div class="profile-card" *ngFor="let perfil of filteredPerfiles">
+      <div class="card-header">
+        <span class="badge">{{ perfil.area }}</span>
+        <div class="card-actions">
+          <button class="action-btn edit-btn" [routerLink]="['/editar', perfil.id]" title="Editar perfil">✏️</button>
+          <button class="action-btn delete-btn" (click)="deletePerfil(perfil.id)" title="Eliminar perfil">🗑️</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3 class="profile-title">{{ perfil.cargo }}</h3>
+        <p class="profile-purpose" *ngIf="perfil.perfil_json.proposito">
+          {{ perfil.perfil_json.proposito | slice:0:150 }}{{ perfil.perfil_json.proposito.length > 150 ? '...' : '' }}
+        </p>
+      </div>
+      <div class="card-footer">
+        <span class="date">Actualizado: {{ perfil.fecha_actualizacion | date:'dd/MM/yyyy' }}</span>
+        <button class="btn btn-link" [routerLink]="['/editar', perfil.id]">Ver detalle →</button>
+      </div>
+    </div>
+  </div>
+</div>
