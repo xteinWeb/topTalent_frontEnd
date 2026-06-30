@@ -1,0 +1,412 @@
+<div class="public-form-container">
+  
+  <!-- Success Screen -->
+  <div *ngIf="successMsg" class="success-screen">
+    <div class="success-icon">🎉</div>
+    <h2>¡Postulación Enviada con Éxito!</h2>
+    <p>Hemos recibido tus datos y tu Hoja de Vida correctamente. Analizaremos tu perfil y nos pondremos en contacto contigo si cumples con los requisitos del puesto.</p>
+    <p class="thanks-note">¡Gracias por querer ser parte de nuestro equipo, Artdecon!</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && !successMsg" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando información de la oferta de empleo...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMsg && !loading && !successMsg" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <h2>Atención</h2>
+    <p>{{ errorMsg }}</p>
+  </div>
+
+  <!-- Form Content -->
+  <form *ngIf="!loading && !errorMsg && !successMsg" (ngSubmit)="onSubmit()" #postularForm="ngForm" class="job-application-form">
+    
+    <header class="application-header">
+      <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="Artdecon Logo" class="brand-logo">
+      <div class="job-info">
+        <span class="job-badge">Convocatoria Abierta</span>
+        <h1>Postulación para: {{ vacante?.titulo }}</h1>
+        <p class="job-description">{{ vacante?.descripcion }}</p>
+      </div>
+    </header>
+
+    <!-- Datos Básicos -->
+    <fieldset class="form-fieldset">
+      <legend>Información Personal de Contacto</legend>
+      <div class="form-grid">
+        <div class="form-group required">
+          <label for="nombre_completo">Nombre Completo</label>
+          <input 
+            type="text" 
+            id="nombre_completo" 
+            name="nombre_completo" 
+            [(ngModel)]="nombre_completo" 
+            required 
+            placeholder="Ingresa tus nombres y apellidos" 
+            class="form-control"
+          />
+        </div>
+        <div class="form-group required">
+          <label for="correo">Correo Electrónico</label>
+          <input 
+            type="email" 
+            id="correo" 
+            name="correo" 
+            [(ngModel)]="correo" 
+            required 
+            placeholder="ejemplo@correo.com" 
+            class="form-control"
+          />
+        </div>
+        <div class="form-group full-width">
+          <label for="telefono">Teléfono / Celular</label>
+          <input 
+            type="text" 
+            id="telefono" 
+            name="telefono" 
+            [(ngModel)]="telefono" 
+            placeholder="Ej. +57 300 123 4567" 
+            class="form-control"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- SECCIÓN 1: Perfil Profesional Principal -->
+    <fieldset class="form-fieldset">
+      <legend>Sección 1: Perfil Profesional</legend>
+      <div class="form-grid">
+        <div class="form-group required full-width">
+          <label for="perfil_titulo">Título del Perfil</label>
+          <input 
+            type="text" 
+            id="perfil_titulo" 
+            name="perfil_titulo" 
+            [(ngModel)]="perfil_titulo" 
+            required 
+            placeholder="Ej. Diseñador Gráfico UI, Analista Contable Senior" 
+            class="form-control"
+          />
+        </div>
+        <div class="form-group required full-width">
+          <label for="perfil_resumen">Extracto / Resumen Profesional (Máx. 1000 caracteres)</label>
+          <textarea 
+            id="perfil_resumen" 
+            name="perfil_resumen" 
+            [(ngModel)]="perfil_resumen" 
+            required 
+            rows="5" 
+            maxlength="1000"
+            placeholder="Describe brevemente tu trayectoria, tus competencias más fuertes y lo que buscas aportar profesionalmente..." 
+            class="form-control"
+          ></textarea>
+          <div class="char-counter">
+            {{ perfil_resumen.length }} / 1000 caracteres
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- SECCIÓN 2: Experiencias Profesionales -->
+    <fieldset class="form-fieldset">
+      <div class="fieldset-header">
+        <legend>Sección 2: Experiencia Profesional</legend>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addExperiencia()">
+          + Añadir Experiencia
+        </button>
+      </div>
+
+      <div class="dynamic-rows">
+        <div class="dynamic-row-card" *ngFor="let exp of experiencias; let i = index">
+          <div class="row-card-header">
+            <h4>Experiencia Laboral #{{ i + 1 }}</h4>
+            <button type="button" class="btn-delete-row" (click)="removeExperiencia(i)" *ngIf="experiencias.length > 1">
+              Eliminar
+            </button>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group required">
+              <label [for]="'exp_cargo_' + i">Cargo / Puesto</label>
+              <input 
+                type="text" 
+                [id]="'exp_cargo_' + i" 
+                [name]="'exp_cargo_' + i" 
+                [(ngModel)]="exp.cargo" 
+                required 
+                placeholder="Ej. Líder de Tesorería" 
+                class="form-control"
+              />
+            </div>
+            <div class="form-group required">
+              <label [for]="'exp_empresa_' + i">Empresa / Organización</label>
+              <input 
+                type="text" 
+                [id]="'exp_empresa_' + i" 
+                [name]="'exp_empresa_' + i" 
+                [(ngModel)]="exp.empresa" 
+                required 
+                placeholder="Ej. Artdecon S.A.S." 
+                class="form-control"
+              />
+            </div>
+            <div class="form-group required full-width">
+              <label [for]="'exp_desc_' + i">Descripción de Funciones y Logros</label>
+              <textarea 
+                [id]="'exp_desc_' + i" 
+                [name]="'exp_desc_' + i" 
+                [(ngModel)]="exp.descripcion" 
+                required
+                rows="3" 
+                placeholder="Ej. Control de flujos de caja, conciliación bancaria..." 
+                class="form-control"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label [for]="'exp_inicio_' + i">Fecha de Inicio</label>
+              <input 
+                type="month" 
+                [id]="'exp_inicio_' + i" 
+                [name]="'exp_inicio_' + i" 
+                [(ngModel)]="exp.fecha_inicio" 
+                required
+                class="form-control"
+              />
+            </div>
+            <div class="form-group">
+              <label [for]="'exp_fin_' + i">Fecha de Fin</label>
+              <input 
+                type="month" 
+                [id]="'exp_fin_' + i" 
+                [name]="'exp_fin_' + i" 
+                [(ngModel)]="exp.fecha_fin" 
+                [disabled]="exp.actualmente"
+                [required]="!exp.actualmente"
+                class="form-control"
+              />
+              <div class="checkbox-container">
+                <input 
+                  type="checkbox" 
+                  [id]="'exp_act_' + i" 
+                  [name]="'exp_act_' + i" 
+                  [(ngModel)]="exp.actualmente"
+                  (change)="onActualmenteChange(exp)"
+                />
+                <label [for]="'exp_act_' + i">Actualmente trabajo aquí</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- SECCIÓN 3: Mis Estudios -->
+    <fieldset class="form-fieldset">
+      <div class="fieldset-header">
+        <legend>Sección 3: Estudios y Formación</legend>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addEstudio()">
+          + Añadir Estudio
+        </button>
+      </div>
+
+      <div class="dynamic-rows">
+        <div class="dynamic-row-card" *ngFor="let est of estudios; let i = index">
+          <div class="row-card-header">
+            <h4>Estudio #{{ i + 1 }}</h4>
+            <button type="button" class="btn-delete-row" (click)="removeEstudio(i)" *ngIf="estudios.length > 1">
+              Eliminar
+            </button>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group required">
+              <label [for]="'est_nivel_' + i">Título Obtenido / Nivel</label>
+              <input 
+                type="text" 
+                [id]="'est_nivel_' + i" 
+                [name]="'est_nivel_' + i" 
+                [(ngModel)]="est.nivel" 
+                required 
+                placeholder="Ej. Tecnólogo en Contabilidad, Profesional en Contaduría" 
+                class="form-control"
+              />
+            </div>
+            <div class="form-group required">
+              <label [for]="'est_inst_' + i">Institución Educativa</label>
+              <input 
+                type="text" 
+                [id]="'est_inst_' + i" 
+                [name]="'est_inst_' + i" 
+                [(ngModel)]="est.institucion" 
+                required 
+                placeholder="Ej. Universidad Nacional" 
+                class="form-control"
+              />
+            </div>
+            <div class="form-group">
+              <label [for]="'est_inicio_' + i">Fecha de Inicio</label>
+              <input 
+                type="month" 
+                [id]="'est_inicio_' + i" 
+                [name]="'est_inicio_' + i" 
+                [(ngModel)]="est.fecha_inicio" 
+                required
+                class="form-control"
+              />
+            </div>
+            <div class="form-group">
+              <label [for]="'est_fin_' + i">Fecha de Fin</label>
+              <input 
+                type="month" 
+                [id]="'est_fin_' + i" 
+                [name]="'est_fin_' + i" 
+                [(ngModel)]="est.fecha_fin" 
+                [disabled]="est.en_curso"
+                [required]="!est.en_curso"
+                class="form-control"
+              />
+              <div class="checkbox-container">
+                <input 
+                  type="checkbox" 
+                  [id]="'est_enc_' + i" 
+                  [name]="'est_enc_' + i" 
+                  [(ngModel)]="est.en_curso"
+                  (change)="onEnCursoChange(est)"
+                />
+                <label [for]="'est_enc_' + i">Estudio en curso</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- SECCIÓN 4: Idiomas -->
+    <fieldset class="form-fieldset">
+      <legend>Sección 4: Idiomas</legend>
+      <div class="tag-selector-row">
+        <div class="form-group">
+          <label for="idioma_select">Idioma</label>
+          <select id="idioma_select" name="idioma_select" [(ngModel)]="idiomaSeleccionado" class="form-control">
+            <option value="" disabled selected>Seleccione idioma...</option>
+            <option *ngFor="let lang of listaIdiomas" [value]="lang">{{ lang }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="nivel_select">Nivel</label>
+          <select id="nivel_select" name="nivel_select" [(ngModel)]="nivelSeleccionado" class="form-control">
+            <option value="" disabled selected>Seleccione nivel...</option>
+            <option *ngFor="let niv of listaNiveles" [value]="niv">{{ niv }}</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-secondary btn-add-tag" (click)="addIdioma()">
+          Agregar
+        </button>
+      </div>
+
+      <div class="tags-container" *ngIf="idiomas.length > 0">
+        <span class="badge-tag" *ngFor="let item of idiomas; let i = index">
+          {{ item.idioma }} - {{ item.nivel }}
+          <button type="button" class="tag-remove-btn" (click)="removeIdioma(i)">×</button>
+        </span>
+      </div>
+      <p class="empty-tags-hint" *ngIf="idiomas.length === 0">No se han agregado idiomas aún.</p>
+    </fieldset>
+
+    <!-- SECCIÓN 5: Conocimientos y Habilidades -->
+    <fieldset class="form-fieldset">
+      <legend>Sección 5: Conocimientos y Habilidades</legend>
+      <div class="tag-selector-row">
+        <div class="form-group">
+          <label for="hab_grupo">Categoría / Grupo</label>
+          <select id="hab_grupo" name="hab_grupo" [(ngModel)]="habilidadGrupo" class="form-control">
+            <option value="tecnicas">Conocimientos Técnicos</option>
+            <option value="interpersonales">Habilidades Interpersonales</option>
+            <option value="otros">Otros Conocimientos</option>
+          </select>
+        </div>
+        <div class="form-group flex-grow">
+          <label for="hab_texto">Habilidad / Concepto</label>
+          <input 
+            type="text" 
+            id="hab_texto" 
+            name="hab_texto" 
+            [(ngModel)]="habilidadTexto" 
+            placeholder="Ej. Excel Avanzado, Trabajo en equipo, Scrum" 
+            class="form-control"
+            (keyup.enter)="addHabilidad()"
+          />
+        </div>
+        <button type="button" class="btn btn-secondary btn-add-tag" (click)="addHabilidad()">
+          Agregar
+        </button>
+      </div>
+
+      <!-- Categoría: Técnicas -->
+      <div class="skills-group-display">
+        <h5>Conocimientos Técnicos</h5>
+        <div class="tags-container">
+          <span class="badge-tag technical" *ngFor="let hab of habilidades.tecnicas; let i = index">
+            {{ hab }}
+            <button type="button" class="tag-remove-btn" (click)="removeHabilidad('tecnicas', i)">×</button>
+          </span>
+          <p class="empty-tags-hint" *ngIf="habilidades.tecnicas.length === 0">Sin agregar.</p>
+        </div>
+      </div>
+
+      <!-- Categoría: Interpersonales -->
+      <div class="skills-group-display">
+        <h5>Habilidades Interpersonales</h5>
+        <div class="tags-container">
+          <span class="badge-tag interpersonal" *ngFor="let hab of habilidades.interpersonales; let i = index">
+            {{ hab }}
+            <button type="button" class="tag-remove-btn" (click)="removeHabilidad('interpersonales', i)">×</button>
+          </span>
+          <p class="empty-tags-hint" *ngIf="habilidades.interpersonales.length === 0">Sin agregar.</p>
+        </div>
+      </div>
+
+      <!-- Categoría: Otros -->
+      <div class="skills-group-display">
+        <h5>Otros Conocimientos</h5>
+        <div class="tags-container">
+          <span class="badge-tag other" *ngFor="let hab of habilidades.otros; let i = index">
+            {{ hab }}
+            <button type="button" class="tag-remove-btn" (click)="removeHabilidad('otros', i)">×</button>
+          </span>
+          <p class="empty-tags-hint" *ngIf="habilidades.otros.length === 0">Sin agregar.</p>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Adjuntar Hoja de Vida -->
+    <fieldset class="form-fieldset file-upload-fieldset">
+      <legend>Adjuntar Hoja de Vida (Requisito Obligatorio)</legend>
+      <div class="file-dropzone" [ngClass]="{'has-file': archivoHv, 'invalid-file': archivoInvalido}">
+        <div class="dropzone-content">
+          <span class="file-icon">📄</span>
+          <p *ngIf="!archivoHv">Arrastra tu Hoja de Vida aquí o haz clic para buscar</p>
+          <p *ngIf="archivoHv" class="filename-display">{{ archivoNombre }}</p>
+          <span class="file-hint">Formatos permitidos: PDF, DOCX, DOC (Máx. 10MB)</span>
+          <input 
+            type="file" 
+            id="hv_file" 
+            (change)="onFileSelected($event)" 
+            accept=".pdf,.docx,.doc" 
+            class="hidden-file-input"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <footer class="form-footer-actions">
+      <button type="submit" class="btn btn-primary btn-lg" [disabled]="submitting || !postularForm.form.valid || !archivoHv">
+        {{ submitting ? 'Enviando Postulación...' : 'Enviar Postulación Profesional' }}
+      </button>
+    </footer>
+
+  </form>
+</div>

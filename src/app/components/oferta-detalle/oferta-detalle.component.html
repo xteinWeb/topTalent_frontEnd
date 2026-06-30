@@ -1,0 +1,104 @@
+<div class="public-portal-container">
+  
+  <header class="portal-header">
+    <button class="back-link" routerLink="/ofertas">← Volver al Portal de Ofertas</button>
+    <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="Artdecon Logo" class="brand-logo">
+  </header>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando detalle de la oferta de empleo...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-state">
+    <h2>Atención</h2>
+    <p>{{ errorMsg }}</p>
+    <button class="btn btn-secondary" routerLink="/ofertas">Volver al Portal</button>
+  </div>
+
+  <!-- Job Detail Content -->
+  <article *ngIf="!loading && !errorMsg && vacante" class="job-detail-card">
+    
+    <div class="detail-header">
+      <span class="category-badge">{{ vacante.perfil_cargo }}</span>
+      <h1>{{ vacante.titulo }}</h1>
+      <div class="meta-row">
+        <span>📅 Publicado: {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}</span>
+        <span>💼 Vacante Activa</span>
+      </div>
+      
+      <div class="action-top">
+        <button class="btn btn-primary btn-lg" [routerLink]="['/postular', vacante.id]">
+          Postularme a esta Oferta
+        </button>
+      </div>
+    </div>
+
+    <!-- Vacancy Description -->
+    <section class="detail-block">
+      <h3>Descripción General del Puesto</h3>
+      <p class="description-text">{{ vacante.descripcion }}</p>
+    </section>
+
+    <!-- Profile Cargo details (Conditional on having the complete profile loaded) -->
+    <section *ngIf="vacante.perfil_completo_json" class="profile-details-section">
+      <h2 class="section-title">Requisitos y Perfil del Cargo</h2>
+
+      <div class="profile-grid">
+        
+        <!-- Requisitos Generales -->
+        <div class="profile-block full-width">
+          <h3>Requisitos de Contratación</h3>
+          <div class="requirements-box">
+            <div class="req-item" *ngIf="vacante.perfil_completo_json.requisitos?.formacion">
+              <strong>🎓 Formación Académica:</strong>
+              <p>{{ vacante.perfil_completo_json.requisitos?.formacion }}</p>
+            </div>
+            <div class="req-item" *ngIf="vacante.perfil_completo_json.requisitos?.experiencia">
+              <strong>💼 Experiencia Laboral Requerida:</strong>
+              <p>{{ vacante.perfil_completo_json.requisitos?.experiencia }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funciones -->
+        <div class="profile-block full-width" *ngIf="vacante.perfil_completo_json.funciones?.length">
+          <h3>Funciones y Responsabilidades</h3>
+          <ul class="duties-list">
+            <li *ngFor="let func of vacante.perfil_completo_json.funciones">{{ func }}</li>
+          </ul>
+        </div>
+
+        <!-- Conocimientos -->
+        <div class="profile-block" *ngIf="vacante.perfil_completo_json.requisitos?.conocimientos_basicos?.length">
+          <h3>Conocimientos Básicos</h3>
+          <div class="tags-container">
+            <span class="detail-tag tech-tag" *ngFor="let con of vacante.perfil_completo_json.requisitos?.conocimientos_basicos">
+              {{ con }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Competencias -->
+        <div class="profile-block" *ngIf="vacante.perfil_completo_json.requisitos?.competencias?.length">
+          <h3>Competencias</h3>
+          <div class="tags-container">
+            <span class="detail-tag soft-tag" *ngFor="let comp of vacante.perfil_completo_json.requisitos?.competencias">
+              {{ comp }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer class="detail-footer">
+      <button class="btn btn-secondary" routerLink="/ofertas">Volver al Portal</button>
+      <button class="btn btn-primary btn-lg" [routerLink]="['/postular', vacante.id]">
+        Postularme a esta Oferta
+      </button>
+    </footer>
+
+  </article>
+
+</div>

@@ -1,0 +1,60 @@
+<div class="public-portal-container">
+  
+  <header class="portal-header">
+    <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="Artdecon Logo" class="brand-logo">
+    <h1>Portal de Oportunidades Laborales</h1>
+    <p class="subtitle">Explora nuestras vacantes activas y postúlate para ser parte de nuestro gran equipo de trabajo</p>
+  </header>
+
+  <div class="search-bar-container">
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="Buscar ofertas de empleo..." 
+      [(ngModel)]="searchTerm" 
+      (input)="filterVacantes()"
+    />
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando vacantes disponibles...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-state">
+    <p>{{ errorMsg }}</p>
+    <button class="btn btn-secondary" (click)="loadVacantes()">Reintentar</button>
+  </div>
+
+  <div *ngIf="!loading && !errorMsg && filteredVacantes.length === 0" class="empty-state">
+    <div class="empty-icon">💼</div>
+    <h3>No hay vacantes activas en este momento</h3>
+    <p>Te invitamos a volver a consultar más adelante o a seguir nuestras redes oficiales.</p>
+  </div>
+
+  <div *ngIf="!loading && !errorMsg && filteredVacantes.length > 0" class="jobs-list">
+    <div class="job-card" *ngFor="let vacante of filteredVacantes">
+      <div class="job-card-header">
+        <span class="category-badge">{{ vacante.perfil_cargo }}</span>
+      </div>
+      
+      <div class="job-card-body">
+        <h3 class="job-title">{{ vacante.titulo }}</h3>
+        <p class="job-desc">{{ vacante.descripcion }}</p>
+      </div>
+
+      <div class="job-card-footer">
+        <span class="post-date">Publicada: {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}</span>
+        <div class="footer-actions">
+          <button class="btn btn-secondary" style="margin-right: 0.5rem;" [routerLink]="['/oferta', vacante.id]">
+            Ver Detalles
+          </button>
+          <button class="btn btn-primary" [routerLink]="['/postular', vacante.id]">
+            Postularse al Cargo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

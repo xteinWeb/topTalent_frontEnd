@@ -1,0 +1,213 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-title">
+      <h1>Postulaciones y Hojas de Vida</h1>
+      <p class="subtitle">Consulta y analiza las postulaciones enviadas por los candidatos</p>
+    </div>
+  </header>
+
+  <!-- Filtro por Vacante -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label for="filter_vacante">Filtrar por Vacante:</label>
+      <select id="filter_vacante" [(ngModel)]="selectedVacanteId" (change)="onVacanteFilterChange()" class="form-control filter-select">
+        <option value="">Todas las vacantes</option>
+        <option *ngFor="let vacante of vacantes" [value]="vacante.id">
+          {{ vacante.titulo }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando postulaciones...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-state">
+    <p>{{ errorMsg }}</p>
+    <button class="btn btn-secondary" (click)="loadPostulaciones()">Reintentar</button>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && !errorMsg && filteredPostulaciones.length === 0" class="empty-state">
+    <div class="empty-icon">👥</div>
+    <h3>No hay postulaciones registradas</h3>
+    <p>Aún ningún candidato se ha postulado para esta convocatoria.</p>
+  </div>
+
+  <!-- Candidates Table -->
+  <div *ngIf="!loading && !errorMsg && filteredPostulaciones.length > 0" class="table-responsive">
+    <table class="candidates-table">
+      <thead>
+        <tr>
+          <th>Nombre del Candidato</th>
+          <th>Correo Electrónico</th>
+          <th>Teléfono</th>
+          <th>Vacante Aplicada</th>
+          <th>Fecha de Postulación</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredPostulaciones">
+          <td class="candidate-name">{{ item.nombre_completo }}</td>
+          <td>{{ item.correo }}</td>
+          <td>{{ item.telefono || 'No especificado' }}</td>
+          <td>
+            <span class="vacante-badge">{{ item.vacante_titulo }}</span>
+          </td>
+          <td>{{ item.fecha_postulacion | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="text-right table-actions">
+            <button class="btn btn-secondary btn-sm" (click)="viewDetails(item)">
+              Ver Perfil
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="downloadResume(item.hv_archivo_ruta)" title="Descargar Hoja de Vida física">
+              📥 HV
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Candidate Details Modal / Side Drawer -->
+  <div class="modal-backdrop" *ngIf="selectedCandidate" (click)="closeDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h2>Detalle Profesional del Candidato</h2>
+        <button class="modal-close-btn" (click)="closeDetails()">×</button>
+      </header>
+
+      <div class="modal-body">
+        
+        <!-- General Info Header -->
+        <div class="candidate-info-card">
+          <h3>{{ selectedCandidate.nombre_completo }}</h3>
+          <p class="candidate-contact">
+            📧 {{ selectedCandidate.correo }} | 📱 {{ selectedCandidate.telefono || 'Sin teléfono' }}
+          </p>
+          <div class="cv-download-section">
+            <button class="btn btn-primary btn-sm" (click)="downloadResume(selectedCandidate.hv_archivo_ruta)">
+              📂 Descargar Hoja de Vida Original ({{ selectedCandidate.hv_archivo_nombre }})
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 1: Professional Profile -->
+        <div class="detail-section">
+          <h4>Sección 1: Perfil Profesional</h4>
+          <div class="section-card">
+            <h5 class="profile-title-text">{{ selectedCandidate.perfil_profesional.titulo }}</h5>
+            <p class="profile-summary-text">{{ selectedCandidate.perfil_profesional.resumen }}</p>
+          </div>
+        </div>
+
+        <!-- Section 2: Experiences -->
+        <div class="detail-section">
+          <h4>Sección 2: Experiencia Profesional</h4>
+          <div class="history-list">
+            <div class="history-item" *ngFor="let exp of selectedCandidate.experiencias_json">
+              <div class="history-meta">
+                <span class="history-period">
+                  {{ exp.fecha_inicio | date:'MM/yyyy' }} - 
+                  {{ exp.actualmente ? 'Actualidad' : (exp.fecha_fin | date:'MM/yyyy') }}
+                </span>
+                <span class="history-company">{{ exp.empresa }}</span>
+              </div>
+              <div class="history-detail">
+                <strong class="history-title">{{ exp.cargo }}</strong>
+                <p class="history-desc">{{ exp.descripcion }}</p>
+              </div>
+            </div>
+            <p class="no-data-hint" *ngIf="!selectedCandidate.experiencias_json || selectedCandidate.experiencias_json.length === 0">
+              No registró experiencias laborales.
+            </p>
+          </div>
+        </div>
+
+        <!-- Section 3: Studies -->
+        <div class="detail-section">
+          <h4>Sección 3: Estudios y Formación</h4>
+          <div class="history-list">
+            <div class="history-item" *ngFor="let est of selectedCandidate.estudios_json">
+              <div class="history-meta">
+                <span class="history-period">
+                  {{ est.fecha_inicio | date:'MM/yyyy' }} - 
+                  {{ est.en_curso ? 'En curso' : (est.fecha_fin | date:'MM/yyyy') }}
+                </span>
+                <span class="history-company">{{ est.institucion }}</span>
+              </div>
+              <div class="history-detail">
+                <strong class="history-title">{{ est.nivel }}</strong>
+              </div>
+            </div>
+            <p class="no-data-hint" *ngIf="!selectedCandidate.estudios_json || selectedCandidate.estudios_json.length === 0">
+              No registró estudios.
+            </p>
+          </div>
+        </div>
+
+        <!-- Section 4: Languages -->
+        <div class="detail-section">
+          <h4>Sección 4: Idiomas</h4>
+          <div class="badges-row">
+            <span class="detail-tag language-tag" *ngFor="let lang of selectedCandidate.idiomas_json">
+              {{ lang.idioma }} ({{ lang.nivel }})
+            </span>
+            <p class="no-data-hint" *ngIf="!selectedCandidate.idiomas_json || selectedCandidate.idiomas_json.length === 0">
+              No registró idiomas.
+            </p>
+          </div>
+        </div>
+
+        <!-- Section 5: Skills -->
+        <div class="detail-section">
+          <h4>Sección 5: Conocimientos y Habilidades</h4>
+          
+          <div class="skills-block">
+            <h5>Conocimientos Técnicos</h5>
+            <div class="badges-row">
+              <span class="detail-tag tech-tag" *ngFor="let hab of selectedCandidate.habilidades_json?.tecnicas">
+                {{ hab }}
+              </span>
+              <span class="no-data-hint" *ngIf="!selectedCandidate.habilidades_json?.tecnicas?.length">
+                Ninguna agregada.
+              </span>
+            </div>
+          </div>
+
+          <div class="skills-block">
+            <h5>Habilidades Interpersonales</h5>
+            <div class="badges-row">
+              <span class="detail-tag soft-tag" *ngFor="let hab of selectedCandidate.habilidades_json?.interpersonales">
+                {{ hab }}
+              </span>
+              <span class="no-data-hint" *ngIf="!selectedCandidate.habilidades_json?.interpersonales?.length">
+                Ninguna agregada.
+              </span>
+            </div>
+          </div>
+
+          <div class="skills-block">
+            <h5>Otros Conocimientos</h5>
+            <div class="badges-row">
+              <span class="detail-tag other-tag" *ngFor="let hab of selectedCandidate.habilidades_json?.otros">
+                {{ hab }}
+              </span>
+              <span class="no-data-hint" *ngIf="!selectedCandidate.habilidades_json?.otros?.length">
+                Ninguna agregada.
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <footer class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDetails()">Cerrar Vista</button>
+      </footer>
+    </div>
+  </div>
+
+</div>

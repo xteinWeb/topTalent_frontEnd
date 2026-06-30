@@ -1,0 +1,70 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-title">
+      <h1>Vacantes Laborales</h1>
+      <p class="subtitle">Gestiona y publica ofertas de empleo vinculadas a los perfiles de cargo</p>
+    </div>
+    <button class="btn btn-primary" routerLink="/vacantes/nueva">
+      <span class="icon">+</span> Nueva Vacante
+    </button>
+  </header>
+
+  <div class="search-bar-container">
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="Buscar por vacante o perfil..." 
+      [(ngModel)]="searchTerm" 
+      (input)="filterVacantes()"
+    />
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando vacantes...</p>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-state">
+    <p>{{ errorMsg }}</p>
+    <button class="btn btn-secondary" (click)="loadVacantes()">Reintentar</button>
+  </div>
+
+  <div *ngIf="!loading && !errorMsg && filteredVacantes.length === 0" class="empty-state">
+    <div class="empty-icon">💼</div>
+    <h3>No se encontraron vacantes</h3>
+    <p>Comienza publicando tu primera oferta de empleo para los candidatos.</p>
+    <button class="btn btn-primary" routerLink="/vacantes/nueva">Crear primera vacante</button>
+  </div>
+
+  <div *ngIf="!loading && !errorMsg && filteredVacantes.length > 0" class="profiles-grid">
+    <div class="profile-card" *ngFor="let vacante of filteredVacantes" [ngClass]="{'inactive-card': vacante.estado === 'INACTIVA'}">
+      <div class="card-header">
+        <span class="badge">{{ vacante.perfil_cargo }}</span>
+        <div class="card-actions">
+          <button class="action-btn" (click)="toggleEstado(vacante)" [title]="vacante.estado === 'ACTIVA' ? 'Desactivar vacante' : 'Activar vacante'">
+            {{ vacante.estado === 'ACTIVA' ? '🟢 Activa' : '🔴 Inactiva' }}
+          </button>
+          <button class="action-btn edit-btn" [routerLink]="['/vacantes/editar', vacante.id]" title="Editar vacante">✏️</button>
+          <button class="action-btn delete-btn" (click)="deleteVacante(vacante.id)" title="Eliminar vacante">🗑️</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3 class="profile-title">{{ vacante.titulo }}</h3>
+        <p class="profile-purpose">
+          {{ vacante.descripcion | slice:0:150 }}{{ vacante.descripcion.length > 150 ? '...' : '' }}
+        </p>
+      </div>
+      <div class="card-footer">
+        <span class="date">Creado: {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}</span>
+        <div class="footer-actions">
+          <button class="btn btn-secondary btn-sm" [routerLink]="['/postulaciones/vacante', vacante.id]">
+            Candidatos
+          </button>
+          <button class="btn btn-link btn-sm" [routerLink]="['/postular', vacante.id]">
+            Postulación →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
