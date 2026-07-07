@@ -43,6 +43,9 @@ export class PerfilFormComponent implements OnInit {
   submitting: boolean = false;
   loading: boolean = false;
   errorMsg: string = '';
+  prompt: string = '';
+  preguntas: any[] = [];
+  generatingQuestions: boolean = false;
 
   constructor(
     private perfilService: PerfilService,
@@ -93,6 +96,9 @@ export class PerfilFormComponent implements OnInit {
           ? [...pj.indicadores]
           : [{ nombre: '', nivel: '', formula: '' }];
 
+        this.prompt = pj.prompt || '';
+        this.preguntas = this.parsePreguntas(pj.preguntas);
+
         this.loading = false;
       },
       error: (err) => {
@@ -119,6 +125,27 @@ export class PerfilFormComponent implements OnInit {
 
   setTab(tab: string): void {
     this.activeTab = tab;
+    if (tab === 'preguntas' && !this.prompt) {
+      this.prompt = `A partir del siguiente perfil del cargo genera un banco de preguntas para ser utilizado durante la postulación.
+
+Reglas:
+- Genera entre 8 y 12 preguntas.
+- Debe existir:
+  * 2 preguntas técnicas
+  * 2 preguntas sobre experiencia
+  * 2 preguntas sobre competencias
+  * 1 caso práctico
+  * 1 pregunta de motivación
+  * 1 pregunta de disponibilidad
+  * Preguntas adicionales solo si son realmente necesarias.
+- Cada pregunta debe tener: id, categoria, tipo, titulo, pregunta, descripcion, peso, obligatoria, tiempo_estimado_segundos.
+- Si la pregunta es cerrada genera las opciones.
+- Si la pregunta es abierta genera una rúbrica de evaluación.
+- Las preguntas deben derivarse automáticamente del perfil del cargo.
+- Si el perfil exige conocimientos específicos (NIIF, Inventarios, SQL, Flutter, etc.) genera preguntas relacionadas con esos conocimientos.
+- Si una función del cargo es crítica, genera un caso práctico basado en ella.
+- Devuelve únicamente un JSON.`;
+    }
   }
 
   onSubmit(): void {
@@ -148,7 +175,9 @@ export class PerfilFormComponent implements OnInit {
         conocimientos_basicos: cleanConocimientos,
         competencias: cleanCompetencias
       },
-      indicadores: cleanIndicadores
+      indicadores: cleanIndicadores,
+      prompt: this.prompt,
+      preguntas: this.preguntas
     };
 
     const payload: PerfilCargo = {
@@ -181,5 +210,181 @@ export class PerfilFormComponent implements OnInit {
   downloadWord(): void {
     if (!this.id) return;
     window.location.href = `${environment.apiUrl}/perfiles/${this.id}/docx`;
+  }
+
+  generateQuestionsWithAI(): void {
+    if (!this.area.trim() || !this.cargo.trim()) {
+      alert('Por favor complete los campos obligatorios: Área y Cargo antes de generar preguntas.');
+      return;
+    }
+
+    const cleanFunciones = this.funciones.filter(f => f.trim() !== '');
+    const cleanConocimientos = this.conocimientos_basicos.filter(c => c.trim() !== '');
+    const cleanCompetencias = this.competencias.filter(c => c.trim() !== '');
+    const cleanIndicadores = this.indicadores.filter(i => i.nombre.trim() !== '' || i.nivel.trim() !== '' || i.formula.trim() !== '');
+
+    const perfilJson: PerfilJson = {
+      contractual: this.contractual,
+      reporta_a: this.reporta_a,
+      supervisa: this.supervisa,
+      proposito: this.proposito,
+      funciones: cleanFunciones,
+      autoridad: this.autoridad,
+      requisitos: {
+        formacion: this.formacion,
+        experiencia: this.experiencia,
+        conocimientos_basicos: cleanConocimientos,
+        competencias: cleanCompetencias
+      },
+      indicadores: cleanIndicadores,
+      prompt: this.prompt,
+      preguntas: this.preguntas
+    };
+
+    this.generatingQuestions = true;
+
+    this.perfilService.generateQuestions(this.area, this.cargo, perfilJson).subscribe({
+      next: (preguntas) => {
+        this.preguntas = this.parsePreguntas(preguntas);
+        this.generatingQuestions = false;
+        alert('Preguntas del cargo generadas exitosamente.');
+      },
+      error: (err) => {
+        alert('Error al generar las preguntas: ' + (err.error?.error || err.message));
+        this.generatingQuestions = false;
+        console.error(err);
+      }
+    });
+  }
+
+  parsePreguntas(data: any): any[] {
+    let list: any[] = [];
+    if (!data) return [];
+    if (Array.isArray(data)) {
+      if (data.length > 0 && data[0].preguntas && Array.isArray(data[0].preguntas)) {
+        list = data[0].preguntas;
+      } else {
+        list = data;
+      }
+    } else if (data.preguntas && Array.isArray(data.preguntas)) {
+      list = data.preguntas;
+    } else {
+      return [];
+    }
+
+    return list.map(p => {
+      const tipoNormalized = this.normalizeTipo(p.tipo);
+      
+      // Look for any key containing "rubri" case-insensitively
+      const rubricaKey = Object.keys(p).find(k => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('rubri'));
+      const rawRubrica = rubricaKey ? p[rubricaKey] : null;
+      
+      return {
+        ...p,
+        tipo: tipoNormalized,
+        categoria: this.normalizeCategory(p.categoria),
+        rubrica_evaluacion: tipoNormalized === 'Abierta' ? this.normalizeRubrica(rawRubrica) : undefined
+      };
+    });
+  }
+
+  normalizeTipo(tipo: string): string {
+    if (!tipo) return 'Abierta';
+    const t = tipo.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (t === 'cerrada') return 'Cerrada';
+    return 'Abierta';
+  }
+
+  normalizeCategory(cat: string): string {
+    if (!cat) return 'Técnica';
+    const c = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    if (c.includes('tecnic')) return 'Técnica';
+    if (c.includes('experienc')) return 'Experiencia';
+    if (c.includes('competenci')) return 'Competencias';
+    if (c.includes('caso') || c.includes('practic')) return 'Caso Práctico';
+    if (c.includes('motivac')) return 'Motivación';
+    if (c.includes('disponibil')) return 'Disponibilidad';
+    return 'Técnica';
+  }
+
+  normalizeRubrica(rubrica: any): { insuficiente: string; aceptable: string; excelente: string } {
+    if (!rubrica) {
+      return { insuficiente: '', aceptable: '', excelente: '' };
+    }
+    if (typeof rubrica === 'string') {
+      return {
+        insuficiente: '',
+        aceptable: rubrica,
+        excelente: ''
+      };
+    }
+    
+    // Find keys case-insensitively and accent-insensitively
+    const keys = Object.keys(rubrica);
+    const keyIns = keys.find(k => {
+      const normalizedKey = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normalizedKey.includes('insuf') || normalizedKey.includes('bajo') || normalizedKey === 'i';
+    });
+    const keyAce = keys.find(k => {
+      const normalizedKey = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normalizedKey.includes('acept') || normalizedKey.includes('med') || normalizedKey === 'a';
+    });
+    const keyExc = keys.find(k => {
+      const normalizedKey = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normalizedKey.includes('excel') || normalizedKey.includes('alt') || normalizedKey === 'e';
+    });
+    
+    return {
+      insuficiente: keyIns ? rubrica[keyIns] : '',
+      aceptable: keyAce ? rubrica[keyAce] : '',
+      excelente: keyExc ? rubrica[keyExc] : ''
+    };
+  }
+
+  addPregunta(): void {
+    this.preguntas.push({
+      id: 'P' + (this.preguntas.length + 1),
+      categoria: 'Técnica',
+      tipo: 'Abierta',
+      titulo: '',
+      pregunta: '',
+      descripcion: '',
+      peso: 1,
+      obligatoria: true,
+      tiempo_estimado_segundos: 120,
+      rubrica_evaluacion: { insuficiente: '', aceptable: '', excelente: '' }
+    });
+  }
+
+  removePregunta(index: number): void {
+    this.preguntas.splice(index, 1);
+  }
+
+  addOpcion(preguntaIndex: number): void {
+    if (!this.preguntas[preguntaIndex].opciones) {
+      this.preguntas[preguntaIndex].opciones = [];
+    }
+    this.preguntas[preguntaIndex].opciones.push({ valor: '', etiqueta: '' });
+  }
+
+  removeOpcion(preguntaIndex: number, opcionIndex: number): void {
+    this.preguntas[preguntaIndex].opciones.splice(opcionIndex, 1);
+  }
+
+  onTipoPreguntaChange(preguntaIndex: number): void {
+    const preg = this.preguntas[preguntaIndex];
+    if (preg.tipo === 'Cerrada') {
+      if (!preg.opciones || preg.opciones.length === 0) {
+        preg.opciones = [{ valor: 'Sí', etiqueta: 'Sí' }, { valor: 'No', etiqueta: 'No' }];
+      }
+      if (preg.rubrica_evaluacion) {
+        delete preg.rubrica_evaluacion;
+      }
+    } else {
+      preg.rubrica_evaluacion = { insuficiente: '', aceptable: '', excelente: '' };
+      if (preg.opciones) {
+        delete preg.opciones;
+      }
+    }
   }
 }

@@ -22,6 +22,8 @@ export interface PerfilJson {
     nivel: string;
     formula: string;
   }>;
+  prompt?: string;
+  preguntas?: any;
 }
 
 export interface PerfilCargo {
@@ -72,6 +74,12 @@ export class PerfilService {
 
   deletePerfil(id: string): Observable<any> {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${id}`).pipe(
+      map(res => res.data)
+    );
+  }
+
+  generateQuestions(area: string, cargo: string, perfilJson: PerfilJson): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/generate-questions`, { area, cargo, perfil_json: perfilJson }).pipe(
       map(res => res.data)
     );
   }
