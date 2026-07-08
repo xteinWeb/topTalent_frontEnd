@@ -1,0 +1,33 @@
+<section class="form-section">
+  <h2 class="section-title">Identificación del Cargo</h2>
+  <div class="form-grid">
+    <div class="form-group required">
+      <label for="cargo">Nombre del Cargo</label>
+      <input type="text" id="cargo" name="cargo" [ngModel]="cargo" (ngModelChange)="cargoChange.emit($event)" required
+        placeholder="Ej. Analista Contable" />
+    </div>
+
+    <div class="form-group required">
+      <label for="area">Área</label>
+      <input type="text" id="area" name="area" [ngModel]="area" (ngModelChange)="areaChange.emit($event)" required placeholder="Ej. Finanzas" />
+    </div>
+
+    <div class="form-group">
+      <label for="contractual">Clasificación Contractual</label>
+      <input type="text" id="contractual" name="contractual" [ngModel]="contractual" (ngModelChange)="contractualChange.emit($event)"
+        placeholder="Ej. Gestor Administrativo" />
+    </div>
+
+    <div class="form-group">
+      <label for="reporta_a">Reporta a</label>
+      <input type="text" id="reporta_a" name="reporta_a" [ngModel]="reporta_a" (ngModelChange)="reporta_aChange.emit($event)"
+        placeholder="Ej. Contador / Tesorería" />
+    </div>
+
+    <div class="form-group full-width">
+      <label for="supervisa">Supervisa</label>
+      <input type="text" id="supervisa" name="supervisa" [ngModel]="supervisa" (ngModelChange)="supervisaChange.emit($event)"
+        placeholder="Ej. No aplica / Asistente contable" />
+    </div>
+  </div>
+</section>

@@ -94,8 +94,55 @@
           </div>
         </div>
 
-        <!-- Section 1: Professional Profile -->
-        <div class="detail-section">
+        <!-- Cargo Questions Answers (Show Prominently) -->
+        <div class="detail-section" *ngIf="selectedCandidate.habilidades_json?.preguntas_respondidas?.length">
+          <h4>Preguntas del Cargo Respondidas</h4>
+          <div class="questions-answers-container" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+            <div class="qa-item-card" *ngFor="let q of selectedCandidate.habilidades_json.preguntas_respondidas" 
+                 style="background: #fafafa; border: 1.5px solid #eee; border-radius: 8px; padding: 1.25rem;">
+              
+              <div style="font-weight: bold; color: var(--brand-navy, #16313a); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                <span>[{{ q.categoria }}] {{ q.titulo }}</span>
+                <span *ngIf="q.obligatoria" style="font-size: 0.7rem; color: #c0392b; background: #fde8e8; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 600;">Obligatoria</span>
+              </div>
+              
+              <p style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: #333; line-height: 1.4;">
+                <strong>Pregunta:</strong> {{ q.pregunta }}
+              </p>
+
+              <div style="margin-bottom: 0.75rem; background: #fff; border-left: 3px solid var(--brand-navy, #16313a); padding: 0.5rem 0.75rem; border-radius: 0 4px 4px 0;">
+                <strong style="color: #555;">Respuesta del Candidato:</strong>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; white-space: pre-wrap; line-height: 1.4; color: #111;">
+                  {{ q.respuesta || '(Sin respuesta)' }}
+                </p>
+              </div>
+
+              <!-- Rubric Info (for open questions) -->
+              <div *ngIf="q.tipo === 'Abierta' && q.rubrica_evaluacion" 
+                   style="font-size: 0.85rem; color: #666; border-top: 1px dashed #eee; padding-top: 0.75rem; margin-top: 0.75rem;">
+                <strong style="display: block; margin-bottom: 0.35rem; color: #444;">Rúbrica de Evaluación para Calificar:</strong>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                  <div style="background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid #f9ebec;">
+                    <span style="color: #c0392b; font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem;">🔴 Insuficiente</span>
+                    {{ q.rubrica_evaluacion.insuficiente || 'No definido' }}
+                  </div>
+                  <div style="background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid #fdf2e9;">
+                    <span style="color: #d35400; font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem;">🟠 Aceptable</span>
+                    {{ q.rubrica_evaluacion.aceptable || 'No definido' }}
+                  </div>
+                  <div style="background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid #edf8f1;">
+                    <span style="color: #27ae60; font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem;">🟢 Excelente</span>
+                    {{ q.rubrica_evaluacion.excelente || 'No definido' }}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Professional Profile (Only show if not basic candidate application) -->
+        <div class="detail-section" *ngIf="selectedCandidate.perfil_profesional?.titulo && selectedCandidate.perfil_profesional.titulo !== 'Postulación Básica'">
           <h4>Sección 1: Perfil Profesional</h4>
           <div class="section-card">
             <h5 class="profile-title-text">{{ selectedCandidate.perfil_profesional.titulo }}</h5>
@@ -103,8 +150,8 @@
           </div>
         </div>
 
-        <!-- Section 2: Experiences -->
-        <div class="detail-section">
+        <!-- Section 2: Experiences (Only show if not empty) -->
+        <div class="detail-section" *ngIf="selectedCandidate.experiencias_json && selectedCandidate.experiencias_json.length > 0">
           <h4>Sección 2: Experiencia Profesional</h4>
           <div class="history-list">
             <div class="history-item" *ngFor="let exp of selectedCandidate.experiencias_json">
@@ -120,14 +167,11 @@
                 <p class="history-desc">{{ exp.descripcion }}</p>
               </div>
             </div>
-            <p class="no-data-hint" *ngIf="!selectedCandidate.experiencias_json || selectedCandidate.experiencias_json.length === 0">
-              No registró experiencias laborales.
-            </p>
           </div>
         </div>
 
-        <!-- Section 3: Studies -->
-        <div class="detail-section">
+        <!-- Section 3: Studies (Only show if not empty) -->
+        <div class="detail-section" *ngIf="selectedCandidate.estudios_json && selectedCandidate.estudios_json.length > 0">
           <h4>Sección 3: Estudios y Formación</h4>
           <div class="history-list">
             <div class="history-item" *ngFor="let est of selectedCandidate.estudios_json">
@@ -142,61 +186,46 @@
                 <strong class="history-title">{{ est.nivel }}</strong>
               </div>
             </div>
-            <p class="no-data-hint" *ngIf="!selectedCandidate.estudios_json || selectedCandidate.estudios_json.length === 0">
-              No registró estudios.
-            </p>
           </div>
         </div>
 
-        <!-- Section 4: Languages -->
-        <div class="detail-section">
+        <!-- Section 4: Languages (Only show if not empty) -->
+        <div class="detail-section" *ngIf="selectedCandidate.idiomas_json && selectedCandidate.idiomas_json.length > 0">
           <h4>Sección 4: Idiomas</h4>
           <div class="badges-row">
             <span class="detail-tag language-tag" *ngFor="let lang of selectedCandidate.idiomas_json">
               {{ lang.idioma }} ({{ lang.nivel }})
             </span>
-            <p class="no-data-hint" *ngIf="!selectedCandidate.idiomas_json || selectedCandidate.idiomas_json.length === 0">
-              No registró idiomas.
-            </p>
           </div>
         </div>
 
-        <!-- Section 5: Skills -->
-        <div class="detail-section">
+        <!-- Section 5: Skills (Only show if tech/interpersonal/other skills contain items) -->
+        <div class="detail-section" *ngIf="selectedCandidate.habilidades_json?.tecnicas?.length || selectedCandidate.habilidades_json?.interpersonales?.length || selectedCandidate.habilidades_json?.otros?.length">
           <h4>Sección 5: Conocimientos y Habilidades</h4>
           
-          <div class="skills-block">
+          <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.tecnicas?.length">
             <h5>Conocimientos Técnicos</h5>
             <div class="badges-row">
-              <span class="detail-tag tech-tag" *ngFor="let hab of selectedCandidate.habilidades_json?.tecnicas">
+              <span class="detail-tag tech-tag" *ngFor="let hab of selectedCandidate.habilidades_json.tecnicas">
                 {{ hab }}
-              </span>
-              <span class="no-data-hint" *ngIf="!selectedCandidate.habilidades_json?.tecnicas?.length">
-                Ninguna agregada.
               </span>
             </div>
           </div>
 
-          <div class="skills-block">
+          <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.interpersonales?.length">
             <h5>Habilidades Interpersonales</h5>
             <div class="badges-row">
-              <span class="detail-tag soft-tag" *ngFor="let hab of selectedCandidate.habilidades_json?.interpersonales">
+              <span class="detail-tag soft-tag" *ngFor="let hab of selectedCandidate.habilidades_json.interpersonales">
                 {{ hab }}
-              </span>
-              <span class="no-data-hint" *ngIf="!selectedCandidate.habilidades_json?.interpersonales?.length">
-                Ninguna agregada.
               </span>
             </div>
           </div>
 
-          <div class="skills-block">
+          <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.otros?.length">
             <h5>Otros Conocimientos</h5>
             <div class="badges-row">
-              <span class="detail-tag other-tag" *ngFor="let hab of selectedCandidate.habilidades_json?.otros">
+              <span class="detail-tag other-tag" *ngFor="let hab of selectedCandidate.habilidades_json.otros">
                 {{ hab }}
-              </span>
-              <span class="no-data-hint" *ngIf="!selectedCandidate.habilidades_json?.otros?.length">
-                Ninguna agregada.
               </span>
             </div>
           </div>

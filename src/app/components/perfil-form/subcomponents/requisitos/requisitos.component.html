@@ -1,0 +1,47 @@
+<section class="form-section">
+  <h2 class="section-title">Perfil Requerido (Conocimientos & Competencias)</h2>
+
+  <div class="form-grid">
+    <div class="form-group full-width">
+      <label for="formacion">Formación Académica</label>
+      <input type="text" id="formacion" name="formacion" [ngModel]="formacion" (ngModelChange)="formacionChange.emit($event)"
+        placeholder="Ej. Profesional en Contaduría Pública o Estudiante" />
+    </div>
+
+    <div class="form-group full-width">
+      <label for="experiencia">Experiencia Laboral Requerida</label>
+      <input type="text" id="experiencia" name="experiencia" [ngModel]="experiencia" (ngModelChange)="experienciaChange.emit($event)"
+        placeholder="Ej. Mínimo 2 años en cargos contables o financieros" />
+    </div>
+  </div>
+
+  <div class="dynamic-lists-grid mt-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <!-- Conocimientos basicos -->
+    <div class="list-column">
+      <div class="column-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1rem; color: var(--brand-navy);">Conocimientos Básicos / Técnicos</h3>
+        <button type="button" class="btn btn-secondary btn-xs" (click)="addConocimiento()">+ Añadir</button>
+      </div>
+      <div class="list-item-row" *ngFor="let cn of conocimientos_basicos; let i = index; trackBy: trackByIndex" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
+        <input type="text" name="conocimiento_{{i}}" [ngModel]="conocimientos_basicos[i]" (ngModelChange)="conocimientos_basicos[i] = $event; conocimientos_basicosChange.emit(conocimientos_basicos)"
+          placeholder="Ej. Excel intermedio" class="list-input-sm" style="flex: 1; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
+        <button type="button" class="remove-row-btn" (click)="removeConocimiento(i)"
+          *ngIf="conocimientos_basicos.length > 1">✕</button>
+      </div>
+    </div>
+
+    <!-- Competencias -->
+    <div class="list-column">
+      <div class="column-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1rem; color: var(--brand-navy);">Competencias / Habilidades</h3>
+        <button type="button" class="btn btn-secondary btn-xs" (click)="addCompetencia()">+ Añadir</button>
+      </div>
+      <div class="list-item-row" *ngFor="let cp of competencias; let i = index; trackBy: trackByIndex" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
+        <input type="text" name="competencia_{{i}}" [ngModel]="competencias[i]" (ngModelChange)="competencias[i] = $event; competenciasChange.emit(competencias)"
+          placeholder="Ej. Atención al detalle" class="list-input-sm" style="flex: 1; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
+        <button type="button" class="remove-row-btn" (click)="removeCompetencia(i)"
+          *ngIf="competencias.length > 1">✕</button>
+      </div>
+    </div>
+  </div>
+</section>

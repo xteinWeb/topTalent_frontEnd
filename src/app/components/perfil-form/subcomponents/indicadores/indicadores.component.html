@@ -1,0 +1,37 @@
+<section class="form-section">
+  <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h2 class="section-title">Indicadores de Medición</h2>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="addIndicador()">+ Agregar Indicador</button>
+  </div>
+
+  <table class="indicators-table mt-3" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+    <thead>
+      <tr style="background: var(--brand-beige-dark, #fafafa); text-align: left;">
+        <th width="35%" style="padding: 0.75rem; border-bottom: 1.5px solid #ddd;">Nombre del Indicador</th>
+        <th width="20%" style="padding: 0.75rem; border-bottom: 1.5px solid #ddd;">Nivel / Meta</th>
+        <th width="35%" style="padding: 0.75rem; border-bottom: 1.5px solid #ddd;">Fórmula / Criterio</th>
+        <th width="10%" style="padding: 0.75rem; border-bottom: 1.5px solid #ddd; text-align: center;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ind of indicadores; let i = index; trackBy: trackByIndex">
+        <td style="padding: 0.5rem 0.25rem;">
+          <input type="text" name="ind_nombre_{{i}}" [ngModel]="ind.nombre" (ngModelChange)="ind.nombre = $event; indicadoresChange.emit(indicadores)"
+            placeholder="Ej. Facturas registradas" class="table-input" style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
+        </td>
+        <td style="padding: 0.5rem 0.25rem;">
+          <input type="text" name="ind_nivel_{{i}}" [ngModel]="ind.nivel" (ngModelChange)="ind.nivel = $event; indicadoresChange.emit(indicadores)" placeholder="Ej. ≥ 98%"
+            class="table-input" style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
+        </td>
+        <td style="padding: 0.5rem 0.25rem;">
+          <input type="text" name="ind_formula_{{i}}" [ngModel]="ind.formula" (ngModelChange)="ind.formula = $event; indicadoresChange.emit(indicadores)"
+            placeholder="Ej. (Facturas correctas / Total) * 100" class="table-input" style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
+        </td>
+        <td class="text-center" style="padding: 0.5rem; text-align: center;">
+          <button type="button" class="btn-delete-row" (click)="removeIndicador(i)" style="color: #c0392b; font-weight: 600; background: none; border: none; cursor: pointer;"
+            *ngIf="indicadores.length > 1">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>

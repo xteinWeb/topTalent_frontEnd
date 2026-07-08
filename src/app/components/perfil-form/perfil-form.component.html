@@ -50,347 +50,51 @@
     <div class="tab-content">
 
       <!-- Tab 1: General Info -->
-      <section *ngIf="activeTab === 'general'" class="form-section">
-        <h2 class="section-title">Identificación del Cargo</h2>
-        <div class="form-grid">
-          <div class="form-group required">
-            <label for="cargo">Nombre del Cargo</label>
-            <input type="text" id="cargo" name="cargo" [(ngModel)]="cargo" required
-              placeholder="Ej. Analista Contable" />
-          </div>
-
-          <div class="form-group required">
-            <label for="area">Área</label>
-            <input type="text" id="area" name="area" [(ngModel)]="area" required placeholder="Ej. Finanzas" />
-          </div>
-
-          <div class="form-group">
-            <label for="contractual">Clasificación Contractual</label>
-            <input type="text" id="contractual" name="contractual" [(ngModel)]="contractual"
-              placeholder="Ej. Gestor Administrativo" />
-          </div>
-
-          <div class="form-group">
-            <label for="reporta_a">Reporta a</label>
-            <input type="text" id="reporta_a" name="reporta_a" [(ngModel)]="reporta_a"
-              placeholder="Ej. Contador / Tesorería" />
-          </div>
-
-          <div class="form-group full-width">
-            <label for="supervisa">Supervisa</label>
-            <input type="text" id="supervisa" name="supervisa" [(ngModel)]="supervisa"
-              placeholder="Ej. No aplica / Asistente contable" />
-          </div>
-        </div>
-      </section>
+      <app-perfil-identificacion
+        *ngIf="activeTab === 'general'"
+        [(cargo)]="cargo"
+        [(area)]="area"
+        [(contractual)]="contractual"
+        [(reporta_a)]="reporta_a"
+        [(supervisa)]="supervisa">
+      </app-perfil-identificacion>
 
       <!-- Tab 2: Proposito & Autoridad -->
-      <section *ngIf="activeTab === 'proposito'" class="form-section">
-        <div class="form-group full-width">
-          <h2 class="section-title">Propósito del Cargo</h2>
-          <label for="proposito">Descripción general del rol</label>
-          <textarea id="proposito" name="proposito" rows="5" [(ngModel)]="proposito"
-            placeholder="Describe el objetivo estratégico de este puesto..."></textarea>
-        </div>
-
-        <div class="form-group full-width mt-4">
-          <h2 class="section-title">Autoridad</h2>
-          <label for="autoridad">Límites y niveles de autoridad asignados</label>
-          <textarea id="autoridad" name="autoridad" rows="3" [(ngModel)]="autoridad"
-            placeholder="Ej. No requiere autoridad especial o describe las aprobaciones delegadas..."></textarea>
-        </div>
-      </section>
+      <app-perfil-proposito
+        *ngIf="activeTab === 'proposito'"
+        [(proposito)]="proposito"
+        [(autoridad)]="autoridad">
+      </app-perfil-proposito>
 
       <!-- Tab 3: Funciones -->
-      <section *ngIf="activeTab === 'funciones'" class="form-section">
-        <div class="section-header">
-          <h2 class="section-title">Funciones y Responsabilidades</h2>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="addFunc()">+ Agregar Función</button>
-        </div>
-
-        <div class="list-entries mt-3">
-          <div class="list-item-row" *ngFor="let fn of funciones; let i = index; trackBy: trackByIndex">
-            <span class="row-num">{{ i + 1 }}</span>
-            <input type="text" name="funciones_{{i}}" [(ngModel)]="funciones[i]"
-              placeholder="Describa una función del cargo..." class="list-input" />
-            <button type="button" class="remove-row-btn" (click)="removeFunc(i)" *ngIf="funciones.length > 1">✕</button>
-          </div>
-        </div>
-      </section>
+      <app-perfil-funciones
+        *ngIf="activeTab === 'funciones'"
+        [(funciones)]="funciones">
+      </app-perfil-funciones>
 
       <!-- Tab 4: Requisitos -->
-      <section *ngIf="activeTab === 'requisitos'" class="form-section">
-        <h2 class="section-title">Perfil Requerido (Conocimientos & Competencias)</h2>
-
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="formacion">Formación Académica</label>
-            <input type="text" id="formacion" name="formacion" [(ngModel)]="formacion"
-              placeholder="Ej. Profesional en Contaduría Pública o Estudiante" />
-          </div>
-
-          <div class="form-group full-width">
-            <label for="experiencia">Experiencia Laboral Requerida</label>
-            <input type="text" id="experiencia" name="experiencia" [(ngModel)]="experiencia"
-              placeholder="Ej. Mínimo 2 años en cargos contables o financieros" />
-          </div>
-        </div>
-
-        <div class="dynamic-lists-grid mt-4">
-          <!-- Conocimientos basicos -->
-          <div class="list-column">
-            <div class="column-header">
-              <h3>Conocimientos Básicos / Técnicos</h3>
-              <button type="button" class="btn btn-secondary btn-xs" (click)="addConocimiento()">+ Añadir</button>
-            </div>
-            <div class="list-item-row" *ngFor="let cn of conocimientos_basicos; let i = index; trackBy: trackByIndex">
-              <input type="text" name="conocimiento_{{i}}" [(ngModel)]="conocimientos_basicos[i]"
-                placeholder="Ej. Excel intermedio" class="list-input-sm" />
-              <button type="button" class="remove-row-btn" (click)="removeConocimiento(i)"
-                *ngIf="conocimientos_basicos.length > 1">✕</button>
-            </div>
-          </div>
-
-          <!-- Competencias -->
-          <div class="list-column">
-            <div class="column-header">
-              <h3>Competencias / Habilidades</h3>
-              <button type="button" class="btn btn-secondary btn-xs" (click)="addCompetencia()">+ Añadir</button>
-            </div>
-            <div class="list-item-row" *ngFor="let cp of competencias; let i = index; trackBy: trackByIndex">
-              <input type="text" name="competencia_{{i}}" [(ngModel)]="competencias[i]"
-                placeholder="Ej. Atención al detalle" class="list-input-sm" />
-              <button type="button" class="remove-row-btn" (click)="removeCompetencia(i)"
-                *ngIf="competencias.length > 1">✕</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <app-perfil-requisitos
+        *ngIf="activeTab === 'requisitos'"
+        [(formacion)]="formacion"
+        [(experiencia)]="experiencia"
+        [(conocimientos_basicos)]="conocimientos_basicos"
+        [(competencias)]="competencias">
+      </app-perfil-requisitos>
 
       <!-- Tab 5: Indicadores -->
-      <section *ngIf="activeTab === 'indicadores'" class="form-section">
-        <div class="section-header">
-          <h2 class="section-title">Indicadores de Medición</h2>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="addIndicador()">+ Agregar Indicador</button>
-        </div>
-
-        <table class="indicators-table mt-3">
-          <thead>
-            <tr>
-              <th width="35%">Nombre del Indicador</th>
-              <th width="20%">Nivel / Meta</th>
-              <th width="35%">Fórmula / Criterio</th>
-              <th width="10%">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let ind of indicadores; let i = index; trackBy: trackByIndex">
-              <td>
-                <input type="text" name="ind_nombre_{{i}}" [(ngModel)]="ind.nombre"
-                  placeholder="Ej. Facturas registradas" class="table-input" />
-              </td>
-              <td>
-                <input type="text" name="ind_nivel_{{i}}" [(ngModel)]="ind.nivel" placeholder="Ej. ≥ 98%"
-                  class="table-input" />
-              </td>
-              <td>
-                <input type="text" name="ind_formula_{{i}}" [(ngModel)]="ind.formula"
-                  placeholder="Ej. (Facturas correctas / Total) * 100" class="table-input" />
-              </td>
-              <td class="text-center">
-                <button type="button" class="btn-delete-row" (click)="removeIndicador(i)"
-                  *ngIf="indicadores.length > 1">Eliminar</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      <app-perfil-indicadores
+        *ngIf="activeTab === 'indicadores'"
+        [(indicadores)]="indicadores">
+      </app-perfil-indicadores>
 
       <!-- Tab 6: Preguntas del cargo -->
-      <section *ngIf="activeTab === 'preguntas'" class="form-section">
-        <h2 class="section-title">Preguntas del Cargo (Generadas por AI)</h2>
-        <p class="section-desc" style="color: #666; margin-bottom: 1.5rem;">
-          Defina un prompt personalizado y haga clic en "Generar preguntas con AI" para llamar al webhook de n8n.
-        </p>
-
-        <div class="form-group full-width">
-          <label for="prompt">Prompt para el Webhook (n8n)</label>
-          <textarea id="prompt" name="prompt" rows="8" [(ngModel)]="prompt"
-            placeholder="Ej. Generar preguntas de entrevista técnica y comportamental..."></textarea>
-        </div>
-
-        <div style="margin-top: 1rem; margin-bottom: 1.5rem;">
-          <button type="button" class="btn btn-secondary" (click)="generateQuestionsWithAI()"
-            [disabled]="generatingQuestions">
-            {{ generatingQuestions ? '⌛ Generando preguntas...' : '⚙️ Generar preguntas con AI' }}
-          </button>
-        </div>
-
-
-
-        <div class="questions-output mt-4">
-          <div class="section-header"
-            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3 style="margin: 0; font-size: 1.15rem; color: var(--brand-navy);">Banco de Preguntas del Cargo</h3>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addPregunta()">➕ Agregar Pregunta
-              Manualmente</button>
-          </div>
-
-          <div *ngIf="preguntas && preguntas.length > 0; else noQuestions" class="questions-list">
-            <div class="question-card" *ngFor="let preg of preguntas; let i = index"
-              style="background: #ffffff; border: 1.5px solid var(--brand-beige-dark, #ddd); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative;">
-
-              <!-- Card Header / Title -->
-              <div
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.75rem;">
-                <span style="font-weight: bold; color: var(--brand-navy, #16313a); font-size: 1.05rem;">Pregunta #{{ i +
-                  1 }} ({{ preg.id }})</span>
-                <button type="button" class="btn-delete-row" (click)="removePregunta(i)"
-                  style="color: #c0392b; font-weight: 600; background: none; border: none; cursor: pointer; font-size: 0.9rem;">✕
-                  Eliminar Pregunta</button>
-              </div>
-
-              <!-- Question Grid -->
-              <div class="form-grid" style="margin-bottom: 1rem;">
-
-                <div class="form-group"
-                  style="display: flex; align-items: center; gap: 0.5rem; height: 38px; margin-top: 1.5rem; flex-direction:row;">
-                  <input type="checkbox" id="preg_obli_{{i}}" name="preg_obli_{{i}}" [(ngModel)]="preg.obligatoria"
-                    style="width: 18px; height: 18px;" />
-                  <label for="preg_obli_{{i}}"
-                    style="margin: 0; cursor: pointer; font-size: 0.9rem;">Obligatoria</label>
-                </div>
-
-                <div class="form-group">
-                  <label>ID Pregunta</label>
-                  <input type="text" name="preg_id_{{i}}" [(ngModel)]="preg.id" required placeholder="Ej. T1"
-                    style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
-                </div>
-
-                <!-- Question details: Text & Description -->
-                <div class="form-group full-width" style="margin-bottom: 1rem; display: flex; flex-direction: column;">
-                  <label>Enunciado de la Pregunta</label>
-                  <textarea name="preg_pregunta_{{i}}" rows="3" [(ngModel)]="preg.pregunta" required
-                    placeholder="Escriba la pregunta completa aquí..."
-                    style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.5rem; font-family: inherit; resize: vertical;"></textarea>
-                </div>
-
-                <div class="form-group full-width" style="margin-bottom: 1rem; display: flex; flex-direction: column;">
-                  <label>Descripción / Justificación</label>
-                  <textarea name="preg_desc_{{i}}" rows="2" [(ngModel)]="preg.descripcion"
-                    placeholder="Describe qué evalúa esta pregunta..."
-                    style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.5rem; font-family: inherit; resize: vertical;"></textarea>
-                </div>
-
-                <div class="form-group">
-                  <label>Categoría</label>
-                  <select name="preg_cat_{{i}}" [(ngModel)]="preg.categoria" required
-                    style="height: 38px; border-radius: 4px; border: 1.5px solid #ddd; padding: 0 0.5rem; width: 100%;">
-                    <option value="Técnica">Técnica</option>
-                    <option value="Experiencia">Experiencia</option>
-                    <option value="Competencias">Competencias</option>
-                    <option value="Caso Práctico">Caso Práctico</option>
-                    <option value="Motivación">Motivación</option>
-                    <option value="Disponibilidad">Disponibilidad</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label>Tipo de Pregunta</label>
-                  <select name="preg_tipo_{{i}}" [(ngModel)]="preg.tipo" (change)="onTipoPreguntaChange(i)" required
-                    style="height: 38px; border-radius: 4px; border: 1.5px solid #ddd; padding: 0 0.5rem; width: 100%;">
-                    <option value="Abierta">Abierta</option>
-                    <option value="Cerrada">Cerrada</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label>Título Corto</label>
-                  <input type="text" name="preg_titulo_{{i}}" [(ngModel)]="preg.titulo" required
-                    placeholder="Ej. Conciliación Bancaria"
-                    style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
-                </div>
-
-                <div class="form-group">
-                  <label>Peso / Importancia</label>
-                  <input type="number" name="preg_peso_{{i}}" [(ngModel)]="preg.peso" step="0.1" required
-                    style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
-                </div>
-
-                <div class="form-group">
-                  <label>Tiempo Estimado (Segundos)</label>
-                  <input type="number" name="preg_tiempo_{{i}}" [(ngModel)]="preg.tiempo_estimado_segundos" required
-                    style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
-                </div>
-              </div>
-
-
-
-              <!-- Options Editor (Cerrada) -->
-              <div *ngIf="preg.tipo === 'Cerrada'" class="options-editor"
-                style="margin-top: 1rem; border-top: 1px dashed #eee; padding-top: 1rem;">
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                  <h4 style="margin: 0; font-size: 0.9rem; color: var(--brand-navy); font-weight: 600;">Opciones de
-                    Respuesta</h4>
-                  <button type="button" class="btn btn-secondary btn-xs" (click)="addOpcion(i)">+ Añadir Opción</button>
-                </div>
-                <div class="list-entries">
-                  <div class="list-item-row" *ngFor="let opt of preg.opciones; let j = index"
-                    style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
-                    <input type="text" name="preg_{{i}}_opt_val_{{j}}" [(ngModel)]="opt.valor" placeholder="Valor"
-                      style="flex: 1; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.9rem;" />
-                    <input type="text" name="preg_{{i}}_opt_lbl_{{j}}" [(ngModel)]="opt.etiqueta"
-                      placeholder="Etiqueta visible"
-                      style="flex: 1; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.9rem;" />
-                    <button type="button" class="remove-row-btn" (click)="removeOpcion(i, j)"
-                      *ngIf="preg.opciones.length > 1">✕</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Rubric Editor (Abierta) -->
-              <div *ngIf="preg.tipo === 'Abierta'" class="rubric-editor"
-                style="margin-top: 1rem; border-top: 1px dashed #eee; padding-top: 1rem;">
-                <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--brand-navy); font-weight: 600;">
-                  Rúbrica de Evaluación</h4>
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;" *ngIf="preg.rubrica_evaluacion">
-                  <div style="display: flex; flex-direction: column;">
-                    <label
-                      style="font-size: 0.8rem; color: #c0392b; font-weight: 600; margin-bottom: 0.25rem;">Insuficiente</label>
-                    <textarea name="preg_{{i}}_rub_ins_{{i}}" rows="2"
-                      [(ngModel)]="preg.rubrica_evaluacion.insuficiente"
-                      style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
-                  </div>
-                  <div style="display: flex; flex-direction: column;">
-                    <label
-                      style="font-size: 0.8rem; color: #d35400; font-weight: 600; margin-bottom: 0.25rem;">Aceptable</label>
-                    <textarea name="preg_{{i}}_rub_ace_{{i}}" rows="2" [(ngModel)]="preg.rubrica_evaluacion.aceptable"
-                      style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
-                  </div>
-                  <div style="display: flex; flex-direction: column;">
-                    <label
-                      style="font-size: 0.8rem; color: #27ae60; font-weight: 600; margin-bottom: 0.25rem;">Excelente</label>
-                    <textarea name="preg_{{i}}_rub_exc_{{i}}" rows="2" [(ngModel)]="preg.rubrica_evaluacion.excelente"
-                      style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <ng-template #noQuestions>
-            <div class="empty-state-box"
-              style="border: 2px dashed #ddd; padding: 2rem; text-align: center; color: #888; border-radius: 6px; margin-top: 1rem; background: #fafafa;">
-              <p style="margin: 0 0 1rem 0; font-size: 0.95rem;">No hay preguntas generadas aún. Haga clic en "Generar
-                preguntas con AI" para generarlas.</p>
-              <button type="button" class="btn btn-secondary btn-sm" (click)="addPregunta()">➕ Agregar Pregunta
-                Manualmente</button>
-            </div>
-          </ng-template>
-        </div>
-      </section>
+      <app-perfil-preguntas
+        *ngIf="activeTab === 'preguntas'"
+        [(prompt)]="prompt"
+        [(preguntas)]="preguntas"
+        [generatingQuestions]="generatingQuestions"
+        (generate)="generateQuestionsWithAI()">
+      </app-perfil-preguntas>
 
     </div>
 

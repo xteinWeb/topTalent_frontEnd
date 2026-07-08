@@ -1,5 +1,5 @@
 <div class="public-portal-container">
-  
+
   <header class="portal-header">
     <button class="back-link" routerLink="/ofertas">← Volver al Portal de Ofertas</button>
     <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="Artdecon Logo" class="brand-logo">
@@ -18,7 +18,7 @@
 
   <!-- Job Detail Content -->
   <article *ngIf="!loading && !errorMsg && vacante" class="job-detail-card">
-    
+
     <div class="detail-header">
       <span class="category-badge">{{ vacante.perfil_cargo }}</span>
       <h1>{{ vacante.titulo }}</h1>
@@ -26,7 +26,7 @@
         <span>📅 Publicado: {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}</span>
         <span>💼 Vacante Activa</span>
       </div>
-      
+
       <div class="action-top">
         <button class="btn btn-primary btn-lg" [routerLink]="['/postular', vacante.id]">
           Postularme a esta Oferta
@@ -45,7 +45,7 @@
       <h2 class="section-title">Requisitos y Perfil del Cargo</h2>
 
       <div class="profile-grid">
-        
+
         <!-- Requisitos Generales -->
         <div class="profile-block full-width">
           <h3>Requisitos de Contratación</h3>
@@ -73,7 +73,8 @@
         <div class="profile-block" *ngIf="vacante.perfil_completo_json.requisitos?.conocimientos_basicos?.length">
           <h3>Conocimientos Básicos</h3>
           <div class="tags-container">
-            <span class="detail-tag tech-tag" *ngFor="let con of vacante.perfil_completo_json.requisitos?.conocimientos_basicos">
+            <span class="detail-tag tech-tag"
+              *ngFor="let con of vacante.perfil_completo_json.requisitos?.conocimientos_basicos">
               {{ con }}
             </span>
           </div>
@@ -83,7 +84,8 @@
         <div class="profile-block" *ngIf="vacante.perfil_completo_json.requisitos?.competencias?.length">
           <h3>Competencias</h3>
           <div class="tags-container">
-            <span class="detail-tag soft-tag" *ngFor="let comp of vacante.perfil_completo_json.requisitos?.competencias">
+            <span class="detail-tag soft-tag"
+              *ngFor="let comp of vacante.perfil_completo_json.requisitos?.competencias">
               {{ comp }}
             </span>
           </div>
@@ -93,7 +95,7 @@
     </section>
 
     <footer class="detail-footer">
-      <button class="btn btn-secondary" routerLink="/ofertas">Volver al Portal</button>
+      <button class="btn btn-secondary" style="padding: 10px;" routerLink="/ofertas">Volver al Portal</button>
       <button class="btn btn-primary btn-lg" [routerLink]="['/postular', vacante.id]">
         Postularme a esta Oferta
       </button>

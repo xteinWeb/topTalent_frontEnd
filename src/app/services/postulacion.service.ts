@@ -19,9 +19,10 @@ export interface Postulacion {
   estudios_json: any[];
   idiomas_json: any[];
   habilidades_json: {
-    tecnicas: string[];
-    interpersonales: string[];
-    otros: string[];
+    tecnicas?: string[];
+    interpersonales?: string[];
+    otros?: string[];
+    preguntas_respondidas?: any[];
   };
   hv_archivo_nombre?: string;
   hv_archivo_ruta?: string;

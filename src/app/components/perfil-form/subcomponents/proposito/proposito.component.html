@@ -1,0 +1,15 @@
+<section class="form-section">
+  <div class="form-group full-width">
+    <h2 class="section-title">Propósito del Cargo</h2>
+    <label for="proposito">Descripción general del rol</label>
+    <textarea id="proposito" name="proposito" rows="5" [ngModel]="proposito" (ngModelChange)="propositoChange.emit($event)"
+      placeholder="Describe el objetivo estratégico de este puesto..."></textarea>
+  </div>
+
+  <div class="form-group full-width mt-4">
+    <h2 class="section-title">Autoridad</h2>
+    <label for="autoridad">Límites y niveles de autoridad asignados</label>
+    <textarea id="autoridad" name="autoridad" rows="3" [ngModel]="autoridad" (ngModelChange)="autoridadChange.emit($event)"
+      placeholder="Ej. No requiere autoridad especial o describe las aprobaciones delegadas..."></textarea>
+  </div>
+</section>

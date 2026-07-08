@@ -20,58 +20,13 @@ export class PostulacionFormComponent implements OnInit {
   successMsg: boolean = false;
   errorMsg: string = '';
 
-  // Form Fields
+  // Form Fields (Basic Information)
   nombre_completo: string = '';
   correo: string = '';
   telefono: string = '';
-  
-  // Section 1: Professional Profile
-  perfil_titulo: string = '';
-  perfil_resumen: string = '';
 
-  // Section 2: Work Experience
-  experiencias: Array<{
-    cargo: string;
-    empresa: string;
-    descripcion: string;
-    fecha_inicio: string;
-    fecha_fin: string;
-    actualmente: boolean;
-  }> = [
-    { cargo: '', empresa: '', descripcion: '', fecha_inicio: '', fecha_fin: '', actualmente: false }
-  ];
-
-  // Section 3: Studies
-  estudios: Array<{
-    nivel: string;
-    institucion: string;
-    fecha_inicio: string;
-    fecha_fin: string;
-    en_curso: boolean;
-  }> = [
-    { nivel: '', institucion: '', fecha_inicio: '', fecha_fin: '', en_curso: false }
-  ];
-
-  // Section 4: Languages
-  idiomaSeleccionado: string = '';
-  nivelSeleccionado: string = '';
-  idiomas: Array<{ idioma: string; nivel: string }> = [];
-
-  listaIdiomas: string[] = ['Español', 'Inglés', 'Portugués', 'Alemán', 'Francés', 'Italiano', 'Mandarín', 'Otro'];
-  listaNiveles: string[] = ['Nativo', 'Avanzado (C1/C2)', 'Intermedio (B1/B2)', 'Básico (A1/A2)'];
-
-  // Section 5: Skills
-  habilidadGrupo: 'tecnicas' | 'interpersonales' | 'otros' = 'tecnicas';
-  habilidadTexto: string = '';
-  habilidades: {
-    tecnicas: string[];
-    interpersonales: string[];
-    otros: string[];
-  } = {
-    tecnicas: [],
-    interpersonales: [],
-    otros: []
-  };
+  // Cargo questions loaded from the vacancy profile
+  preguntas: any[] = [];
 
   // CV File Upload
   archivoHv?: File;
@@ -104,6 +59,15 @@ export class PostulacionFormComponent implements OnInit {
         if (data.estado === 'INACTIVA') {
           this.errorMsg = 'Esta oferta de empleo ya no se encuentra activa.';
         }
+        
+        // Load cargo questions from the vacancy's profile JSON
+        if (data.perfil_completo_json?.preguntas) {
+          this.preguntas = data.perfil_completo_json.preguntas.map((q: any) => ({
+            ...q,
+            respuesta: ''
+          }));
+        }
+
         this.loading = false;
       },
       error: (err) => {
@@ -112,106 +76,6 @@ export class PostulacionFormComponent implements OnInit {
         console.error(err);
       }
     });
-  }
-
-  // Section 2: Experiencias Methods
-  addExperiencia(): void {
-    this.experiencias.push({
-      cargo: '',
-      empresa: '',
-      descripcion: '',
-      fecha_inicio: '',
-      fecha_fin: '',
-      actualmente: false
-    });
-  }
-
-  removeExperiencia(index: number): void {
-    this.experiencias.splice(index, 1);
-    if (this.experiencias.length === 0) {
-      this.addExperiencia();
-    }
-  }
-
-  onActualmenteChange(exp: any): void {
-    if (exp.actualmente) {
-      exp.fecha_fin = '';
-    }
-  }
-
-  // Section 3: Estudios Methods
-  addEstudio(): void {
-    this.estudios.push({
-      nivel: '',
-      institucion: '',
-      fecha_inicio: '',
-      fecha_fin: '',
-      en_curso: false
-    });
-  }
-
-  removeEstudio(index: number): void {
-    this.estudios.splice(index, 1);
-    if (this.estudios.length === 0) {
-      this.addEstudio();
-    }
-  }
-
-  onEnCursoChange(est: any): void {
-    if (est.en_curso) {
-      est.fecha_fin = '';
-    }
-  }
-
-  // Section 4: Idiomas Methods
-  addIdioma(): void {
-    if (!this.idiomaSeleccionado || !this.nivelSeleccionado) {
-      alert('Seleccione un idioma y su respectivo nivel.');
-      return;
-    }
-
-    // Evitar duplicados
-    const existe = this.idiomas.some(
-      i => i.idioma.toLowerCase() === this.idiomaSeleccionado.toLowerCase()
-    );
-
-    if (existe) {
-      alert('Este idioma ya ha sido añadido.');
-      return;
-    }
-
-    this.idiomas.push({
-      idioma: this.idiomaSeleccionado,
-      nivel: this.nivelSeleccionado
-    });
-
-    this.idiomaSeleccionado = '';
-    this.nivelSeleccionado = '';
-  }
-
-  removeIdioma(index: number): void {
-    this.idiomas.splice(index, 1);
-  }
-
-  // Section 5: Habilidades Methods
-  addHabilidad(): void {
-    if (!this.habilidadTexto.trim()) return;
-
-    const texto = this.habilidadTexto.trim();
-    const grupo = this.habilidadGrupo;
-
-    // Evitar duplicados en el grupo
-    if (this.habilidades[grupo].some(h => h.toLowerCase() === texto.toLowerCase())) {
-      alert('Esta habilidad ya ha sido añadida en este grupo.');
-      return;
-    }
-
-    this.habilidades[grupo].push(texto);
-    this.habilidadTexto = '';
-  }
-
-  removeHabilidad(grupo: 'tecnicas' | 'interpersonales' | 'otros', index: number): void {
-    this.habilidades[grupo].splice(index, 1);
   }
 
   // File Upload Handlers
@@ -245,8 +109,8 @@ export class PostulacionFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (!this.nombre_completo.trim() || !this.correo.trim() || !this.perfil_titulo.trim() || !this.perfil_resumen.trim()) {
-      alert('Por favor complete la información obligatoria de identificación y perfil profesional.');
+    if (!this.nombre_completo.trim() || !this.correo.trim()) {
+      alert('Por favor complete la información obligatoria de contacto.');
       return;
     }
 
@@ -255,29 +119,34 @@ export class PostulacionFormComponent implements OnInit {
       return;
     }
 
+    // Validate that all mandatory cargo questions have an answer
+    const missingRequired = this.preguntas.filter(
+      q => q.obligatoria && (!q.respuesta || !q.respuesta.trim())
+    );
+
+    if (missingRequired.length > 0) {
+      alert('Por favor responde a todas las preguntas obligatorias del cargo antes de continuar.');
+      return;
+    }
+
     this.submitting = true;
 
-    // Filter empty experience/study rows if the user didn't write anything
-    const cleanExperiencias = this.experiencias.filter(
-      e => e.cargo.trim() || e.empresa.trim() || e.descripcion.trim()
-    );
-    const cleanEstudios = this.estudios.filter(
-      es => es.nivel.trim() || es.institucion.trim()
-    );
-
+    // Build the payload keeping DB constraints satisfied
     const postulacionPayload = {
       vacante_id: this.vacanteId,
       nombre_completo: this.nombre_completo,
       correo: this.correo,
       telefono: this.telefono,
       perfil_profesional: {
-        titulo: this.perfil_titulo,
-        resumen: this.perfil_resumen
+        titulo: 'Postulación Básica',
+        resumen: 'Postulante aplicó cargando CV y respondiendo al banco de preguntas del cargo.'
       },
-      experiencias_json: cleanExperiencias,
-      estudios_json: cleanEstudios,
-      idiomas_json: this.idiomas,
-      habilidades_json: this.habilidades
+      experiencias_json: [],
+      estudios_json: [],
+      idiomas_json: [],
+      habilidades_json: {
+        preguntas_respondidas: this.preguntas
+      }
     };
 
     this.postulacionService.postular(postulacionPayload, this.archivoHv).subscribe({

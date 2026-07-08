@@ -1,16 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PerfilService, PerfilCargo, PerfilJson } from '../../services/perfil.service';
 import { environment } from '../../../environments/environment';
 
+import { PerfilIdentificacionComponent } from './subcomponents/identificacion/identificacion.component';
+import { PerfilPropositoComponent } from './subcomponents/proposito/proposito.component';
+import { PerfilFuncionesComponent } from './subcomponents/funciones/funciones.component';
+import { PerfilRequisitosComponent } from './subcomponents/requisitos/requisitos.component';
+import { PerfilIndicadoresComponent } from './subcomponents/indicadores/indicadores.component';
+import { PerfilPreguntasComponent } from './subcomponents/preguntas/preguntas.component';
+
 @Component({
   selector: 'app-perfil-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    PerfilIdentificacionComponent,
+    PerfilPropositoComponent,
+    PerfilFuncionesComponent,
+    PerfilRequisitosComponent,
+    PerfilIndicadoresComponent,
+    PerfilPreguntasComponent
+  ],
   templateUrl: './perfil-form.component.html',
-  styleUrls: ['./perfil-form.component.css']
+  styleUrls: ['./perfil-form.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class PerfilFormComponent implements OnInit {
   isEditMode: boolean = false;
@@ -110,18 +128,7 @@ export class PerfilFormComponent implements OnInit {
   }
 
   // Dynamic Array Helper Methods
-  addFunc(): void { this.funciones.push(''); }
-  removeFunc(index: number): void { this.funciones.splice(index, 1); }
   trackByIndex(index: number): number { return index; }
-
-  addConocimiento(): void { this.conocimientos_basicos.push(''); }
-  removeConocimiento(index: number): void { this.conocimientos_basicos.splice(index, 1); }
-
-  addCompetencia(): void { this.competencias.push(''); }
-  removeCompetencia(index: number): void { this.competencias.splice(index, 1); }
-
-  addIndicador(): void { this.indicadores.push({ nombre: '', nivel: '', formula: '' }); }
-  removeIndicador(index: number): void { this.indicadores.splice(index, 1); }
 
   setTab(tab: string): void {
     this.activeTab = tab;
@@ -341,50 +348,4 @@ Reglas:
     };
   }
 
-  addPregunta(): void {
-    this.preguntas.push({
-      id: 'P' + (this.preguntas.length + 1),
-      categoria: 'Técnica',
-      tipo: 'Abierta',
-      titulo: '',
-      pregunta: '',
-      descripcion: '',
-      peso: 1,
-      obligatoria: true,
-      tiempo_estimado_segundos: 120,
-      rubrica_evaluacion: { insuficiente: '', aceptable: '', excelente: '' }
-    });
   }
-
-  removePregunta(index: number): void {
-    this.preguntas.splice(index, 1);
-  }
-
-  addOpcion(preguntaIndex: number): void {
-    if (!this.preguntas[preguntaIndex].opciones) {
-      this.preguntas[preguntaIndex].opciones = [];
-    }
-    this.preguntas[preguntaIndex].opciones.push({ valor: '', etiqueta: '' });
-  }
-
-  removeOpcion(preguntaIndex: number, opcionIndex: number): void {
-    this.preguntas[preguntaIndex].opciones.splice(opcionIndex, 1);
-  }
-
-  onTipoPreguntaChange(preguntaIndex: number): void {
-    const preg = this.preguntas[preguntaIndex];
-    if (preg.tipo === 'Cerrada') {
-      if (!preg.opciones || preg.opciones.length === 0) {
-        preg.opciones = [{ valor: 'Sí', etiqueta: 'Sí' }, { valor: 'No', etiqueta: 'No' }];
-      }
-      if (preg.rubrica_evaluacion) {
-        delete preg.rubrica_evaluacion;
-      }
-    } else {
-      preg.rubrica_evaluacion = { insuficiente: '', aceptable: '', excelente: '' };
-      if (preg.opciones) {
-        delete preg.opciones;
-      }
-    }
-  }
-}
