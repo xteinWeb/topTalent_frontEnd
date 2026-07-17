@@ -37,7 +37,7 @@ export class PostulacionFormComponent implements OnInit {
     private route: ActivatedRoute,
     private vacanteService: VacanteService,
     private postulacionService: PostulacionService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -59,7 +59,7 @@ export class PostulacionFormComponent implements OnInit {
         if (data.estado === 'INACTIVA') {
           this.errorMsg = 'Esta oferta de empleo ya no se encuentra activa.';
         }
-        
+
         // Load cargo questions from the vacancy's profile JSON
         if (data.perfil_completo_json?.preguntas) {
           this.preguntas = data.perfil_completo_json.preguntas.map((q: any) => ({
@@ -84,7 +84,7 @@ export class PostulacionFormComponent implements OnInit {
     if (file) {
       const extension = file.name.split('.').pop()?.toLowerCase();
       const validExtensions = ['pdf', 'docx', 'doc'];
-      
+
       if (!validExtensions.includes(extension || '')) {
         this.archivoInvalido = true;
         this.archivoHv = undefined;
@@ -92,7 +92,7 @@ export class PostulacionFormComponent implements OnInit {
         alert('Solo se permiten archivos con extensión PDF, DOCX o DOC.');
         return;
       }
-      
+
       // Peso máximo 10MB
       if (file.size > 10 * 1024 * 1024) {
         this.archivoInvalido = true;
@@ -115,7 +115,7 @@ export class PostulacionFormComponent implements OnInit {
     }
 
     if (!this.archivoHv) {
-      alert('Debe adjuntar su archivo de Hoja de Vida (PDF, DOCX o DOC) para completar la postulación.');
+      alert('Debe adjuntar su archivo de Hoja de Vida (PDF) para completar la postulación.');
       return;
     }
 
@@ -151,6 +151,12 @@ export class PostulacionFormComponent implements OnInit {
 
     this.postulacionService.postular(postulacionPayload, this.archivoHv).subscribe({
       next: (res) => {
+
+        this.postulacionService.postularWebhook(postulacionPayload, this.archivoHv!).subscribe({
+          next: (res) => console.log('Postulcion guardada correctamente:', res),
+          error: (err) => console.error('Error al enviar la postulación:', err)
+        });
+
         this.submitting = false;
         this.successMsg = true;
       },

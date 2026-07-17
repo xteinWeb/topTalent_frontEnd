@@ -46,7 +46,7 @@ interface ApiResponse<T> {
 export class PerfilService {
   private apiUrl = `${environment.apiUrl}/perfiles`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getPerfiles(): Observable<PerfilCargo[]> {
     return this.http.get<ApiResponse<PerfilCargo[]>>(this.apiUrl).pipe(
@@ -82,5 +82,10 @@ export class PerfilService {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/generate-questions`, { area, cargo, perfil_json: perfilJson }).pipe(
       map(res => res.data)
     );
+  }
+
+  createPerfilIA(perfil: PerfilCargo): Observable<any> {
+
+    return this.http.post<any>('https://agentes.colchonessunmoon.com/webhook/206de3fe-864d-43ba-994c-d0d7b2544ac9', perfil);
   }
 }

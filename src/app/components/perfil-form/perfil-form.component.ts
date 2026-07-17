@@ -133,25 +133,21 @@ export class PerfilFormComponent implements OnInit {
   setTab(tab: string): void {
     this.activeTab = tab;
     if (tab === 'preguntas' && !this.prompt) {
-      this.prompt = `A partir del siguiente perfil del cargo genera un banco de preguntas para ser utilizado durante la postulación.
+      this.prompt = `A partir del siguiente perfil del cargo, genera un banco de preguntas en ESPAÑOL para ser utilizado durante la postulación.
 
-Reglas:
-- Genera entre 8 y 12 preguntas.
-- Debe existir:
-  * 2 preguntas técnicas
-  * 2 preguntas sobre experiencia
-  * 2 preguntas sobre competencias
-  * 1 caso práctico
-  * 1 pregunta de motivación
-  * 1 pregunta de disponibilidad
-  * Preguntas adicionales solo si son realmente necesarias.
-- Cada pregunta debe tener: id, categoria, tipo, titulo, pregunta, descripcion, peso, obligatoria, tiempo_estimado_segundos.
-- Si la pregunta es cerrada genera las opciones.
-- Si la pregunta es abierta genera una rúbrica de evaluación.
-- Las preguntas deben derivarse automáticamente del perfil del cargo.
-- Si el perfil exige conocimientos específicos (NIIF, Inventarios, SQL, Flutter, etc.) genera preguntas relacionadas con esos conocimientos.
-- Si una función del cargo es crítica, genera un caso práctico basado en ella.
-- Devuelve únicamente un JSON.`;
+Reglas del contenido:
+- Genera entre 8 y 12 preguntas en total.
+- El banco DEBE incluir obligatoriamente:
+  * 2 preguntas técnicas (enfocadas en conocimientos específicos del perfil).
+  * 2 preguntas sobre experiencia laboral.
+  * 2 preguntas sobre competencias y habilidades (ej. Proactividad, trabajo en equipo).
+  * 1 caso práctico basado en una función crítica del cargo.
+  * 1 pregunta de motivación.
+- Preguntas adicionales solo si son realmente necesarias para evaluar el perfil.
+- Si una pregunta requiere opciones (tipo cerrada), asegúrate de rellenar el campo "opciones".
+- Si una pregunta es abierta o práctica, asegúrate de rellenar el campo "rubrica" con los criterios de evaluación.
+
+[ESTRICTO] Genera absolutamente todos los textos, títulos, preguntas, rúbricas y categorías en ESPAÑOL. No incluyas introducciones, comentarios ni saludos fuera de la estructura solicitada por el sistema.`;
     }
   }
 
@@ -199,6 +195,11 @@ Reglas:
 
     request$.subscribe({
       next: () => {
+        console.log("se ejecuta")
+        this.perfilService.createPerfilIA(payload).subscribe({
+          next: (res) => console.log('Perfil IA enviado con éxito:', res),
+          error: (err) => console.error('Error al enviar Perfil IA:', err)
+        });
         this.submitting = false;
         this.router.navigate(['/']);
       },
@@ -281,11 +282,11 @@ Reglas:
 
     return list.map(p => {
       const tipoNormalized = this.normalizeTipo(p.tipo);
-      
+
       // Look for any key containing "rubri" case-insensitively
       const rubricaKey = Object.keys(p).find(k => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('rubri'));
       const rawRubrica = rubricaKey ? p[rubricaKey] : null;
-      
+
       return {
         ...p,
         tipo: tipoNormalized,
@@ -325,7 +326,7 @@ Reglas:
         excelente: ''
       };
     }
-    
+
     // Find keys case-insensitively and accent-insensitively
     const keys = Object.keys(rubrica);
     const keyIns = keys.find(k => {
@@ -340,7 +341,7 @@ Reglas:
       const normalizedKey = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       return normalizedKey.includes('excel') || normalizedKey.includes('alt') || normalizedKey === 'e';
     });
-    
+
     return {
       insuficiente: keyIns ? rubrica[keyIns] : '',
       aceptable: keyAce ? rubrica[keyAce] : '',
@@ -348,4 +349,4 @@ Reglas:
     };
   }
 
-  }
+}

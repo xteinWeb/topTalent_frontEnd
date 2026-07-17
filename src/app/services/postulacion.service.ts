@@ -35,7 +35,7 @@ export interface Postulacion {
 export class PostulacionService {
   private apiUrl = `${environment.apiUrl}/postulaciones`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   postular(postulacion: any, archivo: File): Observable<any> {
     const formData = new FormData();
@@ -52,6 +52,23 @@ export class PostulacionService {
       formData.append('hv_archivo', archivo, archivo.name);
     }
     return this.http.post<any>(this.apiUrl, formData);
+  }
+
+  postularWebhook(postulacion: any, archivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('vacante_id', postulacion.vacante_id);
+    formData.append('nombre_completo', postulacion.nombre_completo);
+    formData.append('correo', postulacion.correo);
+    formData.append('telefono', postulacion.telefono || '');
+    formData.append('perfil_profesional', JSON.stringify(postulacion.perfil_profesional));
+    formData.append('experiencias_json', JSON.stringify(postulacion.experiencias_json));
+    formData.append('estudios_json', JSON.stringify(postulacion.estudios_json));
+    formData.append('idiomas_json', JSON.stringify(postulacion.idiomas_json));
+    formData.append('habilidades_json', JSON.stringify(postulacion.habilidades_json));
+    if (archivo) {
+      formData.append('hv_archivo', archivo, archivo.name);
+    }
+    return this.http.post<any>('https://agentes.colchonessunmoon.com/webhook/ef34c04b-32a1-4358-b8d8-28a4d7948690', formData);
   }
 
   getPostulaciones(): Observable<Postulacion[]> {
