@@ -27,6 +27,22 @@ export interface Postulacion {
   hv_archivo_nombre?: string;
   hv_archivo_ruta?: string;
   fecha_postulacion?: string;
+  respuesta_ia?: {
+    cargo_evaluado?: string;
+    nombre_candidato?: string;
+    resultado?: string;
+    puntaje?: number;
+    confiabilidad?: string;
+    cumplimiento_requisitos?: string;
+    estabilidad_laboral?: string;
+    experiencia_relevante?: string[];
+    fortalezas_documentales?: string[];
+    brechas_riesgos?: string[];
+    fit_cultural?: string;
+    validaciones_requeridas?: string[];
+    conclusion?: string;
+  };
+  estado_ia?: string;
 }
 
 @Injectable({

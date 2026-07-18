@@ -27,11 +27,11 @@ export class PostulacionListComponent implements OnInit {
     private route: ActivatedRoute,
     private postulacionService: PostulacionService,
     private vacanteService: VacanteService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadVacantes();
-    
+
     // Check if we are filtering by vacancy from route parameters
     this.route.params.subscribe(params => {
       if (params['vacanteId']) {
@@ -55,15 +55,47 @@ export class PostulacionListComponent implements OnInit {
   loadPostulaciones(): void {
     this.loading = true;
     this.errorMsg = '';
-    
+
     const request$ = this.selectedVacanteId
       ? this.postulacionService.getPostulacionesPorVacante(this.selectedVacanteId)
       : this.postulacionService.getPostulaciones();
 
     request$.subscribe({
       next: (data) => {
-        this.postulaciones = data;
-        this.filteredPostulaciones = data;
+        // Parsear respuesta_ia si viene como string
+        const parsedData = data.map(item => {
+          const rawRespuesta = item.respuesta_ia as any;
+          if (rawRespuesta && typeof rawRespuesta === 'string') {
+            const jsonStr = rawRespuesta.trim();
+            try {
+              item.respuesta_ia = JSON.parse(jsonStr);
+            } catch (e) {
+              // Intento de autoreparación si falta la llave de cierre
+              if (jsonStr.startsWith('{') && !jsonStr.endsWith('}')) {
+                try {
+                  item.respuesta_ia = JSON.parse(jsonStr + '\n}');
+                } catch (retryError) {
+                  console.error('Error al intentar reparar y parsear respuesta_ia:', retryError);
+                  item.respuesta_ia = undefined;
+                }
+              } else {
+                console.error('Error al parsear respuesta_ia:', e);
+                item.respuesta_ia = undefined;
+              }
+            }
+          }
+          return item;
+        });
+
+        // Ordenar de mayor a menor por puntaje de IA
+        const sortedData = parsedData.sort((a, b) => {
+          const scoreA = a.respuesta_ia?.puntaje ?? -1;
+          const scoreB = b.respuesta_ia?.puntaje ?? -1;
+          return scoreB - scoreA;
+        });
+        this.postulaciones = sortedData;
+        this.filteredPostulaciones = sortedData;
+        console.log('Candidatos cargados y procesados:', sortedData);
         this.loading = false;
       },
       error: (err) => {
