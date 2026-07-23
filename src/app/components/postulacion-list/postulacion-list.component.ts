@@ -67,6 +67,7 @@ export class PostulacionListComponent implements OnInit {
           const rawRespuesta = item.respuesta_ia as any;
           if (rawRespuesta && typeof rawRespuesta === 'string') {
             const jsonStr = rawRespuesta.trim();
+
             try {
               item.respuesta_ia = JSON.parse(jsonStr);
             } catch (e) {

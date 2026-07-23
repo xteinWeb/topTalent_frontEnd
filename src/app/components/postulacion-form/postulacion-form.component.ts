@@ -26,7 +26,56 @@ export class PostulacionFormComponent implements OnInit {
   telefono: string = '';
 
   // Cargo questions loaded from the vacancy profile
-  preguntas: any[] = [];
+  preguntas: any[] = [
+    {
+      id: 'CEDULA',
+      categoria: 'Disponibilidad',
+      tipo: 'Abierta',
+      titulo: 'Cédula o Documento de Identidad',
+      pregunta: 'Ingrese su número de documento de identidad (cédula).',
+      descripcion: 'Documento nacional de identidad.',
+      peso: 1,
+      obligatoria: true,
+      tiempo_estimado_segundos: 60,
+      respuesta: ''
+    },
+    {
+      id: 'EXPERIENCIA',
+      categoria: 'Experiencia',
+      tipo: 'Abierta',
+      titulo: 'Experiencia Laboral',
+      pregunta: 'Describa brevemente su experiencia laboral relevante para este cargo.',
+      descripcion: 'Detalle de trayectoria profesional.',
+      peso: 1.5,
+      obligatoria: true,
+      tiempo_estimado_segundos: 300,
+      respuesta: ''
+    },
+    {
+      id: 'ESTUDIOS',
+      categoria: 'Técnica',
+      tipo: 'Abierta',
+      titulo: 'Estudios y Formación Académica',
+      pregunta: 'Detalle sus estudios realizados, títulos obtenidos e instituciones académicas.',
+      descripcion: 'Nivel académico y certificaciones.',
+      peso: 1,
+      obligatoria: true,
+      tiempo_estimado_segundos: 180,
+      respuesta: ''
+    },
+    {
+      id: 'COMPETENCIAS',
+      categoria: 'Competencias',
+      tipo: 'Abierta',
+      titulo: 'Habilidades y Competencias',
+      pregunta: 'Describa sus competencias, habilidades clave y aptitudes más relevantes para el cargo.',
+      descripcion: 'Habilidades técnicas y blandas.',
+      peso: 1,
+      obligatoria: true,
+      tiempo_estimado_segundos: 180,
+      respuesta: ''
+    }
+  ];
 
   // CV File Upload
   archivoHv?: File;
@@ -58,14 +107,6 @@ export class PostulacionFormComponent implements OnInit {
         this.vacante = data;
         if (data.estado === 'INACTIVA') {
           this.errorMsg = 'Esta oferta de empleo ya no se encuentra activa.';
-        }
-
-        // Load cargo questions from the vacancy's profile JSON
-        if (data.perfil_completo_json?.preguntas) {
-          this.preguntas = data.perfil_completo_json.preguntas.map((q: any) => ({
-            ...q,
-            respuesta: ''
-          }));
         }
 
         this.loading = false;
