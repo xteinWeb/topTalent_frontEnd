@@ -1,60 +1,224 @@
-<div class="public-portal-container">
-  
-  <header class="portal-header">
-    <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="Artdecon Logo" class="brand-logo">
-    <h1>Portal de Oportunidades Laborales</h1>
-    <p class="subtitle">Explora nuestras vacantes activas y postúlate para ser parte de nuestro gran equipo de trabajo</p>
+<div class="portal-main-wrapper">
+
+  <!-- Magneto Header Navigation Bar -->
+  <header class="magneto-navbar">
+    <div class="navbar-left">
+      <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-blanco).png" alt="Artdecon Logo"
+        class="magneto-brand-logo">
+      <span class="brand-portal-tag">empleos</span>
+    </div>
+
+    <!-- Single Search Bar -->
+    <div class="magneto-search-bar">
+      <div class="search-field">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" placeholder="Buscar por cargo o profesión..." [(ngModel)]="searchCargo"
+          (input)="filterVacantes()" class="search-input" />
+      </div>
+      <button class="search-btn" (click)="filterVacantes()">
+        Buscar
+      </button>
+    </div>
   </header>
 
-  <div class="search-bar-container">
-    <input 
-      type="text" 
-      class="search-input" 
-      placeholder="Buscar ofertas de empleo..." 
-      [(ngModel)]="searchTerm" 
-      (input)="filterVacantes()"
-    />
-  </div>
-
-  <div *ngIf="loading" class="loading-state">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>
-    <p>Cargando vacantes disponibles...</p>
+    <p>Cargando ofertas de empleo activas...</p>
   </div>
 
-  <div *ngIf="errorMsg" class="error-state">
+  <!-- Error State -->
+  <div *ngIf="errorMsg" class="error-container">
     <p>{{ errorMsg }}</p>
     <button class="btn btn-secondary" (click)="loadVacantes()">Reintentar</button>
   </div>
 
-  <div *ngIf="!loading && !errorMsg && filteredVacantes.length === 0" class="empty-state">
-    <div class="empty-icon">💼</div>
-    <h3>No hay vacantes activas en este momento</h3>
-    <p>Te invitamos a volver a consultar más adelante o a seguir nuestras redes oficiales.</p>
+  <!-- Empty State -->
+  <div *ngIf="!loading && !errorMsg && filteredVacantes.length === 0" class="empty-portal-state">
+    <div class="empty-icon">
+      <span class="material-icons" style="font-size: 3rem; color: var(--brand-gold, #B39C70);">search_off</span>
+    </div>
+    <h3>No se encontraron ofertas con los términos de búsqueda</h3>
+    <p>Prueba buscando con otros términos o borra los filtros de búsqueda.</p>
+    <button class="btn btn-primary" (click)="clearFilters()">Ver todas las ofertas</button>
   </div>
 
-  <div *ngIf="!loading && !errorMsg && filteredVacantes.length > 0" class="jobs-list">
-    <div class="job-card" *ngFor="let vacante of filteredVacantes">
-      <div class="job-card-header">
-        <span class="category-badge">{{ vacante.perfil_cargo }}</span>
-      </div>
-      
-      <div class="job-card-body">
-        <h3 class="job-title">{{ vacante.titulo }}</h3>
-        <p class="job-desc">{{ vacante.descripcion }}</p>
+  <!-- Split Screen Layout (Master-Detail) -->
+  <div *ngIf="!loading && !errorMsg && filteredVacantes.length > 0" class="magneto-split-layout">
+
+    <!-- LEFT COLUMN: Master List of Job Cards -->
+    <section class="offers-master-column">
+      <div class="master-header">
+        <h2>Ofertas de empleo en Artdecon</h2>
+        <span class="offers-count-badge">{{ filteredVacantes.length }} vacantes activas</span>
       </div>
 
-      <div class="job-card-footer">
-        <span class="post-date">Publicada: {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}</span>
-        <div class="footer-actions">
-          <button class="btn btn-secondary" style="margin-right: 0.5rem;" [routerLink]="['/oferta', vacante.id]">
-            Ver Detalles
-          </button>
-          <button class="btn btn-primary" [routerLink]="['/postular', vacante.id]">
-            Postularse al Cargo
-          </button>
+      <div class="offers-scroll-list">
+        <div class="job-master-card" *ngFor="let vacante of filteredVacantes"
+          [class.selected]="selectedVacante?.id === vacante.id" (click)="selectVacante(vacante)">
+          <div class="card-time-badge">Convocatoria Abierta</div>
+          <h3 class="card-title">{{ vacante.titulo }}</h3>
+
+          <div class="card-company-info">
+            <span class="company-name">Artdecon S.A.S.</span>
+            <span class="bullet-dot">•</span>
+            <span class="contract-type">{{ vacante.perfil_completo_json?.identificacion?.tipo_contrato || 'Término
+              Indefinido' }}</span>
+          </div>
+
+          <div class="card-verified-row">
+            <span class="star-rating">
+              4,8 <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;">star</span>
+            </span>
+            <span class="verified-badge">
+              <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;">verified</span> Empresa
+              verificada
+            </span>
+          </div>
+
+          <div class="card-salary-row">
+            <span class="salary-amount">{{ vacante.perfil_completo_json?.identificacion?.salario || 'Salario a convenir'
+              }}</span>
+          </div>
+
+          <div class="card-location-row">
+            <span class="location-text">
+              <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;">place</span> {{
+              vacante.perfil_completo_json?.identificacion?.ubicacion || 'Colombia' }}
+            </span>
+          </div>
+
+          <div class="card-footer-mini">
+            <span class="view-btn">
+              Ver detalle <span class="material-icons"
+                style="font-size: 0.9rem; vertical-align: middle;">chevron_right</span>
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Sticky Job Detail Pane -->
+    <section class="offer-detail-column" *ngIf="selectedVacante">
+      <div class="sticky-detail-card">
+
+        <!-- Detail Header -->
+        <header class="detail-main-header">
+          <div class="header-title-block">
+            <h1>{{ selectedVacante.titulo }}</h1>
+            <p class="company-subline">
+              <span class="company-highlight">Artdecon S.A.S.</span>
+              | {{ selectedVacante.perfil_completo_json?.identificacion?.tipo_contrato || 'Término Indefinido' }}
+              | Convocatoria Abierta
+            </p>
+          </div>
+
+          <!-- CTA Actions Bar -->
+          <div class="detail-actions-bar">
+            <button class="btn-apply-main" [routerLink]="['/postular', selectedVacante.id]">
+              Aplicar a esta Vacante
+            </button>
+
+            <button class="btn-action-outline" (click)="compartirVacante(selectedVacante)"
+              title="Compartir esta oferta">
+              <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">share</span> Compartir
+            </button>
+          </div>
+        </header>
+
+        <hr class="divider-line">
+
+        <!-- Highlight Requirements Card -->
+        <div class="requirements-summary-card">
+          <h4>Requisitos clave para aplicar a esta vacante:</h4>
+
+          <div class="req-items-grid">
+            <div class="req-item">
+              <span class="req-icon">
+                <span class="material-icons" style="font-size: 1.1rem; color: var(--brand-navy, #16313A);">work</span>
+              </span>
+              <div>
+                <strong>Experiencia y Formación</strong>
+                <p>{{ selectedVacante.perfil_completo_json?.requisitos?.experiencia || '1 año de experiencia mínima' }}
+                  | {{ selectedVacante.perfil_completo_json?.requisitos?.formacion || 'Bachillerato o educación
+                  superior' }}</p>
+              </div>
+            </div>
+
+            <div class="req-item">
+              <span class="req-icon">
+                <span class="material-icons"
+                  style="font-size: 1.1rem; color: var(--brand-navy, #16313A);">attach_money</span>
+              </span>
+              <div>
+                <strong>Compensación Salarial</strong>
+                <p>{{ selectedVacante.perfil_completo_json?.identificacion?.salario || 'A convenir según experiencia' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="req-item">
+              <span class="req-icon">
+                <span class="material-icons"
+                  style="font-size: 1.1rem; color: var(--brand-navy, #16313A);">location_on</span>
+              </span>
+              <div>
+                <strong>Ubicación y Modalidad</strong>
+                <p>{{ selectedVacante.perfil_completo_json?.identificacion?.ubicacion || 'Colombia' }} ({{
+                  selectedVacante.perfil_completo_json?.identificacion?.modalidad || 'Presencial' }})</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Description Body -->
+        <div class="detail-body-content">
+          <h3>Descripción del Empleo</h3>
+          <p class="description-text">{{ selectedVacante.descripcion }}</p>
+
+          <!-- Academic Requirements if available -->
+          <div class="detail-subblock" *ngIf="selectedVacante.perfil_completo_json?.requisitos?.formacion">
+            <h4>Formación Académica Requerida</h4>
+            <p>{{ selectedVacante.perfil_completo_json?.requisitos?.formacion }}</p>
+          </div>
+
+          <!-- Key Competencies & Skills -->
+          <div class="detail-subblock" *ngIf="selectedVacante.perfil_completo_json?.requisitos?.competencias?.length">
+            <h4>Competencias y Habilidades Clave</h4>
+            <div class="skills-tags-row">
+              <span class="skill-pill"
+                *ngFor="let comp of selectedVacante.perfil_completo_json?.requisitos?.competencias">
+                <span class="material-icons" style="font-size: 0.8rem; vertical-align: middle;">star</span> {{ comp }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Basic Knowledge -->
+          <div class="detail-subblock"
+            *ngIf="selectedVacante.perfil_completo_json?.requisitos?.conocimientos_basicos?.length">
+            <h4>Conocimientos Específicos</h4>
+            <ul class="knowledge-list">
+              <li *ngFor="let con of selectedVacante.perfil_completo_json?.requisitos?.conocimientos_basicos">
+                {{ con }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Final Apply Banner -->
+          <div class="final-apply-banner">
+            <div class="banner-text">
+              <h3>¿Cumples con los requisitos del puesto?</h3>
+              <p>Envía tu información profesional y Hoja de Vida física a través de nuestro formulario dinámico.</p>
+            </div>
+            <button class="btn-apply-main" [routerLink]="['/postular', selectedVacante.id]">
+              Postularme Ahora
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </div>
 
 </div>

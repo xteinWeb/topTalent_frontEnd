@@ -1,0 +1,92 @@
+<div class="tab-pane">
+  <fieldset class="form-fieldset">
+    <legend>Información Personal de Contacto</legend>
+    <div class="form-grid">
+      <div class="form-group required">
+        <label for="nombre_completo">Nombre Completo</label>
+        <input 
+          type="text" 
+          id="nombre_completo" 
+          name="nombre_completo" 
+          [ngModel]="nombre_completo"
+          (ngModelChange)="onNombreChange($event)"
+          required 
+          placeholder="Ingresa tus nombres y apellidos" 
+          class="form-control"
+        />
+      </div>
+      <div class="form-group required">
+        <label for="correo">Correo Electrónico</label>
+        <input 
+          type="email" 
+          id="correo" 
+          name="correo" 
+          [ngModel]="correo"
+          (ngModelChange)="onCorreoChange($event)"
+          required 
+          placeholder="ejemplo@correo.com" 
+          class="form-control"
+        />
+      </div>
+      <div class="form-group required">
+        <label for="cedula">Cédula / Documento de Identidad</label>
+        <input 
+          type="text" 
+          id="cedula" 
+          name="cedula" 
+          [ngModel]="cedula"
+          (ngModelChange)="onCedulaChange($event)"
+          required 
+          placeholder="Ej. 1020304050" 
+          class="form-control"
+        />
+      </div>
+      <div class="form-group required">
+        <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+        <input 
+          type="date" 
+          id="fecha_nacimiento" 
+          name="fecha_nacimiento" 
+          [ngModel]="fecha_nacimiento"
+          (ngModelChange)="onFechaNacimientoChange($event)"
+          required 
+          class="form-control"
+        />
+      </div>
+      <div class="form-group full-width">
+        <label for="telefono">Teléfono / Celular</label>
+        <input 
+          type="text" 
+          id="telefono" 
+          name="telefono" 
+          [ngModel]="telefono"
+          (ngModelChange)="onTelefonoChange($event)"
+          placeholder="Ej. +57 300 123 4567" 
+          class="form-control"
+        />
+      </div>
+    </div>
+  </fieldset>
+
+
+
+  <!-- Adjuntar Hoja de Vida -->
+  <fieldset class="form-fieldset file-upload-fieldset">
+    <legend>Adjuntar Hoja de Vida (Requisito Obligatorio)</legend>
+    <div class="file-dropzone" [ngClass]="{'has-file': archivoHv, 'invalid-file': archivoInvalido}">
+      <div class="dropzone-content">
+        <span class="material-icons file-icon" style="font-size: 2.5rem; color: var(--brand-navy, #16313A); margin-bottom: 0.5rem;">description</span>
+        <p *ngIf="!archivoHv">Arrastra tu Hoja de Vida aquí o haz clic para buscar</p>
+        <p *ngIf="archivoHv" class="filename-display">{{ archivoNombre }}</p>
+        <span class="file-hint">Formatos permitidos: PDF, DOCX, DOC (Máx. 10MB)</span>
+        <input 
+          type="file" 
+          id="hv_file" 
+          (change)="onFileChange($event)" 
+          accept=".pdf,.docx,.doc" 
+          class="hidden-file-input"
+        />
+      </div>
+    </div>
+  </fieldset>
+</div>

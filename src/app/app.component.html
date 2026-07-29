@@ -1,7 +1,7 @@
-<header class="app-navbar" *ngIf="isLoggedIn$ | async">
+<header class="app-navbar" *ngIf="showNavbar$ | async">
   <div class="nav-container">
     <div class="nav-brand" routerLink="/">
-      <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="">
+      <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-blanco).png" alt="Artdecon Logo">
     </div>
     <nav class="nav-links">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Perfiles de Cargo</a>

@@ -11,6 +11,12 @@ export interface PerfilJson {
   proposito?: string;
   funciones?: string[];
   autoridad?: string;
+  identificacion?: {
+    ubicacion?: string;
+    salario?: string;
+    modalidad?: string;
+    tipo_contrato?: string;
+  };
   requisitos?: {
     formacion?: string;
     experiencia?: string;

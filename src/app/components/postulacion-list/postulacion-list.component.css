@@ -343,25 +343,25 @@
 .language-tag {
   background-color: var(--brand-beige-light);
   color: var(--brand-navy);
-  border-color: var(--brand-beige-dark);
+  border-color: var(--brand-gold);
 }
 
 .tech-tag {
-  background-color: #e0f2fe;
-  color: #0369a1;
-  border-color: #bae6fd;
+  background-color: var(--brand-beige-light);
+  color: var(--brand-navy);
+  border-color: var(--brand-navy);
 }
 
 .soft-tag {
-  background-color: #f0fdf4;
-  color: #15803d;
-  border-color: #bbf7d0;
+  background-color: var(--brand-beige-light);
+  color: var(--brand-green-pine);
+  border-color: var(--brand-green-pine);
 }
 
 .other-tag {
-  background-color: #fdf2f8;
-  color: #be185d;
-  border-color: #fbcfe8;
+  background-color: var(--brand-beige-light);
+  color: var(--brand-terracotta);
+  border-color: var(--brand-terracotta);
 }
 
 .skills-block {
@@ -459,21 +459,21 @@
 }
 
 .resultado-badge.viable {
-  background-color: #f0fdf4;
-  color: #166534;
-  border-color: #bbf7d0;
+  background-color: var(--brand-beige-light);
+  color: var(--brand-green-pine, #344F2C);
+  border-color: var(--brand-green-pine, #344F2C);
 }
 
 .resultado-badge.condicionado {
-  background-color: #fffbeb;
-  color: #92400e;
-  border-color: #fde68a;
+  background-color: var(--brand-beige-light);
+  color: #9d855a;
+  border-color: var(--brand-gold, #B39C70);
 }
 
 .resultado-badge.no-viable {
-  background-color: #fef2f2;
-  color: #991b1b;
-  border-color: #fecaca;
+  background-color: var(--brand-beige-light);
+  color: var(--brand-terracotta, #A35E3E);
+  border-color: var(--brand-terracotta, #A35E3E);
 }
 
 .resultado-badge.evaluando {
@@ -597,25 +597,31 @@
 }
 
 .success-card-list {
-  border-left: 4px solid #28a745;
+  background-color: var(--brand-green-soft, #EAF2EB);
+  border: 1px solid #d2e4d5;
+  border-left: 4px solid var(--brand-green-pine, #344F2C);
 }
 
 .success-card-list h5 {
-  color: #28a745;
+  color: var(--brand-green-pine, #344F2C);
 }
 
 .danger-card-list {
-  border-left: 4px solid #dc3545;
+  background-color: var(--brand-terracotta-soft, #FDF1EC);
+  border: 1px solid #f7dcd1;
+  border-left: 4px solid var(--brand-terracotta, #A35E3E);
 }
 
 .danger-card-list h5 {
-  color: #dc3545;
+  color: var(--brand-terracotta, #A35E3E);
 }
 
 .warning-card-list {
-  border-left: 4px solid #ffc107;
+  background-color: var(--brand-gold-soft, #FAF4E8);
+  border: 1px solid #f2e3c9;
+  border-left: 4px solid var(--brand-gold, #B39C70);
 }
 
 .warning-card-list h5 {
-  color: #d39e00;
+  color: #9d855a;
 }

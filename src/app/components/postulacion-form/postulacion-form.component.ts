@@ -4,11 +4,25 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { VacanteService, Vacante } from '../../services/vacante.service';
 import { PostulacionService } from '../../services/postulacion.service';
+import { InformacionBasicaComponent } from './subcomponents/informacion-basica/informacion-basica.component';
+import { NivelEducativoComponent } from './subcomponents/nivel-educativo/nivel-educativo.component';
+import { ExperienciaLaboralComponent } from './subcomponents/experiencia-laboral/experiencia-laboral.component';
+import { EducacionInformalComponent } from './subcomponents/educacion-informal/educacion-informal.component';
+import { IdiomasHabilidadesComponent } from './subcomponents/idiomas-habilidades/idiomas-habilidades.component';
 
 @Component({
   selector: 'app-postulacion-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    InformacionBasicaComponent,
+    NivelEducativoComponent,
+    ExperienciaLaboralComponent,
+    EducacionInformalComponent,
+    IdiomasHabilidadesComponent
+  ],
   templateUrl: './postulacion-form.component.html',
   styleUrls: ['./postulacion-form.component.css']
 })
@@ -24,58 +38,135 @@ export class PostulacionFormComponent implements OnInit {
   nombre_completo: string = '';
   correo: string = '';
   telefono: string = '';
+  cedula: string = '';
+  fecha_nacimiento: string = '';
 
-  // Cargo questions loaded from the vacancy profile
-  preguntas: any[] = [
-    {
-      id: 'CEDULA',
-      categoria: 'Disponibilidad',
-      tipo: 'Abierta',
-      titulo: 'Cédula o Documento de Identidad',
-      pregunta: 'Ingrese su número de documento de identidad (cédula).',
-      descripcion: 'Documento nacional de identidad.',
-      peso: 1,
-      obligatoria: true,
-      tiempo_estimado_segundos: 60,
-      respuesta: ''
-    },
-    {
-      id: 'EXPERIENCIA',
-      categoria: 'Experiencia',
-      tipo: 'Abierta',
-      titulo: 'Experiencia Laboral',
-      pregunta: 'Describa brevemente su experiencia laboral relevante para este cargo.',
-      descripcion: 'Detalle de trayectoria profesional.',
-      peso: 1.5,
-      obligatoria: true,
-      tiempo_estimado_segundos: 300,
-      respuesta: ''
-    },
-    {
-      id: 'ESTUDIOS',
-      categoria: 'Técnica',
-      tipo: 'Abierta',
-      titulo: 'Estudios y Formación Académica',
-      pregunta: 'Detalle sus estudios realizados, títulos obtenidos e instituciones académicas.',
-      descripcion: 'Nivel académico y certificaciones.',
-      peso: 1,
-      obligatoria: true,
-      tiempo_estimado_segundos: 180,
-      respuesta: ''
-    },
-    {
-      id: 'COMPETENCIAS',
-      categoria: 'Competencias',
-      tipo: 'Abierta',
-      titulo: 'Habilidades y Competencias',
-      pregunta: 'Describa sus competencias, habilidades clave y aptitudes más relevantes para el cargo.',
-      descripcion: 'Habilidades técnicas y blandas.',
-      peso: 1,
-      obligatoria: true,
-      tiempo_estimado_segundos: 180,
-      respuesta: ''
-    }
+
+  // Tab navigation
+  activeTab: string = 'basica';
+
+  // Section indicators (Si/No)
+  tieneEducacionFormal: string = 'No';
+  tieneEducacionInformal: string = 'No';
+
+  // Dynamic lists
+  estudios: any[] = [];
+  experiencias: any[] = [];
+  capacitaciones: any[] = [];
+  idiomas: any[] = [];
+  habilidades: {
+    tecnicas: string[];
+    interpersonales: string[];
+    otros: string[];
+  } = {
+      tecnicas: [],
+      interpersonales: [],
+      otros: []
+    };
+
+  // Selectors list
+  listaNivelesEducativos: string[] = [
+    'Bachillerato / Educación Media',
+    'Técnico Profesional',
+    'Tecnólogo',
+    'Universitario / Profesional',
+    'Especialización',
+    'Maestría',
+    'Doctorado'
   ];
+
+  listaEstadosEducacion: string[] = ['Graduado', 'En curso', 'Suspendido / Aplazado'];
+  listaPaises: string[] = ['Colombia', 'Venezuela', 'Ecuador', 'Perú', 'Argentina', 'Chile', 'España', 'Estados Unidos', 'Otro'];
+
+  listaTiposCapacitacion: string[] = [
+    'Curso',
+    'Diplomado',
+    'Seminario',
+    'Congreso',
+    'Certificación',
+    'Otro'
+  ];
+
+  listaTiposExperiencia: string[] = [
+    'Laboral',
+    'Práctica Profesional / Pasantía',
+    'Independiente / Emprendimiento',
+    'Voluntariado'
+  ];
+
+  listaSectores: string[] = [
+    'Administración / Oficina',
+    'Ventas / Comercial',
+    'Producción / Operarios',
+    'Sistemas / Tecnología',
+    'Contabilidad / Finanzas',
+    'Logística / Distribución',
+    'Recursos Humanos',
+    'Salud',
+    'Educación',
+    'Otros'
+  ];
+
+  listaIdiomas: string[] = ['Español', 'Inglés', 'Portugués', 'Alemán', 'Francés', 'Italiano', 'Mandarín', 'Otro'];
+
+  // Temporary objects for forms
+  showEstudioForm: boolean = false;
+  nuevoEstudio: any = {
+    nivel: '',
+    nucleo: '',
+    titulo: '',
+    homologado: 'No',
+    pais: 'Colombia',
+    institucion: '',
+    estado: '',
+    observaciones: '',
+    practicaEmpresarial: false
+  };
+
+  showExperienciaForm: boolean = false;
+  nuevaExperiencia: any = {
+    tipo: '',
+    empresa: '',
+    sector: '',
+    telefono: '',
+    pais: 'Colombia',
+    cargo: '',
+    cargoEquivalente: '',
+    mesIngreso: '',
+    anioIngreso: '',
+    actualmente: false,
+    mesRetiro: '',
+    anioRetiro: '',
+    funciones: ''
+  };
+
+  showCapacitacionForm: boolean = false;
+  nuevaCapacitacion: any = {
+    tipo: '',
+    nombre: '',
+    institucion: '',
+    pais: 'Colombia',
+    estado: '',
+    duracionHoras: ''
+  };
+
+  nuevoIdioma: any = {
+    idioma: '',
+    nivel: 0
+  };
+
+  nuevaHerramienta: any = {
+    nombre: '',
+    tipo: '',
+    nivel: 0
+  };
+
+  // Helper arrays for months and years
+  listaMeses: string[] = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  listaAnios: number[] = [];
 
   // CV File Upload
   archivoHv?: File;
@@ -86,7 +177,13 @@ export class PostulacionFormComponent implements OnInit {
     private route: ActivatedRoute,
     private vacanteService: VacanteService,
     private postulacionService: PostulacionService
-  ) { }
+  ) {
+    // Fill years from current year down to 1970
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= 1970; y--) {
+      this.listaAnios.push(y);
+    }
+  }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -117,6 +214,183 @@ export class PostulacionFormComponent implements OnInit {
         console.error(err);
       }
     });
+  }
+
+  // Tab navigation helpers
+  setTab(tab: string): void {
+    this.activeTab = tab;
+  }
+
+  nextTab(): void {
+    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
+    const idx = tabs.indexOf(this.activeTab);
+    if (idx < tabs.length - 1) {
+      // Basic validations before changing tabs
+      if (this.activeTab === 'basica') {
+        if (!this.nombre_completo.trim() || !this.correo.trim()) {
+          alert('Por favor complete la información obligatoria de contacto.');
+          return;
+        }
+        if (!this.archivoHv) {
+          alert('Debe adjuntar su archivo de Hoja de Vida para continuar.');
+          return;
+        }
+      }
+      this.activeTab = tabs[idx + 1];
+    }
+  }
+
+  prevTab(): void {
+    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
+    const idx = tabs.indexOf(this.activeTab);
+    if (idx > 0) {
+      this.activeTab = tabs[idx - 1];
+    }
+  }
+
+  // Dynamic Add / Remove handlers
+  toggleEstudioForm(show: boolean): void {
+    this.showEstudioForm = show;
+    if (show) {
+      this.nuevoEstudio = {
+        nivel: '',
+        nucleo: '',
+        titulo: '',
+        pais: 'Colombia',
+        institucion: '',
+        estado: '',
+        observaciones: '',
+        practicaEmpresarial: false
+      };
+    }
+  }
+
+  addEstudioRecord(): void {
+    if (!this.nuevoEstudio.nivel || !this.nuevoEstudio.titulo || !this.nuevoEstudio.institucion || !this.nuevoEstudio.estado) {
+      alert('Por favor complete todos los campos obligatorios del nivel educativo.');
+      return;
+    }
+    this.estudios.push({ ...this.nuevoEstudio });
+    this.toggleEstudioForm(false);
+  }
+
+  removeEstudioRecord(index: number): void {
+    this.estudios.splice(index, 1);
+  }
+
+  toggleExperienciaForm(show: boolean): void {
+    this.showExperienciaForm = show;
+    if (show) {
+      this.nuevaExperiencia = {
+        tipo: '',
+        empresa: '',
+        sector: '',
+        telefono: '',
+        pais: 'Colombia',
+        cargo: '',
+        cargoEquivalente: '',
+        mesIngreso: '',
+        anioIngreso: '',
+        actualmente: false,
+        mesRetiro: '',
+        anioRetiro: '',
+        funciones: ''
+      };
+    }
+  }
+
+  addExperienciaRecord(): void {
+    if (!this.nuevaExperiencia.tipo || !this.nuevaExperiencia.empresa || !this.nuevaExperiencia.sector || !this.nuevaExperiencia.cargo || !this.nuevaExperiencia.mesIngreso || !this.nuevaExperiencia.anioIngreso) {
+      alert('Por favor complete todos los campos obligatorios de la experiencia laboral.');
+      return;
+    }
+    if (!this.nuevaExperiencia.actualmente && (!this.nuevaExperiencia.mesRetiro || !this.nuevaExperiencia.anioRetiro)) {
+      alert('Por favor complete la fecha de retiro.');
+      return;
+    }
+    this.experiencias.push({ ...this.nuevaExperiencia });
+    this.toggleExperienciaForm(false);
+  }
+
+  removeExperienciaRecord(index: number): void {
+    this.experiencias.splice(index, 1);
+  }
+
+  toggleCapacitacionForm(show: boolean): void {
+    this.showCapacitacionForm = show;
+    if (show) {
+      this.nuevaCapacitacion = {
+        tipo: '',
+        nombre: '',
+        institucion: '',
+        pais: 'Colombia',
+        estado: '',
+        duracionHoras: ''
+      };
+    }
+  }
+
+  addCapacitacionRecord(): void {
+    if (!this.nuevaCapacitacion.tipo || !this.nuevaCapacitacion.nombre || !this.nuevaCapacitacion.institucion) {
+      alert('Por favor complete todos los campos obligatorios de la capacitación.');
+      return;
+    }
+    this.capacitaciones.push({ ...this.nuevaCapacitacion });
+    this.toggleCapacitacionForm(false);
+  }
+
+  removeCapacitacionRecord(index: number): void {
+    this.capacitaciones.splice(index, 1);
+  }
+
+  setStarRating(obj: any, rating: number): void {
+    obj.nivel = rating;
+  }
+
+  addIdiomaRecord(): void {
+    if (!this.nuevoIdioma.idioma || this.nuevoIdioma.nivel === 0) {
+      alert('Por favor seleccione un idioma y asigne un nivel en estrellas.');
+      return;
+    }
+    const existe = this.idiomas.some(i => i.idioma.toLowerCase() === this.nuevoIdioma.idioma.toLowerCase());
+    if (existe) {
+      alert('Este idioma ya ha sido añadido.');
+      return;
+    }
+    const nivelTextos = ['Muy Básico', 'Básico', 'Intermedio', 'Avanzado', 'Nativo'];
+    this.idiomas.push({
+      idioma: this.nuevoIdioma.idioma,
+      nivel: nivelTextos[this.nuevoIdioma.nivel - 1] || 'Básico',
+      estrellas: this.nuevoIdioma.nivel
+    });
+    this.nuevoIdioma = { idioma: '', nivel: 0 };
+  }
+
+  removeIdiomaRecord(index: number): void {
+    this.idiomas.splice(index, 1);
+  }
+
+  addHerramientaRecord(): void {
+    if (!this.nuevaHerramienta.nombre || this.nuevaHerramienta.nivel === 0 || !this.nuevaHerramienta.tipo) {
+      alert('Por favor ingrese el nombre de la herramienta, seleccione un tipo y asigne un nivel.');
+      return;
+    }
+
+    const tipo = this.nuevaHerramienta.tipo as 'tecnicas' | 'interpersonales' | 'otros';
+    if (!this.habilidades[tipo]) {
+      this.habilidades[tipo] = [];
+    }
+
+    const itemStr = `${this.nuevaHerramienta.nombre} (Nivel: ${this.nuevaHerramienta.nivel}/3)`;
+    this.habilidades[tipo].push(itemStr);
+
+    this.nuevaHerramienta = { nombre: '', tipo: '', nivel: 0 };
+  }
+
+  removeHerramientaRecord(tipo: 'tecnicas' | 'interpersonales' | 'otros', index: number): void {
+    if (this.habilidades[tipo]) {
+      this.habilidades[tipo].splice(index, 1);
+    }
   }
 
   // File Upload Handlers
@@ -160,42 +434,84 @@ export class PostulacionFormComponent implements OnInit {
       return;
     }
 
-    // Validate that all mandatory cargo questions have an answer
-    const missingRequired = this.preguntas.filter(
-      q => q.obligatoria && (!q.respuesta || !q.respuesta.trim())
-    );
-
-    if (missingRequired.length > 0) {
-      alert('Por favor responde a todas las preguntas obligatorias del cargo antes de continuar.');
-      return;
-    }
-
     this.submitting = true;
 
-    // Build the payload keeping DB constraints satisfied
+    // Map studies_json, experiencias_json, idiomas_json, habilidades_json properly
+    const mappedEstudios = this.tieneEducacionFormal === 'Si' ? this.estudios.map(est => ({
+      nivel: est.nivel,
+      institucion: est.institucion,
+      fecha_inicio: `${est.estado}`, // Map to existing schema keys as best as possible
+      fecha_fin: (est.mesFin && est.anioFin) ? `${est.mesFin} de ${est.anioFin}` : (est.observaciones || ''),
+      en_curso: est.estado === 'En curso',
+      // Store additional metadata
+      nucleo: est.nucleo,
+      titulo: est.titulo,
+      homologado: est.homologado,
+      pais: est.pais,
+      practicaEmpresarial: est.practicaEmpresarial,
+      mesFin: est.mesFin || '',
+      anioFin: est.anioFin || '',
+      tarjetaProfesional: est.tarjetaProfesional || 'No',
+      tarjetaProfesionalNumero: est.tarjetaProfesionalNumero || ''
+    })) : [];
+
+    const mappedExperiencias = this.experiencias.map(exp => ({
+      cargo: exp.cargo,
+      empresa: exp.empresa,
+      descripcion: exp.telefono ? `Tel: ${exp.telefono}. Funciones: ${exp.funciones}` : `Funciones: ${exp.funciones}`,
+      fecha_inicio: `${exp.mesIngreso} ${exp.anioIngreso}`,
+      fecha_fin: exp.actualmente ? 'Actualidad' : `${exp.mesRetiro} ${exp.anioRetiro}`,
+      actualmente: exp.actualmente,
+      tipo: exp.tipo,
+      pais: exp.pais
+    }));
+
+    // Include informal training (capacitaciones) inside estudios_json or as metadata
+    if (this.tieneEducacionInformal === 'Si') {
+      this.capacitaciones.forEach(cap => {
+        mappedEstudios.push({
+          nivel: `Educación Informal - ${cap.tipo}`,
+          institucion: cap.institucion,
+          fecha_inicio: cap.estado,
+          fecha_fin: cap.mesFin && cap.anioFin 
+            ? `${cap.mesFin} de ${cap.anioFin} (Duración: ${cap.duracionHoras} horas. País: ${cap.pais})` 
+            : `Duración: ${cap.duracionHoras} horas. País: ${cap.pais}`,
+          en_curso: cap.estado === 'En curso',
+          nucleo: '',
+          titulo: cap.nombre,
+          homologado: 'No',
+          pais: cap.pais,
+          practicaEmpresarial: false,
+          mesFin: cap.mesFin || '',
+          anioFin: cap.anioFin || '',
+          tarjetaProfesional: 'No',
+          tarjetaProfesionalNumero: ''
+        });
+      });
+    }
+
     const postulacionPayload = {
       vacante_id: this.vacanteId,
       nombre_completo: this.nombre_completo,
       correo: this.correo,
       telefono: this.telefono,
+      cedula: this.cedula,
+      fecha_nacimiento: this.fecha_nacimiento,
       perfil_profesional: {
-        titulo: 'Postulación Básica',
-        resumen: 'Postulante aplicó cargando CV y respondiendo al banco de preguntas del cargo.'
+        titulo: 'Postulación Detallada',
+        resumen: `Candidato (CC: ${this.cedula}, F.Nac: ${this.fecha_nacimiento}) completó el formulario de postulación dinámico estructurado.`
       },
-      experiencias_json: [],
-      estudios_json: [],
-      idiomas_json: [],
-      habilidades_json: {
-        preguntas_respondidas: this.preguntas
-      }
+      experiencias_json: mappedExperiencias,
+      estudios_json: mappedEstudios,
+      idiomas_json: this.idiomas,
+      habilidades_json: this.habilidades,
     };
 
     this.postulacionService.postular(postulacionPayload, this.archivoHv).subscribe({
       next: (res) => {
-
         this.postulacionService.postularWebhook(postulacionPayload, this.archivoHv!).subscribe({
-          next: (res) => console.log('Postulcion guardada correctamente:', res),
-          error: (err) => console.error('Error al enviar la postulación:', err)
+          next: (resWebhook) => console.log('Postulación enviada correctamente a Webhook:', resWebhook),
+          error: (errWebhook) => console.error('Error al enviar la postulación a Webhook:', errWebhook)
         });
 
         this.submitting = false;
@@ -209,3 +525,4 @@ export class PostulacionFormComponent implements OnInit {
     });
   }
 }
+

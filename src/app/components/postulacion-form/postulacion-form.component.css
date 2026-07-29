@@ -1,6 +1,6 @@
 .public-form-container {
   padding: 2rem 1rem;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -148,7 +148,7 @@ textarea.form-control {
   border: 1px solid var(--brand-beige-dark);
   border-radius: 0.5rem;
   padding: 1.25rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .row-card-header {
@@ -408,7 +408,9 @@ textarea.form-control {
 }
 
 /* Success screen styling */
-.success-screen, .loading-state, .error-state {
+.success-screen,
+.loading-state,
+.error-state {
   background: white;
   border: 1.5px solid var(--brand-beige-dark);
   border-radius: 0.75rem;
@@ -424,9 +426,17 @@ textarea.form-control {
 }
 
 @keyframes pop {
-  0% { transform: scale(0.5); }
-  75% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.5);
+  }
+
+  75% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .success-screen h2 {
@@ -458,11 +468,380 @@ textarea.form-control {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
+}
+
+/* --- TAB NAVIGATION STYLING --- */
+.tab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--brand-beige-dark);
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  background: white;
+  border: 1.5px solid var(--brand-beige-dark);
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--brand-green-olive);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-bottom: none;
+}
+
+.tab-btn:hover {
+  background-color: var(--brand-beige-light);
+  color: var(--brand-navy);
+}
+
+.tab-btn.active {
+  background-color: var(--brand-gold);
+  border-color: var(--brand-gold);
+  color: var(--brand-navy);
+}
+
+.tab-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- RECORDS LIST AND CARDS --- */
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.record-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 1.5px solid var(--brand-beige-dark);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.record-card-info h4 {
+  margin: 0 0 0.35rem 0;
+  color: var(--brand-navy);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.record-card-info p {
+  margin: 0.15rem 0;
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.btn-delete-record {
+  background: #fdfdfd;
+  border: 1.5px solid var(--brand-beige-dark);
+  color: var(--brand-navy);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-record:hover {
+  background-color: var(--brand-beige-light);
+  border-color: var(--brand-gold);
+}
+
+.add-record-trigger {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.add-record-trigger .btn-secondary {
+  border: 1.5px dashed var(--brand-gold);
+  background: transparent;
+  color: var(--brand-navy);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+}
+
+.add-record-trigger .btn-secondary:hover {
+  background: var(--brand-beige-light);
+}
+
+/* --- INLINE ADD FORM CONTAINER --- */
+.inline-add-form-container {
+  background: #fdfdfd;
+  border: 1.5px solid var(--brand-beige-dark);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.inline-form-header h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.1rem;
+  color: var(--brand-navy);
+  font-weight: 700;
+  border-left: 3px solid var(--brand-gold);
+  padding-left: 0.5rem;
+}
+
+.date-dropdown-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.5rem;
+}
+
+.checkbox-form-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-navy);
+}
+
+.checkbox-label-container input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+}
+
+.inline-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--brand-beige-dark);
+  padding-top: 1rem;
+}
+
+/* Buttons in action */
+.btn-success-action {
+  background-color: var(--brand-gold);
+  color: var(--brand-navy);
+  border: none;
+  padding: 0.5rem 1.25rem;
+  font-weight: 700;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.btn-success-action:hover {
+  background-color: #a2895d;
+}
+
+.btn-danger-action {
+  background: #fdfdfd;
+  border: 1.5px solid var(--brand-beige-dark);
+  color: var(--brand-navy);
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-danger-action:hover {
+  background-color: var(--brand-beige-light);
+  border-color: var(--brand-gold);
+}
+
+/* --- STAR RATING --- */
+.skill-input-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  background: white;
+  border: 1px solid var(--brand-beige-dark);
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+}
+
+.star-rating-container {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+}
+
+.star-icon {
+  font-size: 1.75rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.15s;
+  user-select: none;
+}
+
+.star-icon:hover,
+.star-icon.filled {
+  color: #ffb400;
+}
+
+.small-star {
+  font-size: 1.1rem;
+  cursor: default;
+}
+
+.star-display {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rating-text {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.compact-card {
+  padding: 0.75rem 1rem;
+}
+
+/* Badge Tags with cross */
+.clickable-tag {
+  position: relative;
+  padding-right: 1.85rem !important;
+}
+
+.remove-tag-x {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+}
+
+.remove-tag-x:hover {
+  color: #333;
+}
+
+.tools-grouped-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tool-group-block h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  color: var(--brand-green-olive);
+  font-weight: 700;
+}
+
+/* --- FOOTER NAVIGATION --- */
+.footer-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.5rem;
+  border-top: 2px solid var(--brand-beige-dark);
+  padding-top: 1.5rem;
+  gap: 1rem;
+}
+
+.nav-prev-btn {
+  background-color: white;
+  border: 1.5px solid var(--brand-beige-dark);
+  color: var(--brand-navy);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.nav-prev-btn:hover:not(:disabled) {
+  background-color: var(--brand-beige-light);
+}
+
+.nav-prev-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-next-btn {
+  background-color: var(--brand-navy);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.nav-next-btn:hover {
+  background-color: #10242b;
+}
+
+.nav-submit-btn {
+  background-color: var(--brand-gold);
+  border: none;
+  color: var(--brand-navy);
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.nav-submit-btn:hover:not(:disabled) {
+  background-color: #a2895d;
+}
+
+.nav-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

@@ -1,12 +1,14 @@
 <div class="form-container">
   <header class="form-header">
     <div class="header-left">
-      <button class="back-link" routerLink="/">← Volver al Listado</button>
+      <button class="back-link" routerLink="/">
+        <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">arrow_back</span> Volver al Listado
+      </button>
       <h1>{{ isEditMode ? 'Editar Perfil de Cargo' : 'Nuevo Perfil de Cargo' }}</h1>
     </div>
     <div class="header-actions" *ngIf="isEditMode">
       <button type="button" class="btn btn-secondary" style="margin-right: 0.5rem;" (click)="downloadWord()">
-        📝 Descargar Word
+        <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">description</span> Descargar Word
       </button>
     </div>
   </header>
@@ -112,7 +114,7 @@
 <!-- Print-Only Document Layout -->
 <div class="print-document-layout">
   <div class="print-header">
-    <div class="print-logo">🏢 Artdecon</div>
+    <div class="print-logo">Artdecon</div>
     <div class="print-title-area">
       <h1>ROL {{ cargo | uppercase }}</h1>
       <p class="print-doc-subtitle">PERFIL DE CARGO OFICIAL</p>

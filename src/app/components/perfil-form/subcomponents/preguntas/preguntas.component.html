@@ -1,18 +1,10 @@
 <section class="form-section">
   <h2 class="section-title">Preguntas del Cargo (Generadas por AI)</h2>
-  <!-- <p class="section-desc" style="color: #666; margin-bottom: 1.5rem;">
-    Defina un prompt personalizado y haga clic en "Generar preguntas con AI" para llamar al webhook de n8n.
-  </p>
-
-  <div class="form-group full-width">
-    <label for="prompt">Prompt para el Webhook (n8n)</label>
-    <textarea id="prompt" name="prompt" rows="8" [ngModel]="prompt" (ngModelChange)="promptChange.emit($event)"
-      placeholder="Ej. Generar preguntas de entrevista técnica y comportamental..."></textarea>
-  </div> -->
 
   <div style="margin-top: 1rem; margin-bottom: 1.5rem;">
     <button type="button" class="btn btn-secondary" (click)="generate.emit()" [disabled]="generatingQuestions">
-      {{ generatingQuestions ? '⌛ Generando preguntas...' : '⚙️ Generar preguntas con IA' }}
+      <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">auto_awesome</span>
+      {{ generatingQuestions ? ' Generando preguntas...' : ' Generar preguntas con IA' }}
     </button>
   </div>
 
@@ -20,8 +12,9 @@
     <div class="section-header"
       style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
       <h3 style="margin: 0; font-size: 1.15rem; color: var(--brand-navy);">Banco de Preguntas del Cargo</h3>
-      <button type="button" class="btn btn-secondary btn-sm" (click)="addPregunta()">➕ Agregar Pregunta
-        Manualmente</button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="addPregunta()">
+        <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">add</span> Agregar Pregunta Manualmente
+      </button>
     </div>
 
     <div *ngIf="preguntas && preguntas.length > 0; else noQuestions" class="questions-list">
@@ -34,8 +27,9 @@
           <span style="font-weight: bold; color: var(--brand-navy, #16313a); font-size: 1.05rem;">Pregunta #{{ i + 1 }}
             ({{ preg.id }})</span>
           <button type="button" class="btn-delete-row" (click)="removePregunta(i)"
-            style="color: #c0392b; font-weight: 600; background: none; border: none; cursor: pointer; font-size: 0.9rem;">✕
-            Eliminar Pregunta</button>
+            style="color: #c0392b; font-weight: 600; background: none; border: none; cursor: pointer; font-size: 0.9rem;">
+            <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">delete</span> Eliminar Pregunta
+          </button>
         </div>
 
         <!-- Question Grid -->
@@ -146,21 +140,21 @@
           <div style="display: flex; flex-direction: column; gap: 0.75rem;" *ngIf="preg.rubrica_evaluacion">
             <div style="display: flex; flex-direction: column;">
               <label
-                style="font-size: 0.8rem; color: #c0392b; font-weight: 600; margin-bottom: 0.25rem;">Insuficiente</label>
+                style="font-size: 0.8rem; color: var(--brand-terracotta); font-weight: 600; margin-bottom: 0.25rem;">Insuficiente</label>
               <textarea name="preg_{{i}}_rub_ins_{{i}}" rows="2" [(ngModel)]="preg.rubrica_evaluacion.insuficiente"
                 (ngModelChange)="preguntasChange.emit(preguntas)"
                 style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
             </div>
             <div style="display: flex; flex-direction: column;">
               <label
-                style="font-size: 0.8rem; color: #d35400; font-weight: 600; margin-bottom: 0.25rem;">Aceptable</label>
+                style="font-size: 0.8rem; color: var(--brand-gold); font-weight: 600; margin-bottom: 0.25rem;">Aceptable</label>
               <textarea name="preg_{{i}}_rub_ace_{{i}}" rows="2" [(ngModel)]="preg.rubrica_evaluacion.aceptable"
                 (ngModelChange)="preguntasChange.emit(preguntas)"
                 style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
             </div>
             <div style="display: flex; flex-direction: column;">
               <label
-                style="font-size: 0.8rem; color: #27ae60; font-weight: 600; margin-bottom: 0.25rem;">Excelente</label>
+                style="font-size: 0.8rem; color: var(--brand-green-pine); font-weight: 600; margin-bottom: 0.25rem;">Excelente</label>
               <textarea name="preg_{{i}}_rub_exc_{{i}}" rows="2" [(ngModel)]="preg.rubrica_evaluacion.excelente"
                 (ngModelChange)="preguntasChange.emit(preguntas)"
                 style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
@@ -176,8 +170,9 @@
         style="border: 2px dashed #ddd; padding: 2rem; text-align: center; color: #888; border-radius: 6px; margin-top: 1rem; background: #fafafa;">
         <p style="margin: 0 0 1rem 0; font-size: 0.95rem;">No hay preguntas generadas aún. Haga clic en "Generar
           preguntas con AI" para generarlas.</p>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="addPregunta()">➕ Agregar Pregunta
-          Manualmente</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addPregunta()">
+          <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">add</span> Agregar Pregunta Manualmente
+        </button>
       </div>
     </ng-template>
   </div>

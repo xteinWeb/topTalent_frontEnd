@@ -111,7 +111,7 @@
         <div class="candidate-info-card">
           <h3>{{ selectedCandidate.nombre_completo }}</h3>
           <p class="candidate-contact">
-            {{ selectedCandidate.correo }} | 📱 {{ selectedCandidate.telefono || 'Sin teléfono' }}
+            {{ selectedCandidate.correo }} | <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">smartphone</span> {{ selectedCandidate.telefono || 'Sin teléfono' }}
           </p>
           <div class="cv-download-section">
             <button class="btn btn-primary btn-sm" (click)="downloadResume(selectedCandidate.hv_archivo_ruta)">
@@ -276,14 +276,15 @@
             <div class="history-item" *ngFor="let exp of selectedCandidate.experiencias_json">
               <div class="history-meta">
                 <span class="history-period">
-                  {{ exp.fecha_inicio | date:'MM/yyyy' }} -
-                  {{ exp.actualmente ? 'Actualidad' : (exp.fecha_fin | date:'MM/yyyy') }}
+                  {{ exp.fecha_inicio && exp.fecha_inicio.includes('-') ? (exp.fecha_inicio | date:'MM/yyyy') : exp.fecha_inicio }} -
+                  {{ exp.actualmente ? 'Actualidad' : (exp.fecha_fin && exp.fecha_fin.includes('-') ? (exp.fecha_fin | date:'MM/yyyy') : exp.fecha_fin) }}
                 </span>
                 <span class="history-company">{{ exp.empresa }}</span>
               </div>
               <div class="history-detail">
-                <strong class="history-title">{{ exp.cargo }}</strong>
+                <strong class="history-title">{{ exp.cargo }} <span *ngIf="exp.tipo" style="font-weight: normal; font-size: 0.85em; color: #666;">({{ exp.tipo }})</span></strong>
                 <p class="history-desc">{{ exp.descripcion }}</p>
+                <p class="history-desc" *ngIf="exp.cargoEquivalente" style="font-style: italic; font-size: 0.9em; margin-top: 0.25rem;">Cargo equivalente: {{ exp.cargoEquivalente }}</p>
               </div>
             </div>
           </div>
@@ -297,13 +298,16 @@
             <div class="history-item" *ngFor="let est of selectedCandidate.estudios_json">
               <div class="history-meta">
                 <span class="history-period">
-                  {{ est.fecha_inicio | date:'MM/yyyy' }} -
-                  {{ est.en_curso ? 'En curso' : (est.fecha_fin | date:'MM/yyyy') }}
+                  {{ est.fecha_inicio && est.fecha_inicio.includes('-') ? (est.fecha_inicio | date:'MM/yyyy') : est.fecha_inicio }}
                 </span>
                 <span class="history-company">{{ est.institucion }}</span>
               </div>
               <div class="history-detail">
-                <strong class="history-title">{{ est.nivel }}</strong>
+                <strong class="history-title">
+                  {{ est.nivel }} <span *ngIf="est.titulo" style="font-weight: 500;">- {{ est.titulo }}</span>
+                </strong>
+                <p class="history-desc" *ngIf="est.fecha_fin && !est.fecha_fin.includes('-')" style="margin-top: 0.25rem; font-size: 0.9em;">{{ est.fecha_fin }}</p>
+                <p class="history-desc" *ngIf="est.nucleo" style="font-size: 0.9em;">Área: {{ est.nucleo }} | Homologado: {{ est.homologado || 'No' }}</p>
               </div>
             </div>
           </div>

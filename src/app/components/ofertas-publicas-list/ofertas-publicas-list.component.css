@@ -1,194 +1,149 @@
-.public-portal-container {
-  padding: 2rem 1rem;
-  max-width: 1000px;
-  margin: 0 auto;
+/* Portal Main Container - Institutional Artdecon Theme */
+.portal-main-wrapper {
+  background-color: var(--brand-beige-light, #F1EDE1);
+  min-height: 100vh;
+  padding-bottom: 3rem;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--brand-navy, #16313A);
 }
 
-.portal-header {
+/* Institutional Navigation Bar */
+.magneto-navbar {
+  background: var(--brand-navy, #16313A);
+  border-bottom: 3px solid var(--brand-gold, #B39C70);
+  padding: 0.85rem 2rem;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  border-bottom: 2px solid var(--brand-beige-dark);
-  padding-bottom: 2rem;
-  margin-bottom: 2rem;
-  gap: 1.25rem;
+  justify-content: space-between;
+  gap: 2rem;
+  box-shadow: 0 4px 15px rgba(22, 49, 58, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.brand-logo {
-  max-height: 80px;
-  border-radius: 0.375rem;
-}
-
-.portal-header h1 {
-  font-size: 2rem;
-  color: var(--brand-navy);
-  margin: 0;
-  font-weight: 800;
-}
-
-.subtitle {
-  color: var(--brand-green-olive);
-  font-size: 1rem;
-  margin: 0;
-  max-width: 600px;
-  line-height: 1.5;
-}
-
-.search-bar-container {
-  margin-bottom: 2.5rem;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.85rem 1.25rem;
-  font-size: 1.05rem;
-  border-radius: 0.5rem;
-  border: 1.5px solid var(--brand-beige-dark);
-  background-color: white;
-  color: var(--brand-navy);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-  transition: all 0.25s ease;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: var(--brand-gold);
-  box-shadow: 0 0 0 3px rgba(179, 156, 112, 0.25);
-}
-
-/* Jobs list and cards */
-.jobs-list {
+.navbar-left {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.job-card {
-  background: white;
-  border: 1.5px solid var(--brand-beige-dark);
-  border-radius: 0.75rem;
-  padding: 1.75rem;
-  box-shadow: 0 4px 10px rgba(22, 49, 58, 0.02);
-  transition: all 0.25s ease;
-  display: flex;
-  flex-direction: column;
+.magneto-brand-logo {
+  height: 44px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
-.job-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(22, 49, 58, 0.05);
-  border-color: var(--brand-gold);
-}
-
-.job-card-header {
-  margin-bottom: 0.75rem;
-}
-
-.category-badge {
-  background-color: var(--brand-beige-light);
-  color: var(--brand-navy);
-  border: 1px solid var(--brand-beige-dark);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
+.brand-portal-tag {
   font-weight: 700;
-  border-radius: 9999px;
+  color: var(--brand-gold, #B39C70);
+  font-size: 1.15rem;
+  letter-spacing: -0.5px;
   text-transform: uppercase;
 }
 
-.job-card-body {
-  flex-grow: 1;
-  margin-bottom: 1.5rem;
-}
-
-.job-title {
-  font-size: 1.35rem;
-  color: var(--brand-navy);
-  margin: 0 0 0.75rem 0;
-  font-weight: 700;
-}
-
-.job-desc {
-  color: var(--brand-black);
-  font-size: 0.925rem;
-  line-height: 1.6;
-  margin: 0;
-  white-space: pre-line;
-}
-
-.job-card-footer {
+/* Dual Search Bar with Institutional Colors */
+.magneto-search-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-top: 1.5px solid var(--brand-beige-light);
-  padding-top: 1.25rem;
+  background: white;
+  border: 1.5px solid var(--brand-gold, #B39C70);
+  border-radius: 2rem;
+  padding: 0.25rem 0.5rem 0.25rem 1.25rem;
+  flex: 1;
+  max-width: 750px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
-.post-date {
-  font-size: 0.8rem;
-  color: var(--brand-green-olive);
+.magneto-search-bar:focus-within {
+  border-color: var(--brand-gold, #B39C70);
+  box-shadow: 0 0 0 3px rgba(179, 156, 112, 0.3);
 }
 
-/* Buttons */
-.btn {
-  display: inline-flex;
+.search-field {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.625rem 1.25rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  border: 1.5px solid transparent;
+  flex: 1;
+  gap: 0.5rem;
+}
+
+.search-icon {
+  font-size: 1rem;
+  color: var(--brand-gold, #B39C70);
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  padding: 0.5rem 0;
+  font-size: 0.925rem;
+  color: var(--brand-navy, #16313A);
+  font-family: inherit;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #718096;
+}
+
+.search-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--brand-beige-dark, #D9C5B2);
+  margin: 0 0.75rem;
+}
+
+.search-btn {
+  background: var(--brand-gold, #B39C70);
+  color: var(--brand-navy, #16313A);
+  border: none;
+  border-radius: 1.5rem;
+  padding: 0.55rem 1.75rem;
+  font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.25s ease;
-  font-size: 0.875rem;
+  transition: all 0.2s ease;
 }
 
-.btn-primary {
-  background-color: var(--brand-navy);
-  border-color: var(--brand-navy);
+.search-btn:hover {
+  background: #9d855a;
   color: white;
 }
 
-.btn-primary:hover {
-  background-color: var(--brand-gold);
-  border-color: var(--brand-gold);
-  color: var(--brand-navy);
-}
-
-.btn-secondary {
-  background-color: var(--brand-beige-dark);
-  border-color: var(--brand-beige-dark);
-  color: var(--brand-navy);
-}
-
-.btn-secondary:hover {
-  background-color: #cbad93;
-}
-
-/* Loading/states */
-.loading-state, .error-state, .empty-state {
+/* Loading & Empty States */
+.loading-container,
+.error-container,
+.empty-portal-state {
   text-align: center;
   padding: 4rem 2rem;
+  max-width: 600px;
+  margin: 3rem auto;
   background: white;
-  border-radius: 0.75rem;
-  border: 1.5px solid var(--brand-beige-dark);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-  margin-top: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--brand-beige-dark, #D9C5B2);
+  box-shadow: 0 4px 15px rgba(22, 49, 58, 0.05);
 }
 
 .spinner {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 4px solid var(--brand-beige-light);
-  border-top: 4px solid var(--brand-gold);
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--brand-beige-light, #F1EDE1);
+  border-top: 4px solid var(--brand-navy, #16313A);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem auto;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-icon {
@@ -196,13 +151,402 @@
   margin-bottom: 1rem;
 }
 
-.empty-state h3 {
+.empty-portal-state h3 {
   font-size: 1.25rem;
-  color: var(--brand-navy);
-  margin: 0 0 0.5rem 0;
+  color: var(--brand-navy, #16313A);
+  margin-bottom: 0.5rem;
 }
 
-.empty-state p {
-  color: var(--brand-green-olive);
+.empty-portal-state p {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+/* Split Screen Layout Grid */
+.magneto-split-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+/* LEFT COLUMN: Master List */
+.offers-master-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.master-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+}
+
+.master-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
   margin: 0;
+}
+
+.offers-count-badge {
+  font-size: 0.8rem;
+  color: var(--brand-navy, #16313A);
+  background: white;
+  border: 1px solid var(--brand-beige-dark, #D9C5B2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-weight: 600;
+}
+
+.offers-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Job Master Card - Institutional styling */
+.job-master-card {
+  background: white;
+  border: 1.5px solid var(--brand-beige-dark, #D9C5B2);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.job-master-card:hover {
+  border-color: var(--brand-gold, #B39C70);
+  box-shadow: 0 6px 16px rgba(22, 49, 58, 0.08);
+  transform: translateY(-1px);
+}
+
+.job-master-card.selected {
+  border-color: var(--brand-navy, #16313A);
+  background: #faf8f5;
+  box-shadow: 0 0 0 2px var(--brand-gold, #B39C70);
+}
+
+.card-time-badge {
+  font-size: 0.725rem;
+  color: var(--brand-clay, #C6531A);
+  background-color: var(--brand-terracotta-soft, #FDF1EC);
+  border: 1px solid #f7dcd1;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.card-company-info {
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.company-name {
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+}
+
+.bullet-dot {
+  margin: 0 0.35rem;
+  color: var(--brand-beige-dark, #D9C5B2);
+}
+
+.card-verified-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.star-rating {
+  font-weight: 700;
+  color: var(--brand-gold, #B39C70);
+}
+
+.verified-badge {
+  color: var(--brand-navy, #16313A);
+  font-weight: 600;
+}
+
+.card-salary-row {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+  margin-bottom: 0.4rem;
+}
+
+.card-location-row {
+  font-size: 0.825rem;
+  color: #64748b;
+}
+
+.card-footer-mini {
+  margin-top: 0.75rem;
+  text-align: right;
+}
+
+.view-btn {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+}
+
+/* RIGHT COLUMN: Sticky Job Detail Pane */
+.offer-detail-column {
+  position: relative;
+}
+
+.sticky-detail-card {
+  background: white;
+  border: 1.5px solid var(--brand-beige-dark, #D9C5B2);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  position: sticky;
+  top: 5rem;
+  max-height: calc(90vh - 6.5rem);
+  overflow-y: auto;
+  box-shadow: 0 8px 25px rgba(22, 49, 58, 0.06);
+}
+
+.detail-main-header h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--brand-navy, #16313A);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.25;
+}
+
+.company-subline {
+  font-size: 0.95rem;
+  color: #475569;
+  margin-bottom: 1.5rem;
+}
+
+.company-highlight {
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+}
+
+/* Actions Bar - Institutional styling */
+.detail-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-apply-main {
+  background: var(--brand-navy, #16313A);
+  color: white;
+  border: 1.5px solid var(--brand-gold, #B39C70);
+  border-radius: 2rem;
+  padding: 0.75rem 2rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(22, 49, 58, 0.2);
+}
+
+.btn-apply-main:hover {
+  background: #10242b;
+  border-color: #d4af37;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(22, 49, 58, 0.3);
+}
+
+.btn-action-outline {
+  background: var(--brand-beige-light, #F1EDE1);
+  border: 1px solid var(--brand-beige-dark, #D9C5B2);
+  border-radius: 2rem;
+  padding: 0.65rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--brand-navy, #16313A);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action-outline:hover {
+  background: white;
+  border-color: var(--brand-gold, #B39C70);
+}
+
+.divider-line {
+  border: none;
+  border-top: 1px solid var(--brand-beige-dark, #D9C5B2);
+  margin: 1.5rem 0;
+}
+
+/* Requirements Summary Card */
+.requirements-summary-card {
+  background: var(--brand-beige-light, #F1EDE1);
+  border: 1px solid var(--brand-beige-dark, #D9C5B2);
+  border-radius: 0.65rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.requirements-summary-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+  margin: 0 0 1rem 0;
+}
+
+.req-items-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.req-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.req-icon {
+  font-size: 1.25rem;
+  background: white;
+  border: 1px solid var(--brand-beige-dark, #D9C5B2);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.req-item strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--brand-navy, #16313A);
+}
+
+.req-item p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+/* Body Content */
+.detail-body-content h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+  margin: 1.5rem 0 0.75rem 0;
+}
+
+.description-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--brand-black, #222222);
+  white-space: pre-line;
+}
+
+.detail-subblock {
+  margin-top: 1.25rem;
+}
+
+.detail-subblock h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand-navy, #16313A);
+  margin-bottom: 0.5rem;
+}
+
+.detail-subblock p {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.skills-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-pill {
+  background: white;
+  color: var(--brand-navy, #16313A);
+  border: 1px solid var(--brand-gold, #B39C70);
+  border-radius: 1rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.knowledge-list {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+/* Final Apply Banner - Institutional Navy & Gold Gradient */
+.final-apply-banner {
+  background: linear-gradient(135deg, var(--brand-navy, #16313A) 0%, #0d1e24 100%);
+  color: white;
+  border: 1.5px solid var(--brand-gold, #B39C70);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.banner-text h3 {
+  color: var(--brand-gold, #B39C70);
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+}
+
+.banner-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .magneto-split-layout {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+
+  .offer-detail-column {
+    display: none;
+  }
+
+  .magneto-navbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 1rem;
+  }
 }

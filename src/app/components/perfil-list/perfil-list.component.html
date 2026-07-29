@@ -5,7 +5,7 @@
       <p class="subtitle">Gestiona y consulta los perfiles definidos para los puestos de trabajo</p>
     </div>
     <button class="btn btn-primary" routerLink="/nuevo">
-      <span class="icon">+</span> Nuevo Perfil
+      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">add</span> Nuevo Perfil
     </button>
   </header>
 
@@ -30,7 +30,9 @@
   </div>
 
   <div *ngIf="!loading && !errorMsg && filteredPerfiles.length === 0" class="empty-state">
-    <div class="empty-icon">📂</div>
+    <div class="empty-icon">
+      <span class="material-icons" style="font-size: 3rem; color: var(--brand-gold, #B39C70);">folder_open</span>
+    </div>
     <h3>No se encontraron perfiles de cargo</h3>
     <p>Comienza creando un nuevo perfil de cargo para esta área.</p>
     <button class="btn btn-primary" routerLink="/nuevo">Crear primer perfil</button>
@@ -41,8 +43,12 @@
       <div class="card-header">
         <span class="badge">{{ perfil.area }}</span>
         <div class="card-actions">
-          <button class="action-btn edit-btn" [routerLink]="['/editar', perfil.id]" title="Editar perfil">✏️</button>
-          <button class="action-btn delete-btn" (click)="deletePerfil(perfil.id)" title="Eliminar perfil">🗑️</button>
+          <button class="action-btn edit-btn" [routerLink]="['/editar', perfil.id]" title="Editar perfil">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">edit</span>
+          </button>
+          <button class="action-btn delete-btn" (click)="deletePerfil(perfil.id)" title="Eliminar perfil">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">delete</span>
+          </button>
         </div>
       </div>
       <div class="card-body">
@@ -53,7 +59,9 @@
       </div>
       <div class="card-footer">
         <span class="date">Actualizado: {{ perfil.fecha_actualizacion | date:'dd/MM/yyyy' }}</span>
-        <button class="btn btn-link" [routerLink]="['/editar', perfil.id]">Ver detalle →</button>
+        <button class="btn btn-link" [routerLink]="['/editar', perfil.id]">
+          Ver detalle <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;">arrow_forward</span>
+        </button>
       </div>
     </div>
   </div>

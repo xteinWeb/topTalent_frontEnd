@@ -19,6 +19,12 @@
   --brand-navy: #16313A;
   --brand-violet: #211659;
 
+  /* Derived Soft Tints */
+  --brand-green-soft: #EAF2EB;
+  --brand-terracotta-soft: #FDF1EC;
+  --brand-gold-soft: #FAF4E8;
+  --brand-navy-soft: #EBF1F3;
+
   /* Theme mappings */
   --color-bg-app: var(--brand-beige-light);
   --color-bg-card: var(--brand-white);
@@ -41,4 +47,4 @@ body {
   background-color: var(--color-bg-app);
   color: var(--color-text-body);
   font-family: 'Outfit', 'Segoe UI', Roboto, sans-serif;
-}
+}

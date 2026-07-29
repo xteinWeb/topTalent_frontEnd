@@ -1,0 +1,116 @@
+<div class="tab-pane">
+
+  <!-- Idiomas y Dialectos -->
+  <fieldset class="form-fieldset">
+    <legend>Idiomas y Dialectos</legend>
+
+    <div class="skill-input-bar">
+      <div class="form-group" style="flex: 2;">
+        <label for="lang_name">Agregar idioma</label>
+        <select id="lang_name" name="lang_name" [(ngModel)]="nuevoIdioma.idioma" class="form-control">
+          <option value="" disabled selected>Seleccione</option>
+          <option *ngFor="let l of listaIdiomas" [value]="l">{{ l }}</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="flex: 1; min-width: 150px;">
+        <label>Nivel</label>
+        <div class="star-rating-container">
+          <span *ngFor="let star of [1,2,3,4,5]" class="star-icon" [class.filled]="star <= nuevoIdioma.nivel"
+            (click)="setStarRating(nuevoIdioma, star)">★</span>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-success-action" style="align-self: flex-end;" (click)="addIdiomaRecord()">
+        Guardar
+      </button>
+    </div>
+
+    <!-- Lista de idiomas agregados -->
+    <div class="records-list" style="margin-top: 1.5rem;" *ngIf="idiomas.length > 0">
+      <div class="record-card compact-card" *ngFor="let lang of idiomas; let idx = index">
+        <div class="record-card-info">
+          <h4>{{ lang.idioma }}</h4>
+          <div class="star-display">
+            <span *ngFor="let star of [1,2,3,4,5]" class="star-icon small-star"
+              [class.filled]="star <= lang.estrellas">★</span>
+            <span class="rating-text">({{ lang.nivel }})</span>
+          </div>
+        </div>
+        <button type="button" class="btn-delete-record" (click)="removeIdiomaRecord(idx)">Eliminar</button>
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Otros Conocimientos -->
+  <fieldset class="form-fieldset">
+    <legend>Otros Conocimientos y Herramientas</legend>
+
+    <div class="skill-input-bar">
+      <div class="form-group" style="flex: 2;">
+        <label for="tool_name">Agregar herramienta</label>
+        <input type="text" id="tool_name" name="tool_name" [(ngModel)]="nuevaHerramienta.nombre"
+          placeholder="Ej. Excel, Photoshop, SAP" class="form-control" />
+      </div>
+
+      <div class="form-group" style="flex: 1.5;">
+        <label for="tool_type">Tipo</label>
+        <select id="tool_type" name="tool_type" [(ngModel)]="nuevaHerramienta.tipo" class="form-control">
+          <option value="" disabled selected>Seleccione</option>
+          <option value="tecnicas">Procesador de texto (Ej: Word)</option>
+          <option value="interpersonales">Hoja de cálculo (Ej: Excel)</option>
+          <option value="otros">Otros / Softwares específicos</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="flex: 1; min-width: 110px;">
+        <label>Nivel</label>
+        <div class="star-rating-container">
+          <span *ngFor="let star of [1,2,3]" class="star-icon" [class.filled]="star <= nuevaHerramienta.nivel"
+            (click)="setStarRating(nuevaHerramienta, star)">★</span>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-success-action" style="align-self: flex-end;"
+        (click)="addHerramientaRecord()">
+        Guardar
+      </button>
+    </div>
+
+    <!-- Listas de herramientas agrupadas -->
+    <div class="tools-grouped-container" style="margin-top: 2rem;">
+
+      <div class="tool-group-block" *ngIf="habilidades.tecnicas.length > 0">
+        <h4>Procesador de texto / Ofimática</h4>
+        <div class="badges-row">
+          <span class="detail-tag tech-tag clickable-tag" *ngFor="let t of habilidades.tecnicas; let idx = index">
+            {{ t }}
+            <span class="remove-tag-x" (click)="removeHerramientaRecord('tecnicas', idx)">×</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="tool-group-block" *ngIf="habilidades.interpersonales.length > 0">
+        <h4>Hojas de cálculo</h4>
+        <div class="badges-row">
+          <span class="detail-tag soft-tag clickable-tag"
+            *ngFor="let t of habilidades.interpersonales; let idx = index">
+            {{ t }}
+            <span class="remove-tag-x" (click)="removeHerramientaRecord('interpersonales', idx)">×</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="tool-group-block" *ngIf="habilidades.otros.length > 0">
+        <h4>Otros softwares y conocimientos</h4>
+        <div class="badges-row">
+          <span class="detail-tag other-tag clickable-tag" *ngFor="let t of habilidades.otros; let idx = index">
+            {{ t }}
+            <span class="remove-tag-x" (click)="removeHerramientaRecord('otros', idx)">×</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </fieldset>
+</div>

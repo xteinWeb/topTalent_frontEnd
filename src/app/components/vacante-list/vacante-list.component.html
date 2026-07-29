@@ -5,7 +5,7 @@
       <p class="subtitle">Gestiona y publica ofertas de empleo vinculadas a los perfiles de cargo</p>
     </div>
     <button class="btn btn-primary" routerLink="/vacantes/nueva">
-      <span class="icon">+</span> Nueva Vacante
+      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">add</span> Nueva Vacante
     </button>
   </header>
 
@@ -30,7 +30,9 @@
   </div>
 
   <div *ngIf="!loading && !errorMsg && filteredVacantes.length === 0" class="empty-state">
-    <div class="empty-icon">💼</div>
+    <div class="empty-icon">
+      <span class="material-icons" style="font-size: 3rem; color: var(--brand-gold, #B39C70);">work_outline</span>
+    </div>
     <h3>No se encontraron vacantes</h3>
     <p>Comienza publicando tu primera oferta de empleo para los candidatos.</p>
     <button class="btn btn-primary" routerLink="/vacantes/nueva">Crear primera vacante</button>
@@ -42,10 +44,15 @@
         <span class="badge">{{ vacante.perfil_cargo }}</span>
         <div class="card-actions">
           <button class="action-btn" (click)="toggleEstado(vacante)" [title]="vacante.estado === 'ACTIVA' ? 'Desactivar vacante' : 'Activar vacante'">
-            {{ vacante.estado === 'ACTIVA' ? '🟢 Activa' : '🔴 Inactiva' }}
+            <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;" [style.color]="vacante.estado === 'ACTIVA' ? '#2e7d32' : '#c62828'">circle</span>
+            {{ vacante.estado === 'ACTIVA' ? ' Activa' : ' Inactiva' }}
           </button>
-          <button class="action-btn edit-btn" [routerLink]="['/vacantes/editar', vacante.id]" title="Editar vacante">✏️</button>
-          <button class="action-btn delete-btn" (click)="deleteVacante(vacante.id)" title="Eliminar vacante">🗑️</button>
+          <button class="action-btn edit-btn" [routerLink]="['/vacantes/editar', vacante.id]" title="Editar vacante">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">edit</span>
+          </button>
+          <button class="action-btn delete-btn" (click)="deleteVacante(vacante.id)" title="Eliminar vacante">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">delete</span>
+          </button>
         </div>
       </div>
       <div class="card-body">
@@ -61,7 +68,7 @@
             Candidatos
           </button>
           <button class="btn btn-link btn-sm" [routerLink]="['/postular', vacante.id]">
-            Postulación →
+            Postulación <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;">arrow_forward</span>
           </button>
         </div>
       </div>

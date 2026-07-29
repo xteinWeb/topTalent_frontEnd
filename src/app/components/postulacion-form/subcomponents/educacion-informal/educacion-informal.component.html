@@ -1,0 +1,117 @@
+<div class="tab-pane">
+  <fieldset class="form-fieldset">
+    <legend>Educación Informal (Capacitaciones / Certificaciones)</legend>
+
+    <div class="form-grid" style="margin-bottom: 1.5rem;">
+      <div class="form-group">
+        <label for="tiene_inf">¿Tiene educación informal?</label>
+        <select 
+          id="tiene_inf" 
+          name="tiene_inf" 
+          [ngModel]="tieneEducacionInformal" 
+          (ngModelChange)="onTieneEducacionInformalChange($event)"
+          class="form-control"
+        >
+          <option value="Si">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+    </div>
+
+    <div *ngIf="tieneEducacionInformal === 'Si'">
+      
+      <!-- Lista de capacitaciones agregadas -->
+      <div class="records-list" *ngIf="capacitaciones.length > 0">
+        <div class="record-card" *ngFor="let cap of capacitaciones; let idx = index">
+          <div class="record-card-info">
+            <h4>{{ cap.nombre }}</h4>
+            <p><strong>Tipo:</strong> {{ cap.tipo }} | <strong>Institución:</strong> {{ cap.institucion }}</p>
+            <p>
+              <strong>Duración:</strong> {{ cap.duracionHoras }} horas |
+              <strong>Estado:</strong> {{ cap.estado }}
+              <span *ngIf="cap.mesFin && cap.anioFin"> (Finalización: {{ cap.mesFin }} de {{ cap.anioFin }})</span>
+            </p>
+          </div>
+          <button type="button" class="btn-delete-record" (click)="removeCapacitacionRecord(idx)">Eliminar</button>
+        </div>
+      </div>
+
+      <!-- Botón para mostrar formulario de agregar -->
+      <div *ngIf="!showCapacitacionForm" class="add-record-trigger">
+        <button type="button" class="btn btn-secondary" (click)="toggleCapacitacionForm(true)">
+          + Agregar Capacitación o Certificación
+        </button>
+      </div>
+
+      <!-- Formulario Agregar Capacitación -->
+      <div *ngIf="showCapacitacionForm" class="inline-add-form-container">
+        <div class="inline-form-header">
+          <h3>Agregar Capacitación</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group required">
+            <label for="cap_tipo">Tipo capacitación o certificación</label>
+            <select id="cap_tipo" name="cap_tipo" [(ngModel)]="nuevaCapacitacion.tipo" class="form-control">
+              <option value="" disabled selected>Seleccione</option>
+              <option *ngFor="let opt of listaTiposCapacitacion" [value]="opt">{{ opt }}</option>
+            </select>
+          </div>
+
+          <div class="form-group required">
+            <label for="cap_nom">Nombre del programa</label>
+            <input type="text" id="cap_nom" name="cap_nom" [(ngModel)]="nuevaCapacitacion.nombre" placeholder="Ej. Especialización en Gestión Financiera" class="form-control" />
+          </div>
+
+          <div class="form-group required">
+            <label for="cap_inst">Institución</label>
+            <input type="text" id="cap_inst" name="cap_inst" [(ngModel)]="nuevaCapacitacion.institucion" placeholder="Ej. SENA" class="form-control" />
+          </div>
+
+          <div class="form-group required">
+            <label for="cap_pais">País</label>
+            <select id="cap_pais" name="cap_pais" [(ngModel)]="nuevaCapacitacion.pais" class="form-control">
+              <option *ngFor="let p of listaPaises" [value]="p">{{ p }}</option>
+            </select>
+          </div>
+
+          <div class="form-group required">
+            <label for="cap_est">Estado</label>
+            <select id="cap_est" name="cap_est" [(ngModel)]="nuevaCapacitacion.estado" class="form-control">
+              <option value="" disabled selected>Seleccione</option>
+              <option value="Completo">Completo</option>
+              <option value="En curso">En curso</option>
+              <option value="Incompleto">Incompleto</option>
+            </select>
+          </div>
+
+          <!-- Fecha de Finalización / Grado -->
+          <div class="form-group required" *ngIf="nuevaCapacitacion.estado === 'Completo' || nuevaCapacitacion.estado === 'Incompleto'">
+            <label>Fecha de finalización</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="cap_mes_fin" name="cap_mes_fin" [(ngModel)]="nuevaCapacitacion.mesFin" class="form-control" style="flex: 1;">
+                <option value="" disabled selected>Mes</option>
+                <option *ngFor="let m of listaMeses" [value]="m">{{ m }}</option>
+              </select>
+              <select id="cap_anio_fin" name="cap_anio_fin" [(ngModel)]="nuevaCapacitacion.anioFin" class="form-control" style="flex: 1;">
+                <option value="" disabled selected>Año</option>
+                <option *ngFor="let y of listaAnios" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cap_dur">Duración en horas</label>
+            <input type="text" id="cap_dur" name="cap_dur" [(ngModel)]="nuevaCapacitacion.duracionHoras" placeholder="Ej. 40" class="form-control" />
+          </div>
+        </div>
+
+        <div class="inline-form-actions">
+          <button type="button" class="btn btn-danger-action" (click)="toggleCapacitacionForm(false)">Cancelar</button>
+          <button type="button" class="btn btn-success-action" (click)="addCapacitacionRecord()">Guardar</button>
+        </div>
+      </div>
+
+    </div>
+  </fieldset>
+</div>

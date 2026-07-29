@@ -1,10 +1,12 @@
 <div class="public-form-container">
-  
+
   <!-- Success Screen -->
   <div *ngIf="successMsg" class="success-screen">
-    <div class="success-icon">🎉</div>
+    <div class="success-icon"><span class="material-icons"
+        style="font-size: 3.5rem; color: #2e7d32;">check_circle</span></div>
     <h2>¡Postulación Enviada con Éxito!</h2>
-    <p>Hemos recibido tus datos y tu Hoja de Vida correctamente. Analizaremos tu perfil y nos pondremos en contacto contigo si cumples con los requisitos del puesto.</p>
+    <p>Hemos recibido tus datos y tu Hoja de Vida correctamente. Analizaremos tu perfil y nos pondremos en contacto
+      contigo si cumples con los requisitos del puesto.</p>
     <p class="thanks-note">¡Gracias por querer ser parte de nuestro equipo, Artdecon!</p>
   </div>
 
@@ -16,16 +18,17 @@
 
   <!-- Error State -->
   <div *ngIf="errorMsg && !loading && !successMsg" class="error-state">
-    <div class="error-icon">⚠️</div>
+    <div class="error-icon"><span class="material-icons" style="font-size: 3.5rem; color: #c62828;">warning</span></div>
     <h2>Atención</h2>
     <p>{{ errorMsg }}</p>
   </div>
 
   <!-- Form Content -->
-  <form *ngIf="!loading && !errorMsg && !successMsg" (ngSubmit)="onSubmit()" #postularForm="ngForm" class="job-application-form">
-    
+  <form *ngIf="!loading && !errorMsg && !successMsg" (ngSubmit)="onSubmit()" #postularForm="ngForm"
+    class="job-application-form">
+
     <header class="application-header">
-      <img src="images/Logo-ARTDECON-HD-fondo-negro-(logo-blanco).jpg" alt="Artdecon Logo" class="brand-logo">
+      <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-negro).png" alt="Artdecon Logo" class="brand-logo">
       <div class="job-info">
         <span class="job-badge">Convocatoria Abierta</span>
         <h1>Postulación para: {{ vacante?.titulo }}</h1>
@@ -33,128 +36,70 @@
       </div>
     </header>
 
-    <!-- Datos Básicos -->
-    <fieldset class="form-fieldset">
-      <legend>Información Personal de Contacto</legend>
-      <div class="form-grid">
-        <div class="form-group required">
-          <label for="nombre_completo">Nombre Completo</label>
-          <input 
-            type="text" 
-            id="nombre_completo" 
-            name="nombre_completo" 
-            [(ngModel)]="nombre_completo" 
-            required 
-            placeholder="Ingresa tus nombres y apellidos" 
-            class="form-control"
-          />
-        </div>
-        <div class="form-group required">
-          <label for="correo">Correo Electrónico</label>
-          <input 
-            type="email" 
-            id="correo" 
-            name="correo" 
-            [(ngModel)]="correo" 
-            required 
-            placeholder="ejemplo@correo.com" 
-            class="form-control"
-          />
-        </div>
-        <div class="form-group full-width">
-          <label for="telefono">Teléfono / Celular</label>
-          <input 
-            type="text" 
-            id="telefono" 
-            name="telefono" 
-            [(ngModel)]="telefono" 
-            placeholder="Ej. +57 300 123 4567" 
-            class="form-control"
-          />
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- Cargo Questions Section -->
-    <fieldset class="form-fieldset" *ngIf="preguntas && preguntas.length > 0">
-      <legend>Preguntas del Cargo</legend>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
-        Por favor responda las siguientes preguntas específicas requeridas para este puesto de trabajo:
-      </p>
-
-      <div class="questions-answering-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <div class="question-answer-card" *ngFor="let preg of preguntas; let i = index" 
-             style="background: #fafafa; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem;">
-          
-          <div style="font-weight: bold; color: var(--brand-navy, #16313a); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-            <span>Pregunta #{{ i + 1 }} - {{ preg.titulo }}</span>
-            <span *ngIf="preg.obligatoria" style="font-size: 0.75rem; color: #c0392b; background: #fde8e8; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;">Obligatoria</span>
-          </div>
-
-          <p style="margin: 0 0 0.75rem 0; font-size: 0.95rem; line-height: 1.4; color: #333;">
-            {{ preg.pregunta }}
-          </p>
-
-          <p *ngIf="preg.descripcion" style="margin: 0 0 1rem 0; font-size: 0.85rem; color: #666; font-style: italic;">
-            {{ preg.descripcion }}
-          </p>
-
-          <!-- Open Question Answer Input -->
-          <div class="form-group full-width" *ngIf="preg.tipo === 'Abierta'" style="margin: 0;">
-            <textarea 
-              [name]="'preg_res_' + i"
-              [(ngModel)]="preg.respuesta"
-              [required]="preg.obligatoria"
-              rows="3"
-              placeholder="Escribe tu respuesta aquí..."
-              class="form-control"
-              style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.5rem; font-family: inherit;"
-            ></textarea>
-          </div>
-
-          <!-- Closed Question Answer Input -->
-          <div class="form-group full-width" *ngIf="preg.tipo === 'Cerrada'" style="margin: 0;">
-            <select 
-              [name]="'preg_res_' + i"
-              [(ngModel)]="preg.respuesta"
-              [required]="preg.obligatoria"
-              class="form-control"
-              style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; height: 38px; padding: 0 0.5rem;"
-            >
-              <option value="" disabled selected>Seleccione una opción...</option>
-              <option *ngFor="let opt of preg.opciones" [value]="opt.valor">{{ opt.etiqueta }}</option>
-            </select>
-          </div>
-
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- Adjuntar Hoja de Vida -->
-    <fieldset class="form-fieldset file-upload-fieldset">
-      <legend>Adjuntar Hoja de Vida (Requisito Obligatorio)</legend>
-      <div class="file-dropzone" [ngClass]="{'has-file': archivoHv, 'invalid-file': archivoInvalido}">
-        <div class="dropzone-content">
-          <span class="file-icon">📄</span>
-          <p *ngIf="!archivoHv">Arrastra tu Hoja de Vida aquí o haz clic para buscar</p>
-          <p *ngIf="archivoHv" class="filename-display">{{ archivoNombre }}</p>
-          <span class="file-hint">Formatos permitidos: PDF, DOCX, DOC (Máx. 10MB)</span>
-          <input 
-            type="file" 
-            id="hv_file" 
-            (change)="onFileSelected($event)" 
-            accept=".pdf,.docx,.doc" 
-            class="hidden-file-input"
-          />
-        </div>
-      </div>
-    </fieldset>
-
-    <footer class="form-footer-actions">
-      <button type="submit" class="btn btn-primary btn-lg" [disabled]="submitting || !postularForm.form.valid || !archivoHv">
-        {{ submitting ? 'Enviando Postulación...' : 'Enviar Postulación Profesional' }}
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'basica'" (click)="setTab('basica')">
+        Información Básica
       </button>
-    </footer>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'educacion'" (click)="setTab('educacion')">
+        Nivel Educativo
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'experiencia'"
+        (click)="setTab('experiencia')">
+        Experiencia Laboral
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'informal'" (click)="setTab('informal')">
+        Educación Informal
+      </button>
+      <button type="button" class="tab-btn" [class.active]="activeTab === 'idiomas'" (click)="setTab('idiomas')">
+        Idiomas y Habilidades
+      </button>
+    </nav>
+
+    <!-- Pestaña 1: Información Básica -->
+    <app-postulacion-informacion-basica *ngIf="activeTab === 'basica'" [(nombre_completo)]="nombre_completo"
+      [(correo)]="correo" [(telefono)]="telefono" [(cedula)]="cedula" [(fecha_nacimiento)]="fecha_nacimiento"
+      [(archivoHv)]="archivoHv" [(archivoNombre)]="archivoNombre" [(archivoInvalido)]="archivoInvalido"
+      (fileSelected)="onFileSelected($event)">
+    </app-postulacion-informacion-basica>
+
+    <!-- Pestaña 2: Nivel Educativo -->
+    <app-postulacion-nivel-educativo *ngIf="activeTab === 'educacion'" [(tieneEducacionFormal)]="tieneEducacionFormal"
+      [(estudios)]="estudios">
+    </app-postulacion-nivel-educativo>
+
+    <!-- Pestaña 3: Experiencia Laboral -->
+    <app-postulacion-experiencia-laboral *ngIf="activeTab === 'experiencia'" [(experiencias)]="experiencias">
+    </app-postulacion-experiencia-laboral>
+
+    <!-- Pestaña 4: Educación Informal -->
+    <app-postulacion-educacion-informal *ngIf="activeTab === 'informal'"
+      [(tieneEducacionInformal)]="tieneEducacionInformal" [(capacitaciones)]="capacitaciones">
+    </app-postulacion-educacion-informal>
+
+    <!-- Pestaña 5: Idiomas y Habilidades -->
+    <app-postulacion-idiomas-habilidades *ngIf="activeTab === 'idiomas'" [(idiomas)]="idiomas"
+      [(habilidades)]="habilidades">
+    </app-postulacion-idiomas-habilidades>
+
+    <!-- Navegación de pestañas inferior -->
+    <div class="footer-navigation">
+      <button type="button" class="nav-prev-btn" (click)="prevTab()" [disabled]="activeTab === 'basica'">
+        ❮ {{ activeTab === 'educacion' ? 'Información Básica' : (activeTab === 'experiencia' ? 'Nivel Educativo' :
+        (activeTab === 'informal' ? 'Experiencia Laboral' : 'Educación Informal')) }}
+      </button>
+
+      <button type="button" class="nav-next-btn" *ngIf="activeTab !== 'idiomas'" (click)="nextTab()">
+        {{ activeTab === 'basica' ? 'Nivel Educativo' : (activeTab === 'educacion' ? 'Experiencia Laboral' : (activeTab
+        === 'experiencia' ? 'Educación Informal' : 'Idiomas y Habilidades')) }} ❯
+      </button>
+
+      <!-- Botón final de envío en la última pestaña -->
+      <button type="submit" class="nav-submit-btn" *ngIf="activeTab === 'idiomas'"
+        [disabled]="submitting || !postularForm.form.valid || !archivoHv">
+        {{ submitting ? 'Enviando...' : 'Enviar Postulación Profesional' }}
+      </button>
+    </div>
 
   </form>
 </div>
