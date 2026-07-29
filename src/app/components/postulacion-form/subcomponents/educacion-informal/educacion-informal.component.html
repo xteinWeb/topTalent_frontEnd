@@ -1,25 +1,9 @@
 <div class="tab-pane">
   <fieldset class="form-fieldset">
-    <legend>Educación Informal (Capacitaciones / Certificaciones)</legend>
+    <legend>Cursos y Certificaciones</legend>
 
-    <div class="form-grid" style="margin-bottom: 1.5rem;">
-      <div class="form-group">
-        <label for="tiene_inf">¿Tiene educación informal?</label>
-        <select 
-          id="tiene_inf" 
-          name="tiene_inf" 
-          [ngModel]="tieneEducacionInformal" 
-          (ngModelChange)="onTieneEducacionInformalChange($event)"
-          class="form-control"
-        >
-          <option value="Si">Sí</option>
-          <option value="No">No</option>
-        </select>
-      </div>
-    </div>
+    <div>
 
-    <div *ngIf="tieneEducacionInformal === 'Si'">
-      
       <!-- Lista de capacitaciones agregadas -->
       <div class="records-list" *ngIf="capacitaciones.length > 0">
         <div class="record-card" *ngFor="let cap of capacitaciones; let idx = index">
@@ -39,14 +23,14 @@
       <!-- Botón para mostrar formulario de agregar -->
       <div *ngIf="!showCapacitacionForm" class="add-record-trigger">
         <button type="button" class="btn btn-secondary" (click)="toggleCapacitacionForm(true)">
-          + Agregar Capacitación o Certificación
+          + Agregar Curso o Certificación
         </button>
       </div>
 
-      <!-- Formulario Agregar Capacitación -->
+      <!-- Formulario Agregar Curso o Certificación -->
       <div *ngIf="showCapacitacionForm" class="inline-add-form-container">
         <div class="inline-form-header">
-          <h3>Agregar Capacitación</h3>
+          <h3>Agregar Curso o Certificación</h3>
         </div>
 
         <div class="form-grid">
@@ -60,12 +44,14 @@
 
           <div class="form-group required">
             <label for="cap_nom">Nombre del programa</label>
-            <input type="text" id="cap_nom" name="cap_nom" [(ngModel)]="nuevaCapacitacion.nombre" placeholder="Ej. Especialización en Gestión Financiera" class="form-control" />
+            <input type="text" id="cap_nom" name="cap_nom" [(ngModel)]="nuevaCapacitacion.nombre"
+              placeholder=" Especialización en Gestión Financiera" class="form-control" />
           </div>
 
           <div class="form-group required">
             <label for="cap_inst">Institución</label>
-            <input type="text" id="cap_inst" name="cap_inst" [(ngModel)]="nuevaCapacitacion.institucion" placeholder="Ej. SENA" class="form-control" />
+            <input type="text" id="cap_inst" name="cap_inst" [(ngModel)]="nuevaCapacitacion.institucion"
+              placeholder=" SENA" class="form-control" />
           </div>
 
           <div class="form-group required">
@@ -86,14 +72,17 @@
           </div>
 
           <!-- Fecha de Finalización / Grado -->
-          <div class="form-group required" *ngIf="nuevaCapacitacion.estado === 'Completo' || nuevaCapacitacion.estado === 'Incompleto'">
+          <div class="form-group required"
+            *ngIf="nuevaCapacitacion.estado === 'Completo' || nuevaCapacitacion.estado === 'Incompleto'">
             <label>Fecha de finalización</label>
             <div style="display: flex; gap: 0.5rem;">
-              <select id="cap_mes_fin" name="cap_mes_fin" [(ngModel)]="nuevaCapacitacion.mesFin" class="form-control" style="flex: 1;">
+              <select id="cap_mes_fin" name="cap_mes_fin" [(ngModel)]="nuevaCapacitacion.mesFin" class="form-control"
+                style="flex: 1;">
                 <option value="" disabled selected>Mes</option>
                 <option *ngFor="let m of listaMeses" [value]="m">{{ m }}</option>
               </select>
-              <select id="cap_anio_fin" name="cap_anio_fin" [(ngModel)]="nuevaCapacitacion.anioFin" class="form-control" style="flex: 1;">
+              <select id="cap_anio_fin" name="cap_anio_fin" [(ngModel)]="nuevaCapacitacion.anioFin" class="form-control"
+                style="flex: 1;">
                 <option value="" disabled selected>Año</option>
                 <option *ngFor="let y of listaAnios" [value]="y">{{ y }}</option>
               </select>
@@ -102,7 +91,8 @@
 
           <div class="form-group">
             <label for="cap_dur">Duración en horas</label>
-            <input type="text" id="cap_dur" name="cap_dur" [(ngModel)]="nuevaCapacitacion.duracionHoras" placeholder="Ej. 40" class="form-control" />
+            <input type="text" id="cap_dur" name="cap_dur" [(ngModel)]="nuevaCapacitacion.duracionHoras"
+              placeholder=" 40" class="form-control" />
           </div>
         </div>
 
@@ -111,7 +101,6 @@
           <button type="button" class="btn btn-success-action" (click)="addCapacitacionRecord()">Guardar</button>
         </div>
       </div>
-
     </div>
   </fieldset>
 </div>

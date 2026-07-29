@@ -8,10 +8,19 @@ import { PostulacionFormComponent } from './components/postulacion-form/postulac
 import { OfertasPublicasListComponent } from './components/ofertas-publicas-list/ofertas-publicas-list.component';
 import { OfertaDetalleComponent } from './components/oferta-detalle/oferta-detalle.component';
 import { LoginComponent } from './components/login/login.component';
+import { CandidatoLoginComponent } from './components/login/candidato-login/candidato-login.component';
+import { CandidatoRegistroComponent } from './components/login/candidato-registro/candidato-registro.component';
+import { CandidatoPerfilComponent } from './components/login/candidato-perfil/candidato-perfil.component';
 import { authGuard } from './guards/auth.guard';
+import { candidatoAuthGuard } from './guards/candidato-auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  
+  // Candidato Auth Routes
+  { path: 'candidato/login', component: CandidatoLoginComponent },
+  { path: 'candidato/registro', component: CandidatoRegistroComponent },
+  { path: 'candidato/perfil', component: CandidatoPerfilComponent, canActivate: [candidatoAuthGuard] },
   
   // Perfiles de Cargo (Private)
   { path: '', component: PerfilListComponent, canActivate: [authGuard] },

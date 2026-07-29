@@ -14,6 +14,8 @@ export interface Vacante {
   titulo: string;
   descripcion: string;
   estado?: string;
+  requiere_registro?: boolean;
+  configuracion_json?: any;
   fecha_creacion?: string;
   fecha_actualizacion?: string;
 }

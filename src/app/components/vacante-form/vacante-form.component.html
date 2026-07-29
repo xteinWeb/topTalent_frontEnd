@@ -19,7 +19,7 @@
   <form *ngIf="!loading && !errorMsg" (ngSubmit)="onSubmit()" #vacanteForm="ngForm" class="profile-form">
     <section class="form-section">
       <h2 class="section-title">Información de la Oferta Laboral</h2>
-      
+
       <div class="form-grid">
         <div class="form-group required full-width">
           <label for="perfil_id">Asociar a Perfil de Cargo</label>
@@ -33,36 +33,66 @@
 
         <div class="form-group required full-width">
           <label for="titulo">Título de la Vacante</label>
-          <input 
-            type="text" 
-            id="titulo" 
-            name="titulo" 
-            [(ngModel)]="titulo" 
-            required 
-            placeholder="Ej. Desarrollador Angular Senior - Medellín" 
-            class="form-control"
-          />
+          <input type="text" id="titulo" name="titulo" [(ngModel)]="titulo" required
+            placeholder=" Desarrollador Angular Senior - Medellín" class="form-control" />
         </div>
 
         <div class="form-group required full-width">
           <label for="descripcion">Descripción de la Vacante / Requisitos Adicionales</label>
-          <textarea 
-            id="descripcion" 
-            name="descripcion" 
-            [(ngModel)]="descripcion" 
-            required 
-            rows="8" 
-            placeholder="Describe las funciones, requisitos, salario, jornada y beneficios del puesto de trabajo..." 
-            class="form-control"
-          ></textarea>
+          <textarea id="descripcion" name="descripcion" [(ngModel)]="descripcion" required rows="8"
+            placeholder="Describe las funciones, requisitos, salario, jornada y beneficios del puesto de trabajo..."
+            class="form-control"></textarea>
         </div>
 
         <div class="form-group full-width">
           <label for="estado">Estado de la Vacante</label>
           <select id="estado" name="estado" [(ngModel)]="estado" class="form-control">
-            <option value="ACTIVA">🟢 ACTIVA (Pública para postulaciones)</option>
-            <option value="INACTIVA">🔴 INACTIVA (Oculta para candidatos)</option>
+            <option value="ACTIVA"> ACTIVA (Pública para postulaciones)</option>
+            <option value="INACTIVA">INACTIVA (Oculta para candidatos)</option>
           </select>
+        </div>
+
+        <div class="form-group full-width checkbox-group"
+          style="margin-top: 1rem; border-top: 1px dashed var(--brand-beige-dark); padding-top: 1rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" name="requiere_registro" [(ngModel)]="requiere_registro"
+              style="width: 18px; height: 18px;">
+            Requiere registro de candidatos (Recomendado)
+          </label>
+          <p style="font-size: 0.85rem; color: #666; margin: 0.25rem 0 1rem 1.6rem;">
+            Por defecto activo. Si se desmarca, los candidatos podrán aplicar directamente a esta vacante ingresando sus
+            datos sin necesidad de registrarse.
+          </p>
+        </div>
+
+        <div class="form-group full-width" style="margin-top: 0.5rem;">
+          <label style="font-weight: 600;">Secciones requeridas para aplicar</label>
+          <p style="font-size: 0.85rem; color: #666; margin: 0 0 0.75rem 0;">
+            Selecciona qué pestañas del formulario de postulación serán obligatorias para el candidato.
+          </p>
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background-color: var(--brand-beige-light); padding: 1rem; border-radius: 0.375rem; border: 1px solid var(--brand-beige-dark);">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" name="req_basica" [(ngModel)]="campos_requeridos.informacion_basica">
+              Información Básica
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" name="req_educacion" [(ngModel)]="campos_requeridos.nivel_educativo">
+              Formación Académica
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" name="req_experiencia" [(ngModel)]="campos_requeridos.experiencia_laboral">
+              Experiencia Laboral
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" name="req_informal" [(ngModel)]="campos_requeridos.educacion_informal">
+              Cursos y Certificaciones
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" name="req_idiomas" [(ngModel)]="campos_requeridos.idiomas_habilidades">
+              Idiomas y Habilidades
+            </label>
+          </div>
         </div>
       </div>
     </section>

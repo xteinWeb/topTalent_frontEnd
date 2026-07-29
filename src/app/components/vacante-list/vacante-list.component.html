@@ -10,13 +10,8 @@
   </header>
 
   <div class="search-bar-container">
-    <input 
-      type="text" 
-      class="search-input" 
-      placeholder="Buscar por vacante o perfil..." 
-      [(ngModel)]="searchTerm" 
-      (input)="filterVacantes()"
-    />
+    <input type="text" class="search-input" placeholder="Buscar por vacante o perfil..." [(ngModel)]="searchTerm"
+      (input)="filterVacantes()" />
   </div>
 
   <div *ngIf="loading" class="loading-state">
@@ -39,12 +34,15 @@
   </div>
 
   <div *ngIf="!loading && !errorMsg && filteredVacantes.length > 0" class="profiles-grid">
-    <div class="profile-card" *ngFor="let vacante of filteredVacantes" [ngClass]="{'inactive-card': vacante.estado === 'INACTIVA'}">
+    <div class="profile-card" *ngFor="let vacante of filteredVacantes"
+      [ngClass]="{'inactive-card': vacante.estado === 'INACTIVA'}">
       <div class="card-header">
         <span class="badge">{{ vacante.perfil_cargo }}</span>
         <div class="card-actions">
-          <button class="action-btn" (click)="toggleEstado(vacante)" [title]="vacante.estado === 'ACTIVA' ? 'Desactivar vacante' : 'Activar vacante'">
-            <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;" [style.color]="vacante.estado === 'ACTIVA' ? '#2e7d32' : '#c62828'">circle</span>
+          <button class="action-btn" (click)="toggleEstado(vacante)"
+            [title]="vacante.estado === 'ACTIVA' ? 'Desactivar vacante' : 'Activar vacante'">
+            <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;"
+              [style.color]="vacante.estado === 'ACTIVA' ? '#2e7d32' : '#c62828'">circle</span>
             {{ vacante.estado === 'ACTIVA' ? ' Activa' : ' Inactiva' }}
           </button>
           <button class="action-btn edit-btn" [routerLink]="['/vacantes/editar', vacante.id]" title="Editar vacante">
@@ -66,9 +64,6 @@
         <div class="footer-actions">
           <button class="btn btn-secondary btn-sm" [routerLink]="['/postulaciones/vacante', vacante.id]">
             Candidatos
-          </button>
-          <button class="btn btn-link btn-sm" [routerLink]="['/postular', vacante.id]">
-            Postulación <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;">arrow_forward</span>
           </button>
         </div>
       </div>

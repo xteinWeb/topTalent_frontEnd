@@ -1,18 +1,8 @@
 <div class="tab-pane">
   <fieldset class="form-fieldset">
-    <legend>Educación Formal</legend>
-    <div class="form-grid" style="margin-bottom: 1.5rem;">
-      <div class="form-group">
-        <label for="tiene_educacion">¿Tiene educación formal?</label>
-        <select id="tiene_educacion" name="tiene_educacion" [ngModel]="tieneEducacionFormal"
-          (ngModelChange)="onTieneEducacionChange($event)" class="form-control">
-          <option value="Si">Sí</option>
-          <option value="No">No</option>
-        </select>
-      </div>
-    </div>
+    <legend>Formación Académica</legend>
 
-    <div *ngIf="tieneEducacionFormal === 'Si'">
+    <div>
 
       <!-- Lista de estudios agregados -->
       <div class="records-list" *ngIf="estudios.length > 0">
@@ -37,19 +27,19 @@
       <!-- Botón para mostrar formulario de agregar -->
       <div *ngIf="!showEstudioForm" class="add-record-trigger">
         <button type="button" class="btn btn-secondary" (click)="toggleEstudioForm(true)">
-          + Agregar Nivel Educativo
+          + Agregar Formación Académica
         </button>
       </div>
 
-      <!-- Formulario Agregar Nivel Educativo -->
+      <!-- Formulario Agregar Formación Académica -->
       <div *ngIf="showEstudioForm" class="inline-add-form-container">
         <div class="inline-form-header">
-          <h3>Agregar Nivel Educativo</h3>
+          <h3>Agregar Formación Académica</h3>
         </div>
 
         <div class="form-grid">
           <div class="form-group required">
-            <label for="edu_nivel">Nivel educativo</label>
+            <label for="edu_nivel">Nivel de formación</label>
             <select id="edu_nivel" name="edu_nivel" [(ngModel)]="nuevoEstudio.nivel" class="form-control">
               <option value="" disabled selected>Seleccione</option>
               <option *ngFor="let opt of listaNivelesEducativos" [value]="opt">{{ opt }}</option>
@@ -60,7 +50,10 @@
           <div class="form-group required">
             <label for="edu_titulo">Título obtenido</label>
             <input type="text" id="edu_titulo" name="edu_titulo" [(ngModel)]="nuevoEstudio.titulo"
-              placeholder="Ej. Contador Público" class="form-control" />
+              placeholder=" Contador Público" class="form-control" list="titulosList" />
+            <datalist id="titulosList">
+              <option *ngFor="let t of sugerenciasTitulos" [value]="t"></option>
+            </datalist>
           </div>
 
           <div class="form-group required">
@@ -73,7 +66,11 @@
           <div class="form-group required">
             <label for="edu_inst">Institución</label>
             <input type="text" id="edu_inst" name="edu_inst" [(ngModel)]="nuevoEstudio.institucion"
-              placeholder="Ej. Universidad de Antioquia" class="form-control" />
+              (input)="buscarInstituciones($event)"
+              placeholder=" Universidad de Antioquia" class="form-control" list="institucionesList" />
+            <datalist id="institucionesList">
+              <option *ngFor="let inst of sugerenciasInstituciones" [value]="inst"></option>
+            </datalist>
           </div>
 
           <div class="form-group required">
@@ -85,14 +82,17 @@
           </div>
 
           <!-- Fecha de Finalización / Grado -->
-          <div class="form-group required" *ngIf="nuevoEstudio.estado === 'Graduado' || nuevoEstudio.estado === 'Suspendido / Aplazado'">
+          <div class="form-group required"
+            *ngIf="nuevoEstudio.estado === 'Graduado' || nuevoEstudio.estado === 'Suspendido / Aplazado'">
             <label>Fecha de finalización</label>
             <div style="display: flex; gap: 0.5rem;">
-              <select id="edu_mes_fin" name="edu_mes_fin" [(ngModel)]="nuevoEstudio.mesFin" class="form-control" style="flex: 1;">
+              <select id="edu_mes_fin" name="edu_mes_fin" [(ngModel)]="nuevoEstudio.mesFin" class="form-control"
+                style="flex: 1;">
                 <option value="" disabled selected>Mes</option>
                 <option *ngFor="let m of listaMeses" [value]="m">{{ m }}</option>
               </select>
-              <select id="edu_anio_fin" name="edu_anio_fin" [(ngModel)]="nuevoEstudio.anioFin" class="form-control" style="flex: 1;">
+              <select id="edu_anio_fin" name="edu_anio_fin" [(ngModel)]="nuevoEstudio.anioFin" class="form-control"
+                style="flex: 1;">
                 <option value="" disabled selected>Año</option>
                 <option *ngFor="let y of listaAnios" [value]="y">{{ y }}</option>
               </select>
@@ -102,7 +102,8 @@
           <!-- Tarjeta Profesional -->
           <div class="form-group">
             <label for="edu_tarjeta">¿Cuenta con Tarjeta Profesional?</label>
-            <select id="edu_tarjeta" name="edu_tarjeta" [(ngModel)]="nuevoEstudio.tarjetaProfesional" class="form-control">
+            <select id="edu_tarjeta" name="edu_tarjeta" [(ngModel)]="nuevoEstudio.tarjetaProfesional"
+              class="form-control">
               <option value="No">No</option>
               <option value="Si">Sí</option>
             </select>
@@ -110,8 +111,9 @@
 
           <div class="form-group required" *ngIf="nuevoEstudio.tarjetaProfesional === 'Si'">
             <label for="edu_tarjeta_num">Número de Tarjeta Profesional</label>
-            <input type="text" id="edu_tarjeta_num" name="edu_tarjeta_num" [(ngModel)]="nuevoEstudio.tarjetaProfesionalNumero"
-              placeholder="Ingrese el número" class="form-control" />
+            <input type="text" id="edu_tarjeta_num" name="edu_tarjeta_num"
+              [(ngModel)]="nuevoEstudio.tarjetaProfesionalNumero" placeholder="Ingrese el número"
+              class="form-control" />
           </div>
 
           <div class="form-group full-width">
@@ -128,7 +130,6 @@
           <button type="button" class="btn btn-success-action" (click)="addEstudioRecord()">Guardar</button>
         </div>
       </div>
-
     </div>
   </fieldset>
 </div>

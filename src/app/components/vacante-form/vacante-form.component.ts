@@ -21,6 +21,14 @@ export class VacanteFormComponent implements OnInit {
   titulo: string = '';
   descripcion: string = '';
   estado: string = 'ACTIVA';
+  requiere_registro: boolean = true;
+  campos_requeridos: any = {
+    informacion_basica: true,
+    nivel_educativo: true,
+    experiencia_laboral: true,
+    educacion_informal: true,
+    idiomas_habilidades: true
+  };
 
   perfiles: PerfilCargo[] = [];
   submitting: boolean = false;
@@ -65,6 +73,16 @@ export class VacanteFormComponent implements OnInit {
         this.titulo = data.titulo;
         this.descripcion = data.descripcion;
         this.estado = data.estado || 'ACTIVA';
+        this.requiere_registro = data.requiere_registro !== undefined ? data.requiere_registro : true;
+        if (data.configuracion_json) {
+          try {
+            this.campos_requeridos = typeof data.configuracion_json === 'string' 
+              ? JSON.parse(data.configuracion_json) 
+              : data.configuracion_json;
+          } catch (e) {
+            console.error('Error parsing configuracion_json:', e);
+          }
+        }
         this.loading = false;
       },
       error: (err) => {
@@ -87,7 +105,9 @@ export class VacanteFormComponent implements OnInit {
       perfil_id: this.perfil_id,
       titulo: this.titulo,
       descripcion: this.descripcion,
-      estado: this.estado
+      estado: this.estado,
+      requiere_registro: this.requiere_registro,
+      configuracion_json: this.campos_requeridos
     };
 
     const request$ = this.isEditMode

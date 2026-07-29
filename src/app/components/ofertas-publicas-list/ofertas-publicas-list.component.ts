@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { VacanteService, Vacante } from '../../services/vacante.service';
+import { CandidatoService } from '../../services/candidato.service';
 
 @Component({
   selector: 'app-ofertas-publicas-list',
@@ -24,14 +25,79 @@ export class OfertasPublicasListComponent implements OnInit {
 
   loading: boolean = true;
   errorMsg: string = '';
+  completitudPorcentaje: number | null = null;
+  candidatoNombre: string = '';
 
   constructor(
     private vacanteService: VacanteService,
+    private candidatoService: CandidatoService,
     private router: Router
   ) {}
 
+  isCandidatoLoggedIn(): boolean {
+    return this.candidatoService.isLoggedIn();
+  }
+
+  getCandidatoEmail(): string {
+    return this.candidatoService.getCurrentUser()?.email || '';
+  }
+
+  logoutCandidato(): void {
+    this.candidatoService.logout();
+    this.completitudPorcentaje = null;
+    this.candidatoNombre = '';
+    this.router.navigate(['/ofertas']);
+  }
+
   ngOnInit(): void {
     this.loadVacantes();
+    this.checkPerfilCompletitud();
+  }
+
+  checkPerfilCompletitud(): void {
+    if (this.isCandidatoLoggedIn()) {
+      this.candidatoService.getPerfil().subscribe({
+        next: (profile) => {
+          let nombre = '';
+          let estudios: any[] = [];
+          let experiencias: any[] = [];
+          let idiomas: any[] = [];
+          let habilidades: any = { tecnicas: [], interpersonales: [], otros: [] };
+          let archivoNombre = profile.hv_archivo_nombre || '';
+
+          let telefono = '';
+          if (profile.perfil_completo_json) {
+            let p = profile.perfil_completo_json;
+            if (typeof p === 'string') {
+              try { p = JSON.parse(p); } catch(e) {}
+            }
+            nombre = p.nombre_completo || '';
+            telefono = p.telefono || '';
+            estudios = p.estudios || [];
+            experiencias = p.experiencias || [];
+            idiomas = p.idiomas || [];
+            habilidades = p.habilidades || { tecnicas: [], interpersonales: [], otros: [] };
+          }
+
+          this.candidatoNombre = nombre || this.getCandidatoEmail().split('@')[0];
+
+          // Calcular porcentaje
+          let puntos = 0;
+          if (nombre.trim()) puntos += 10;
+          if (profile.email && profile.email.trim()) puntos += 10;
+          if (telefono.trim()) puntos += 10;
+          if (archivoNombre) puntos += 10;
+
+          if (estudios.length > 0) puntos += 20;
+          if (experiencias.length > 0) puntos += 20;
+          let habs = (habilidades.tecnicas.length > 0 || habilidades.interpersonales.length > 0 || habilidades.otros.length > 0);
+          if (habs || idiomas.length > 0) puntos += 20;
+
+          this.completitudPorcentaje = puntos;
+        },
+        error: (err) => console.error('Error al evaluar completitud:', err)
+      });
+    }
   }
 
   loadVacantes(): void {

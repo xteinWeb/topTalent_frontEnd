@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CandidatoService } from '../../services/candidato.service';
 import { VacanteService, Vacante } from '../../services/vacante.service';
 import { PostulacionService } from '../../services/postulacion.service';
 import { InformacionBasicaComponent } from './subcomponents/informacion-basica/informacion-basica.component';
@@ -34,6 +35,51 @@ export class PostulacionFormComponent implements OnInit {
   successMsg: boolean = false;
   errorMsg: string = '';
 
+  // Calcular porcentaje de completitud del perfil/postulación
+  getCompletitudPorcentaje(): number {
+    let puntos = 0;
+    let totalPuntosPosibles = 0;
+
+    // 1. Información Básica (Siempre requerida, máx 40%)
+    totalPuntosPosibles += 40;
+    if (this.nombre_completo.trim()) puntos += 10;
+    if (this.correo.trim()) puntos += 10;
+    if (this.telefono.trim()) puntos += 10;
+    if (this.archivoHv) {
+      puntos += 10;
+    } else if (this.archivoNombre) {
+      puntos += 10;
+    }
+
+    // 2. Nivel Educativo (si está activo en campos requeridos)
+    if (this.campos_requeridos.nivel_educativo !== false) {
+      totalPuntosPosibles += 20;
+      if (this.estudios && this.estudios.length > 0) {
+        puntos += 20;
+      }
+    }
+
+    // 3. Experiencia Laboral (si está activo en campos requeridos)
+    if (this.campos_requeridos.experiencia_laboral !== false) {
+      totalPuntosPosibles += 20;
+      if (this.experiencias && this.experiencias.length > 0) {
+        puntos += 20;
+      }
+    }
+
+    // 4. Idiomas y habilidades (si está activo en campos requeridos)
+    if (this.campos_requeridos.idiomas_habilidades !== false) {
+      totalPuntosPosibles += 20;
+      let habilidadesLlenas = (this.habilidades.tecnicas.length > 0 || this.habilidades.interpersonales.length > 0 || this.habilidades.otros.length > 0);
+      if (habilidadesLlenas || this.idiomas.length > 0) {
+        puntos += 20;
+      }
+    }
+
+    if (totalPuntosPosibles === 0) return 0;
+    return Math.round((puntos / totalPuntosPosibles) * 100);
+  }
+
   // Form Fields (Basic Information)
   nombre_completo: string = '';
   correo: string = '';
@@ -44,6 +90,15 @@ export class PostulacionFormComponent implements OnInit {
 
   // Tab navigation
   activeTab: string = 'basica';
+  candidato_id: string | null = null;
+  requiere_registro: boolean = true;
+  campos_requeridos: any = {
+    informacion_basica: true,
+    nivel_educativo: true,
+    experiencia_laboral: true,
+    educacion_informal: true,
+    idiomas_habilidades: true
+  };
 
   // Section indicators (Si/No)
   tieneEducacionFormal: string = 'No';
@@ -175,8 +230,10 @@ export class PostulacionFormComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private vacanteService: VacanteService,
-    private postulacionService: PostulacionService
+    private postulacionService: PostulacionService,
+    private candidatoService: CandidatoService
   ) {
     // Fill years from current year down to 1970
     const currentYear = new Date().getFullYear();
@@ -204,9 +261,67 @@ export class PostulacionFormComponent implements OnInit {
         this.vacante = data;
         if (data.estado === 'INACTIVA') {
           this.errorMsg = 'Esta oferta de empleo ya no se encuentra activa.';
+          this.loading = false;
+          return;
         }
 
-        this.loading = false;
+        this.requiere_registro = data.requiere_registro !== undefined ? data.requiere_registro : true;
+        if (data.configuracion_json) {
+          try {
+            this.campos_requeridos = typeof data.configuracion_json === 'string'
+              ? JSON.parse(data.configuracion_json)
+              : data.configuracion_json;
+          } catch (e) {
+            console.error('Error parsing configuracion_json:', e);
+          }
+        }
+
+        // Intercept flows
+        const isUserLoggedIn = this.candidatoService.isLoggedIn();
+        if (this.requiere_registro && !isUserLoggedIn) {
+          // Redirect to login page
+          this.router.navigate(['/candidato/login'], { queryParams: { returnUrl: `/postular/${this.vacanteId}` } });
+          return;
+        }
+
+        if (isUserLoggedIn) {
+          // Load logged in candidate profile data
+          this.candidato_id = this.candidatoService.getCurrentUser()?.id || null;
+          this.candidatoService.getPerfil().subscribe({
+            next: (profile) => {
+              this.correo = profile.email;
+              this.archivoNombre = profile.hv_archivo_nombre || '';
+              if (profile.perfil_completo_json) {
+                let p = profile.perfil_completo_json;
+                if (typeof p === 'string') {
+                  try {
+                    p = JSON.parse(p);
+                  } catch (e) {
+                    console.error('Error parsing candidate profile json:', e);
+                  }
+                }
+                this.nombre_completo = p.nombre_completo || '';
+                this.telefono = p.telefono || '';
+                this.cedula = p.cedula || '';
+                this.fecha_nacimiento = p.fecha_nacimiento || '';
+                this.tieneEducacionFormal = p.tieneEducacionFormal || 'No';
+                this.tieneEducacionInformal = p.tieneEducacionInformal || 'No';
+                this.estudios = p.estudios || [];
+                this.experiencias = p.experiencias || [];
+                this.capacitaciones = p.capacitaciones || [];
+                this.idiomas = p.idiomas || [];
+                this.habilidades = p.habilidades || { tecnicas: [], interpersonales: [], otros: [] };
+              }
+              this.loading = false;
+            },
+            error: (err) => {
+              console.error('Error loading candidate profile:', err);
+              this.loading = false;
+            }
+          });
+        } else {
+          this.loading = false;
+        }
       },
       error: (err) => {
         this.errorMsg = 'No se pudo obtener la información de la vacante seleccionada.';
@@ -236,7 +351,26 @@ export class PostulacionFormComponent implements OnInit {
           return;
         }
       }
-      this.activeTab = tabs[idx + 1];
+      
+      // Find the next available tab that is required
+      let nextIdx = idx + 1;
+      const tabMapping: { [key: string]: string } = {
+        'basica': 'informacion_basica',
+        'educacion': 'nivel_educativo',
+        'experiencia': 'experiencia_laboral',
+        'informal': 'educacion_informal',
+        'idiomas': 'idiomas_habilidades'
+      };
+
+      while (nextIdx < tabs.length) {
+        const nextTabName = tabs[nextIdx];
+        const configKey = tabMapping[nextTabName];
+        if (this.campos_requeridos[configKey] !== false) {
+          this.activeTab = nextTabName;
+          break;
+        }
+        nextIdx++;
+      }
     }
   }
 
@@ -244,7 +378,24 @@ export class PostulacionFormComponent implements OnInit {
     const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
     const idx = tabs.indexOf(this.activeTab);
     if (idx > 0) {
-      this.activeTab = tabs[idx - 1];
+      let prevIdx = idx - 1;
+      const tabMapping: { [key: string]: string } = {
+        'basica': 'informacion_basica',
+        'educacion': 'nivel_educativo',
+        'experiencia': 'experiencia_laboral',
+        'informal': 'educacion_informal',
+        'idiomas': 'idiomas_habilidades'
+      };
+
+      while (prevIdx >= 0) {
+        const prevTabName = tabs[prevIdx];
+        const configKey = tabMapping[prevTabName];
+        if (this.campos_requeridos[configKey] !== false) {
+          this.activeTab = prevTabName;
+          break;
+        }
+        prevIdx--;
+      }
     }
   }
 
@@ -470,7 +621,7 @@ export class PostulacionFormComponent implements OnInit {
     if (this.tieneEducacionInformal === 'Si') {
       this.capacitaciones.forEach(cap => {
         mappedEstudios.push({
-          nivel: `Educación Informal - ${cap.tipo}`,
+          nivel: `Cursos y Certificaciones - ${cap.tipo}`,
           institucion: cap.institucion,
           fecha_inicio: cap.estado,
           fecha_fin: cap.mesFin && cap.anioFin 
@@ -505,6 +656,7 @@ export class PostulacionFormComponent implements OnInit {
       estudios_json: mappedEstudios,
       idiomas_json: this.idiomas,
       habilidades_json: this.habilidades,
+      candidato_id: this.candidato_id
     };
 
     this.postulacionService.postular(postulacionPayload, this.archivoHv).subscribe({

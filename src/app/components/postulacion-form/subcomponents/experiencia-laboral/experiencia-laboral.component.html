@@ -9,7 +9,7 @@
           <h4>{{ exp.cargo }}</h4>
           <p><strong>Empresa:</strong> {{ exp.empresa }} | <strong>Tipo:</strong> {{ exp.tipo }}</p>
           <p>
-            <strong>Período:</strong> {{ exp.mesIngreso }} de {{ exp.anioIngreso }} - 
+            <strong>Período:</strong> {{ exp.mesIngreso }} de {{ exp.anioIngreso }} -
             <span *ngIf="exp.actualmente">Actualidad</span>
             <span *ngIf="!exp.actualmente">{{ exp.mesRetiro }} de {{ exp.anioRetiro }}</span>
           </p>
@@ -42,13 +42,15 @@
 
         <div class="form-group required">
           <label for="exp_empresa">Nombre de la empresa</label>
-          <input type="text" id="exp_empresa" name="exp_empresa" [(ngModel)]="nuevaExperiencia.empresa" placeholder="Ej. Bancolombia" class="form-control" />
+          <input type="text" id="exp_empresa" name="exp_empresa" [(ngModel)]="nuevaExperiencia.empresa"
+            placeholder="Bancolombia" class="form-control" />
         </div>
 
 
         <div class="form-group">
           <label for="exp_tel">Teléfono de la empresa</label>
-          <input type="text" id="exp_tel" name="exp_tel" [(ngModel)]="nuevaExperiencia.telefono" placeholder="Ej. 6045551234" class="form-control" />
+          <input type="text" id="exp_tel" name="exp_tel" [(ngModel)]="nuevaExperiencia.telefono"
+            placeholder="6045551234" class="form-control" />
         </div>
 
         <div class="form-group required">
@@ -60,7 +62,8 @@
 
         <div class="form-group required">
           <label for="exp_cargo">Cargo</label>
-          <input type="text" id="exp_cargo" name="exp_cargo" [(ngModel)]="nuevaExperiencia.cargo" placeholder="Ej. Auxiliar de Contabilidad" class="form-control" />
+          <input type="text" id="exp_cargo" name="exp_cargo" [(ngModel)]="nuevaExperiencia.cargo"
+            placeholder="Auxiliar de Contabilidad" class="form-control" />
         </div>
 
 
@@ -101,7 +104,8 @@
 
         <div class="form-group full-width required">
           <label for="exp_func">Funciones y logros</label>
-          <textarea id="exp_func" name="exp_func" [(ngModel)]="nuevaExperiencia.funciones" rows="4" placeholder="Describa brevemente sus funciones..." class="form-control" maxlength="2000"></textarea>
+          <textarea id="exp_func" name="exp_func" [(ngModel)]="nuevaExperiencia.funciones" rows="4"
+            placeholder="Describa brevemente sus funciones..." class="form-control" maxlength="2000"></textarea>
           <span class="char-counter">Caracteres restantes: {{ 2000 - (nuevaExperiencia.funciones?.length || 0) }}</span>
         </div>
       </div>

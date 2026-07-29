@@ -36,22 +36,39 @@
       </div>
     </header>
 
+    <!-- Completitud de Postulación -->
+    <div class="completitud-container" style="margin-bottom: 1.5rem; background: var(--brand-beige-light, #FAF9F6); padding: 1rem 1.5rem; border-radius: 0.5rem; border: 1px solid var(--brand-beige-dark, #D9C5B2);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-weight: 700; color: var(--brand-navy, #16313A); font-size: 0.95rem;">Progreso de tu Postulación</span>
+        <span style="font-weight: 800; color: var(--brand-gold, #B39C70); font-size: 1.1rem;">{{ getCompletitudPorcentaje() }}%</span>
+      </div>
+      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+        <div [style.width.%]="getCompletitudPorcentaje()" style="height: 100%; background: linear-gradient(90deg, var(--brand-gold, #B39C70) 0%, var(--brand-navy, #16313A) 100%); transition: width 0.3s ease-in-out;"></div>
+      </div>
+      <p style="font-size: 0.8rem; color: #64748b; margin: 0.4rem 0 0 0;" *ngIf="getCompletitudPorcentaje() < 100">
+        Completa las secciones del formulario para mejorar la calidad de tu postulación.
+      </p>
+      <p style="font-size: 0.8rem; color: #15803d; margin: 0.4rem 0 0 0; font-weight: 600;" *ngIf="getCompletitudPorcentaje() === 100">
+        ¡Tu postulación está completa y lista para ser enviada al 100%!
+      </p>
+    </div>
+
     <!-- Tab Navigation -->
     <nav class="tab-nav">
-      <button type="button" class="tab-btn" [class.active]="activeTab === 'basica'" (click)="setTab('basica')">
+      <button *ngIf="campos_requeridos.informacion_basica" type="button" class="tab-btn" [class.active]="activeTab === 'basica'" (click)="setTab('basica')">
         Información Básica
       </button>
-      <button type="button" class="tab-btn" [class.active]="activeTab === 'educacion'" (click)="setTab('educacion')">
-        Nivel Educativo
+      <button *ngIf="campos_requeridos.nivel_educativo" type="button" class="tab-btn" [class.active]="activeTab === 'educacion'" (click)="setTab('educacion')">
+        Formación Académica
       </button>
-      <button type="button" class="tab-btn" [class.active]="activeTab === 'experiencia'"
+      <button *ngIf="campos_requeridos.experiencia_laboral" type="button" class="tab-btn" [class.active]="activeTab === 'experiencia'"
         (click)="setTab('experiencia')">
         Experiencia Laboral
       </button>
-      <button type="button" class="tab-btn" [class.active]="activeTab === 'informal'" (click)="setTab('informal')">
-        Educación Informal
+      <button *ngIf="campos_requeridos.educacion_informal" type="button" class="tab-btn" [class.active]="activeTab === 'informal'" (click)="setTab('informal')">
+        Cursos y Certificaciones
       </button>
-      <button type="button" class="tab-btn" [class.active]="activeTab === 'idiomas'" (click)="setTab('idiomas')">
+      <button *ngIf="campos_requeridos.idiomas_habilidades" type="button" class="tab-btn" [class.active]="activeTab === 'idiomas'" (click)="setTab('idiomas')">
         Idiomas y Habilidades
       </button>
     </nav>
@@ -63,7 +80,7 @@
       (fileSelected)="onFileSelected($event)">
     </app-postulacion-informacion-basica>
 
-    <!-- Pestaña 2: Nivel Educativo -->
+    <!-- Pestaña 2: Formación Académica -->
     <app-postulacion-nivel-educativo *ngIf="activeTab === 'educacion'" [(tieneEducacionFormal)]="tieneEducacionFormal"
       [(estudios)]="estudios">
     </app-postulacion-nivel-educativo>
@@ -72,7 +89,7 @@
     <app-postulacion-experiencia-laboral *ngIf="activeTab === 'experiencia'" [(experiencias)]="experiencias">
     </app-postulacion-experiencia-laboral>
 
-    <!-- Pestaña 4: Educación Informal -->
+    <!-- Pestaña 4: Cursos y Certificaciones -->
     <app-postulacion-educacion-informal *ngIf="activeTab === 'informal'"
       [(tieneEducacionInformal)]="tieneEducacionInformal" [(capacitaciones)]="capacitaciones">
     </app-postulacion-educacion-informal>
@@ -85,13 +102,13 @@
     <!-- Navegación de pestañas inferior -->
     <div class="footer-navigation">
       <button type="button" class="nav-prev-btn" (click)="prevTab()" [disabled]="activeTab === 'basica'">
-        ❮ {{ activeTab === 'educacion' ? 'Información Básica' : (activeTab === 'experiencia' ? 'Nivel Educativo' :
-        (activeTab === 'informal' ? 'Experiencia Laboral' : 'Educación Informal')) }}
+        ❮ {{ activeTab === 'educacion' ? 'Información Básica' : (activeTab === 'experiencia' ? 'Formación Académica' :
+        (activeTab === 'informal' ? 'Experiencia Laboral' : 'Cursos y Certificaciones')) }}
       </button>
 
       <button type="button" class="nav-next-btn" *ngIf="activeTab !== 'idiomas'" (click)="nextTab()">
-        {{ activeTab === 'basica' ? 'Nivel Educativo' : (activeTab === 'educacion' ? 'Experiencia Laboral' : (activeTab
-        === 'experiencia' ? 'Educación Informal' : 'Idiomas y Habilidades')) }} ❯
+        {{ activeTab === 'basica' ? 'Formación Académica' : (activeTab === 'educacion' ? 'Experiencia Laboral' : (activeTab
+        === 'experiencia' ? 'Cursos y Certificaciones' : 'Idiomas y Habilidades')) }} ❯
       </button>
 
       <!-- Botón final de envío en la última pestaña -->
