@@ -6,45 +6,44 @@
         <label for="nombre_completo">Nombre Completo</label>
         <input type="text" id="nombre_completo" name="nombre_completo" [ngModel]="nombre_completo"
           (ngModelChange)="onNombreChange($event)" required placeholder="Ingresa tus nombres y apellidos"
-          class="form-control" />
+          class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
       <div class="form-group required">
         <label for="correo">Correo Electrónico</label>
         <input type="email" id="correo" name="correo" [ngModel]="correo" (ngModelChange)="onCorreoChange($event)"
-          required placeholder="ejemplo@correo.com" class="form-control" />
+          required placeholder="ejemplo@correo.com" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
       <div class="form-group required">
         <label for="cedula">Cédula / Documento de Identidad</label>
         <input type="text" id="cedula" name="cedula" [ngModel]="cedula" (ngModelChange)="onCedulaChange($event)"
-          required placeholder="1020304050" class="form-control" />
+          required placeholder="1020304050" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
       <div class="form-group required">
         <label for="fecha_nacimiento">Fecha de Nacimiento</label>
         <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" [ngModel]="fecha_nacimiento"
-          (ngModelChange)="onFechaNacimientoChange($event)" required class="form-control" />
+          (ngModelChange)="onFechaNacimientoChange($event)" required class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
       <div class="form-group full-width">
         <label for="telefono">Teléfono / Celular</label>
         <input type="text" id="telefono" name="telefono" [ngModel]="telefono" (ngModelChange)="onTelefonoChange($event)"
-          placeholder="+57 300 123 4567" class="form-control" />
+          placeholder="+57 300 123 4567" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
     </div>
   </fieldset>
 
-
-
   <!-- Adjuntar Hoja de Vida -->
   <fieldset class="form-fieldset file-upload-fieldset">
     <legend>Adjuntar Hoja de Vida (Requisito Obligatorio)</legend>
-    <div class="file-dropzone" [ngClass]="{'has-file': archivoNombre, 'invalid-file': archivoInvalido}">
+    <div class="file-dropzone" [ngClass]="{'has-file': archivoNombre, 'invalid-file': archivoInvalido, 'disabled-zone': readOnly}" [style.pointer-events]="readOnly ? 'none' : 'auto'" [style.opacity]="readOnly ? '0.7' : '1'">
       <div class="dropzone-content">
         <span class="material-icons file-icon"
           style="font-size: 2.5rem; color: var(--brand-navy, #16313A); margin-bottom: 0.5rem;">description</span>
         <p *ngIf="!archivoNombre">Arrastra tu Hoja de Vida aquí o haz clic para buscar</p>
         <p *ngIf="archivoNombre" class="filename-display">{{ archivoNombre }}</p>
-        <span class="file-hint">Formatos permitidos: PDF, DOCX, DOC (Máx. 10MB)</span>
+        <span class="file-hint" *ngIf="!readOnly">Formatos permitidos: PDF, DOCX, DOC (Máx. 10MB)</span>
+        <span class="file-hint" *ngIf="readOnly" style="color: #64748b; font-weight: 600; display: block; margin-top: 0.25rem;">Para cambiar tu Hoja de Vida, modifícala desde tu perfil.</span>
         <input type="file" id="hv_file" (change)="onFileChange($event)" accept=".pdf,.docx,.doc"
-          class="hidden-file-input" />
+          class="hidden-file-input" [disabled]="readOnly" />
       </div>
     </div>
   </fieldset>

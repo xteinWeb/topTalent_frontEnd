@@ -34,6 +34,8 @@ export class InformacionBasicaComponent {
   @Input() archivoInvalido: boolean = false;
   @Output() archivoInvalidoChange = new EventEmitter<boolean>();
 
+  @Input() readOnly: boolean = false;
+
   @Output() fileSelected = new EventEmitter<any>();
 
   onNombreChange(val: string): void {

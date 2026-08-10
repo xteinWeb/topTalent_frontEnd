@@ -34,6 +34,10 @@ export class PostulacionFormComponent implements OnInit {
   submitting: boolean = false;
   successMsg: boolean = false;
   errorMsg: string = '';
+  showIncompleteWarningModal: boolean = false;
+  showErrorModal: boolean = false;
+  errorMessageModalText: string = '';
+  isLoggedIn: boolean = false;
 
   // Calcular porcentaje de completitud del perfil/postulación
   getCompletitudPorcentaje(): number {
@@ -278,6 +282,7 @@ export class PostulacionFormComponent implements OnInit {
 
         // Intercept flows
         const isUserLoggedIn = this.candidatoService.isLoggedIn();
+        this.isLoggedIn = isUserLoggedIn;
         if (this.requiere_registro && !isUserLoggedIn) {
           // Redirect to login page
           this.router.navigate(['/candidato/login'], { queryParams: { returnUrl: `/postular/${this.vacanteId}` } });
@@ -574,17 +579,61 @@ export class PostulacionFormComponent implements OnInit {
     }
   }
 
+  isProfileIncomplete(): boolean {
+    if (this.campos_requeridos.nivel_educativo !== false && (!this.estudios || this.estudios.length === 0)) {
+      return true;
+    }
+    if (this.campos_requeridos.experiencia_laboral !== false && (!this.experiencias || this.experiencias.length === 0)) {
+      return true;
+    }
+    if (this.campos_requeridos.idiomas_habilidades !== false) {
+      const habilidadesLlenas = this.habilidades && (
+        (this.habilidades.tecnicas && this.habilidades.tecnicas.length > 0) ||
+        (this.habilidades.interpersonales && this.habilidades.interpersonales.length > 0) ||
+        (this.habilidades.otros && this.habilidades.otros.length > 0)
+      );
+      if (!habilidadesLlenas && (!this.idiomas || this.idiomas.length === 0)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  confirmPostulateAnyway(): void {
+    this.showIncompleteWarningModal = false;
+    this.executePostulation();
+  }
+
+  triggerErrorModal(msg: string): void {
+    this.errorMessageModalText = msg;
+    this.showErrorModal = true;
+  }
+
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+    this.errorMessageModalText = '';
+  }
+
   onSubmit(): void {
     if (!this.nombre_completo.trim() || !this.correo.trim()) {
-      alert('Por favor complete la información obligatoria de contacto.');
+      this.triggerErrorModal('Por favor complete la información obligatoria de contacto.');
       return;
     }
 
-    if (!this.archivoHv) {
-      alert('Debe adjuntar su archivo de Hoja de Vida (PDF) para completar la postulación.');
+    if (!this.archivoHv && !this.archivoNombre) {
+      this.triggerErrorModal('Debe adjuntar su archivo de Hoja de Vida (PDF) para completar la postulación.');
       return;
     }
 
+    if (this.isProfileIncomplete()) {
+      this.showIncompleteWarningModal = true;
+      return;
+    }
+
+    this.executePostulation();
+  }
+
+  executePostulation(): void {
     this.submitting = true;
 
     // Map studies_json, experiencias_json, idiomas_json, habilidades_json properly
@@ -659,18 +708,22 @@ export class PostulacionFormComponent implements OnInit {
       candidato_id: this.candidato_id
     };
 
-    this.postulacionService.postular(postulacionPayload, this.archivoHv).subscribe({
+    this.postulacionService.postular(postulacionPayload, this.archivoHv as File).subscribe({
       next: (res) => {
-        this.postulacionService.postularWebhook(postulacionPayload, this.archivoHv!).subscribe({
-          next: (resWebhook) => console.log('Postulación enviada correctamente a Webhook:', resWebhook),
-          error: (errWebhook) => console.error('Error al enviar la postulación a Webhook:', errWebhook)
-        });
+        if (this.archivoHv) {
+          this.postulacionService.postularWebhook(postulacionPayload, this.archivoHv).subscribe({
+            next: (resWebhook) => console.log('Postulación enviada correctamente a Webhook:', resWebhook),
+            error: (errWebhook) => console.error('Error al enviar la postulación a Webhook:', errWebhook)
+          });
+        } else {
+          console.log('Postulación enviada sin archivo nuevo.');
+        }
 
         this.submitting = false;
         this.successMsg = true;
       },
       error: (err) => {
-        alert('Error al enviar la postulación: ' + (err.error?.error || err.message));
+        this.triggerErrorModal('Error al enviar la postulación: ' + (err.error?.error || err.message));
         this.submitting = false;
         console.error(err);
       }

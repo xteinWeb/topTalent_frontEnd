@@ -45,8 +45,12 @@ export class CandidatoService {
     });
   }
 
-  registro(email: string, password: string): Observable<CandidatoResponse> {
-    return this.http.post<CandidatoResponse>(`${this.apiUrl}/registro`, { email, password }).pipe(
+  registro(email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/registro`, { email, password });
+  }
+
+  verificarCodigo(email: string, codigo: string): Observable<CandidatoResponse> {
+    return this.http.post<CandidatoResponse>(`${this.apiUrl}/verificar`, { email, codigo }).pipe(
       tap(res => {
         if (res && res.token) {
           localStorage.setItem('candidato_token', res.token);

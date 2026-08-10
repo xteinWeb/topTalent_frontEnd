@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { CandidatoService, CandidatoPerfil } from '../../../services/candidato.service';
 import { InformacionBasicaComponent } from '../../postulacion-form/subcomponents/informacion-basica/informacion-basica.component';
 import { NivelEducativoComponent } from '../../postulacion-form/subcomponents/nivel-educativo/nivel-educativo.component';
@@ -106,9 +106,12 @@ export class CandidatoPerfilComponent implements OnInit {
   archivoInvalido = false;
   showSuccessModal = false;
 
+  returnUrl: string | null = null;
+
   constructor(
     private candidatoService: CandidatoService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1970; y--) {
@@ -117,6 +120,10 @@ export class CandidatoPerfilComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.returnUrl = params['returnUrl'] || null;
+    });
+
     const user = this.candidatoService.getCurrentUser();
     if (!user) {
       this.router.navigate(['/candidato/login']);
@@ -193,6 +200,28 @@ export class CandidatoPerfilComponent implements OnInit {
   }
 
   saveProfile(): void {
+    // Auto-commit pending studies form if filled out
+    if (this.showEstudioForm && this.nuevoEstudio.nivel && this.nuevoEstudio.titulo && this.nuevoEstudio.institucion && this.nuevoEstudio.estado) {
+      this.estudios.push({ ...this.nuevoEstudio });
+      this.showEstudioForm = false;
+    }
+
+    // Auto-commit pending training (capacitaciones) form if filled out
+    if (this.showCapacitacionForm && this.nuevaCapacitacion.tipo && this.nuevaCapacitacion.nombre && this.nuevaCapacitacion.institucion) {
+      this.capacitaciones.push({ ...this.nuevaCapacitacion });
+      this.showCapacitacionForm = false;
+    }
+
+    // Auto-commit pending experiences form if filled out
+    if (this.showExperienciaForm && this.nuevaExperiencia.cargo && this.nuevaExperiencia.empresa && this.nuevaExperiencia.funciones) {
+      this.experiencias.push({ ...this.nuevaExperiencia });
+      this.showExperienciaForm = false;
+    }
+
+    // Auto-detect and set education flags
+    this.tieneEducacionFormal = this.estudios.length > 0 ? 'Si' : 'No';
+    this.tieneEducacionInformal = this.capacitaciones.length > 0 ? 'Si' : 'No';
+
     this.saving = true;
     const profilePayload = {
       perfil_completo_json: {
@@ -227,7 +256,11 @@ export class CandidatoPerfilComponent implements OnInit {
 
   closeModal(): void {
     this.showSuccessModal = false;
-    this.router.navigate(['/ofertas']);
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+    } else {
+      this.router.navigate(['/ofertas']);
+    }
   }
 
   onFileSelected(event: any): void {

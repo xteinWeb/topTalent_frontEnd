@@ -6,7 +6,8 @@
       <p class="subtitle">Regístrate para guardar tu hoja de vida</p>
     </div>
 
-    <form (ngSubmit)="onSubmit()" #regForm="ngForm" class="login-form">
+    <!-- Paso 1: Registro -->
+    <form *ngIf="!showVerificationStep" (ngSubmit)="onSubmit()" #regForm="ngForm" class="login-form">
       <div *ngIf="errorMessage" class="error-alert">
         <span class="error-icon">⚠️</span>
         <span class="error-text">{{ errorMessage }}</span>
@@ -57,7 +58,43 @@
       </button>
     </form>
 
-    <div class="register-prompt">
+    <!-- Paso 2: Verificación de Código -->
+    <form *ngIf="showVerificationStep" (ngSubmit)="verifyCode()" #verifyForm="ngForm" class="login-form">
+      <div *ngIf="errorMessage" class="error-alert">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">{{ errorMessage }}</span>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <span class="material-icons" style="font-size: 3rem; color: var(--brand-gold, #B39C70); display: block; margin-bottom: 0.5rem;">mail_outline</span>
+        <p style="font-size: 0.9rem; color: #475569; line-height: 1.4;">Hemos enviado un código de verificación de 6 dígitos al correo: <strong style="color: var(--brand-navy, #16313A);">{{ email }}</strong></p>
+      </div>
+
+      <div class="form-group">
+        <label for="verificationCode" style="text-align: center; display: block; font-weight: 700; letter-spacing: 0.5px;">Código de Verificación</label>
+        <input 
+          type="text" 
+          id="verificationCode" 
+          name="verificationCode" 
+          [(ngModel)]="verificationCode" 
+          required 
+          maxlength="6"
+          placeholder="000000"
+          style="text-align: center; font-size: 1.5rem; letter-spacing: 6px; font-weight: 700; padding: 0.5rem;"
+          autocomplete="one-time-code"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-login" [disabled]="loading || !verificationCode || verificationCode.trim().length !== 6">
+        {{ loading ? 'Verificando...' : 'Verificar y Activar Cuenta' }}
+      </button>
+
+      <button type="button" class="btn" style="background: transparent; color: #64748b; border: 1px solid #cbd5e1; margin-top: 0.75rem; width: 100%;" (click)="showVerificationStep = false; errorMessage = ''">
+        Atrás
+      </button>
+    </form>
+
+    <div class="register-prompt" *ngIf="!showVerificationStep">
       <p>¿Ya tienes una cuenta? <a routerLink="/candidato/login" [queryParams]="{ returnUrl: returnUrl }">Inicia sesión</a></p>
     </div>
   </div>

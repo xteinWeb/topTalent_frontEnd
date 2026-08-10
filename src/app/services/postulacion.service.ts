@@ -64,6 +64,9 @@ export class PostulacionService {
     formData.append('estudios_json', JSON.stringify(postulacion.estudios_json));
     formData.append('idiomas_json', JSON.stringify(postulacion.idiomas_json));
     formData.append('habilidades_json', JSON.stringify(postulacion.habilidades_json));
+    if (postulacion.candidato_id) {
+      formData.append('candidato_id', postulacion.candidato_id);
+    }
     if (archivo) {
       formData.append('hv_archivo', archivo, archivo.name);
     }
@@ -81,6 +84,9 @@ export class PostulacionService {
     formData.append('estudios_json', JSON.stringify(postulacion.estudios_json));
     formData.append('idiomas_json', JSON.stringify(postulacion.idiomas_json));
     formData.append('habilidades_json', JSON.stringify(postulacion.habilidades_json));
+    if (postulacion.candidato_id) {
+      formData.append('candidato_id', postulacion.candidato_id);
+    }
     if (archivo) {
       formData.append('hv_archivo', archivo, archivo.name);
     }

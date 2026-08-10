@@ -27,6 +27,12 @@
   <form *ngIf="!loading && !errorMsg && !successMsg" (ngSubmit)="onSubmit()" #postularForm="ngForm"
     class="job-application-form">
 
+    <div style="margin-bottom: 1rem; display: flex; align-items: center;">
+      <a [routerLink]="vacanteId ? '/oferta/' + vacanteId : '/ofertas'" style="color: var(--brand-navy, #16313A); text-decoration: none; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+        <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">arrow_back</span> Volver a la oferta
+      </a>
+    </div>
+
     <header class="application-header">
       <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-negro).png" alt="Artdecon Logo" class="brand-logo">
       <div class="job-info">
@@ -38,85 +44,83 @@
 
     <!-- Completitud de Postulación -->
     <div class="completitud-container" style="margin-bottom: 1.5rem; background: var(--brand-beige-light, #FAF9F6); padding: 1rem 1.5rem; border-radius: 0.5rem; border: 1px solid var(--brand-beige-dark, #D9C5B2);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-        <span style="font-weight: 700; color: var(--brand-navy, #16313A); font-size: 0.95rem;">Progreso de tu Postulación</span>
-        <span style="font-weight: 800; color: var(--brand-gold, #B39C70); font-size: 1.1rem;">{{ getCompletitudPorcentaje() }}%</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <span style="font-weight: 700; color: var(--brand-navy, #16313A); font-size: 0.95rem; display: block;">Progreso de tu Perfil</span>
+          <span style="font-size: 0.8rem; color: #64748b;" *ngIf="getCompletitudPorcentaje() < 100">
+            Completa tu perfil profesional para aumentar tus posibilidades de ser contratado.
+          </span>
+          <span style="font-size: 0.8rem; color: #15803d; font-weight: 600;" *ngIf="getCompletitudPorcentaje() === 100">
+            ¡Tu perfil está al 100% completado!
+          </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <a [routerLink]="['/candidato/perfil']" [queryParams]="{ returnUrl: '/postular/' + vacanteId }" style="background: var(--brand-navy, #16313A); color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; transition: background 0.2s;" onmouseover="this.style.background='#224754'" onmouseout="this.style.background='#16313A'">
+            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">edit</span> Terminar perfil
+          </a>
+          <span style="font-weight: 800; color: var(--brand-gold, #B39C70); font-size: 1.1rem;">{{ getCompletitudPorcentaje() }}%</span>
+        </div>
       </div>
-      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 0.5rem;">
         <div [style.width.%]="getCompletitudPorcentaje()" style="height: 100%; background: linear-gradient(90deg, var(--brand-gold, #B39C70) 0%, var(--brand-navy, #16313A) 100%); transition: width 0.3s ease-in-out;"></div>
       </div>
-      <p style="font-size: 0.8rem; color: #64748b; margin: 0.4rem 0 0 0;" *ngIf="getCompletitudPorcentaje() < 100">
-        Completa las secciones del formulario para mejorar la calidad de tu postulación.
-      </p>
-      <p style="font-size: 0.8rem; color: #15803d; margin: 0.4rem 0 0 0; font-weight: 600;" *ngIf="getCompletitudPorcentaje() === 100">
-        ¡Tu postulación está completa y lista para ser enviada al 100%!
-      </p>
     </div>
 
-    <!-- Tab Navigation -->
-    <nav class="tab-nav">
-      <button *ngIf="campos_requeridos.informacion_basica" type="button" class="tab-btn" [class.active]="activeTab === 'basica'" (click)="setTab('basica')">
-        Información Básica
-      </button>
-      <button *ngIf="campos_requeridos.nivel_educativo" type="button" class="tab-btn" [class.active]="activeTab === 'educacion'" (click)="setTab('educacion')">
-        Formación Académica
-      </button>
-      <button *ngIf="campos_requeridos.experiencia_laboral" type="button" class="tab-btn" [class.active]="activeTab === 'experiencia'"
-        (click)="setTab('experiencia')">
-        Experiencia Laboral
-      </button>
-      <button *ngIf="campos_requeridos.educacion_informal" type="button" class="tab-btn" [class.active]="activeTab === 'informal'" (click)="setTab('informal')">
-        Cursos y Certificaciones
-      </button>
-      <button *ngIf="campos_requeridos.idiomas_habilidades" type="button" class="tab-btn" [class.active]="activeTab === 'idiomas'" (click)="setTab('idiomas')">
-        Idiomas y Habilidades
-      </button>
-    </nav>
-
     <!-- Pestaña 1: Información Básica -->
-    <app-postulacion-informacion-basica *ngIf="activeTab === 'basica'" [(nombre_completo)]="nombre_completo"
+    <app-postulacion-informacion-basica [(nombre_completo)]="nombre_completo"
       [(correo)]="correo" [(telefono)]="telefono" [(cedula)]="cedula" [(fecha_nacimiento)]="fecha_nacimiento"
       [(archivoHv)]="archivoHv" [(archivoNombre)]="archivoNombre" [(archivoInvalido)]="archivoInvalido"
-      (fileSelected)="onFileSelected($event)">
+      [readOnly]="isLoggedIn" (fileSelected)="onFileSelected($event)">
     </app-postulacion-informacion-basica>
 
-    <!-- Pestaña 2: Formación Académica -->
-    <app-postulacion-nivel-educativo *ngIf="activeTab === 'educacion'" [(tieneEducacionFormal)]="tieneEducacionFormal"
-      [(estudios)]="estudios">
-    </app-postulacion-nivel-educativo>
-
-    <!-- Pestaña 3: Experiencia Laboral -->
-    <app-postulacion-experiencia-laboral *ngIf="activeTab === 'experiencia'" [(experiencias)]="experiencias">
-    </app-postulacion-experiencia-laboral>
-
-    <!-- Pestaña 4: Cursos y Certificaciones -->
-    <app-postulacion-educacion-informal *ngIf="activeTab === 'informal'"
-      [(tieneEducacionInformal)]="tieneEducacionInformal" [(capacitaciones)]="capacitaciones">
-    </app-postulacion-educacion-informal>
-
-    <!-- Pestaña 5: Idiomas y Habilidades -->
-    <app-postulacion-idiomas-habilidades *ngIf="activeTab === 'idiomas'" [(idiomas)]="idiomas"
-      [(habilidades)]="habilidades">
-    </app-postulacion-idiomas-habilidades>
-
-    <!-- Navegación de pestañas inferior -->
-    <div class="footer-navigation">
-      <button type="button" class="nav-prev-btn" (click)="prevTab()" [disabled]="activeTab === 'basica'">
-        ❮ {{ activeTab === 'educacion' ? 'Información Básica' : (activeTab === 'experiencia' ? 'Formación Académica' :
-        (activeTab === 'informal' ? 'Experiencia Laboral' : 'Cursos y Certificaciones')) }}
-      </button>
-
-      <button type="button" class="nav-next-btn" *ngIf="activeTab !== 'idiomas'" (click)="nextTab()">
-        {{ activeTab === 'basica' ? 'Formación Académica' : (activeTab === 'educacion' ? 'Experiencia Laboral' : (activeTab
-        === 'experiencia' ? 'Cursos y Certificaciones' : 'Idiomas y Habilidades')) }} ❯
-      </button>
-
-      <!-- Botón final de envío en la última pestaña -->
-      <button type="submit" class="nav-submit-btn" *ngIf="activeTab === 'idiomas'"
-        [disabled]="submitting || !postularForm.form.valid || !archivoHv">
-        {{ submitting ? 'Enviando...' : 'Enviar Postulación Profesional' }}
+    <!-- Botón de Envío -->
+    <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+      <button type="submit" class="nav-submit-btn" style="width: 100%; max-width: 300px; padding: 0.75rem 1.5rem;"
+        [disabled]="submitting || !postularForm.form.valid || (!archivoHv && !archivoNombre)">
+        {{ submitting ? 'Enviando...' : 'Enviar Postulación' }}
       </button>
     </div>
 
   </form>
+
+  <!-- Modal de Advertencia Perfil Incompleto -->
+  <div *ngIf="showIncompleteWarningModal" class="custom-modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+    <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); border: 1px solid var(--brand-beige-dark, #D9C5B2);">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: #d97706;">
+        <span class="material-icons" style="font-size: 2.2rem;">warning</span>
+        <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--brand-navy, #16313A);">Perfil Incompleto</h3>
+      </div>
+      <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+        Esta vacante tiene requisitos obligatorios en tu perfil que aún no has completado (como formación académica, experiencia o habilidades).
+        <strong style="display: block; margin-top: 0.75rem; color: var(--brand-navy, #16313A); font-size: 1rem;">Si no completas los datos obligatorios del perfil tienes menos posibilidades de ser escogido.</strong>
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
+        <button type="button" (click)="confirmPostulateAnyway()" style="background: transparent; color: #64748b; border: 1px solid #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+          Enviar de todos modos
+        </button>
+        <a [routerLink]="['/candidato/perfil']" [queryParams]="{ returnUrl: '/postular/' + vacanteId }" style="background: var(--brand-navy, #16313A); color: white; padding: 0.6rem 1.2rem; border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 0.9rem; text-align: center; transition: background 0.2s;" onmouseover="this.style.background='#224754'" onmouseout="this.style.background='#16313A'">
+          Completar perfil
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Mensaje / Error -->
+  <div *ngIf="showErrorModal" class="custom-modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+    <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); border: 1px solid var(--brand-beige-dark, #D9C5B2);">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: #dc2626;">
+        <span class="material-icons" style="font-size: 2.2rem;">error_outline</span>
+        <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--brand-navy, #16313A);">Atención</h3>
+      </div>
+      <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+        {{ errorMessageModalText }}
+      </p>
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="button" (click)="closeErrorModal()" style="background: var(--brand-navy, #16313A); color: white; padding: 0.6rem 1.5rem; border-radius: 0.375rem; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='#224754'" onmouseout="this.style.background='#16313A'">
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

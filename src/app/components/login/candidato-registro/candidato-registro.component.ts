@@ -15,6 +15,8 @@ export class CandidatoRegistroComponent implements OnInit {
   email = '';
   password = '';
   confirmPassword = '';
+  verificationCode = '';
+  showVerificationStep = false;
   loading = false;
   errorMessage = '';
   returnUrl = '';
@@ -41,13 +43,35 @@ export class CandidatoRegistroComponent implements OnInit {
     this.errorMessage = '';
 
     this.candidatoService.registro(this.email, this.password).subscribe({
-      next: () => {
+      next: (res) => {
+        this.loading = false;
+        this.showVerificationStep = true;
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMessage = err.error?.error || 'Ocurrió un error al registrar el usuario.';
+        console.error(err);
+      }
+    });
+  }
+
+  verifyCode(): void {
+    if (!this.verificationCode || this.verificationCode.trim().length !== 6) {
+      this.errorMessage = 'Por favor ingresa el código de verificación de 6 dígitos.';
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.candidatoService.verificarCodigo(this.email, this.verificationCode).subscribe({
+      next: (res) => {
         this.loading = false;
         this.router.navigateByUrl(this.returnUrl);
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.error || 'Ocurrió un error al registrar el usuario.';
+        this.errorMessage = err.error?.error || 'El código de verificación es incorrecto.';
         console.error(err);
       }
     });
