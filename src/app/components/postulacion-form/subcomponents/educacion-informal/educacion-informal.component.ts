@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CatalogoService } from '../../../../services/catalogo.service';
 
 @Component({
   selector: 'app-postulacion-educacion-informal',
@@ -9,21 +10,14 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './educacion-informal.component.html',
   styleUrls: ['../../postulacion-form.component.css']
 })
-export class EducacionInformalComponent {
+export class EducacionInformalComponent implements OnInit {
   @Input() tieneEducacionInformal: string = 'No';
   @Output() tieneEducacionInformalChange = new EventEmitter<string>();
 
   @Input() capacitaciones: any[] = [];
   @Output() capacitacionesChange = new EventEmitter<any[]>();
 
-  listaTiposCapacitacion: string[] = [
-    'Curso',
-    'Diplomado',
-    'Seminario',
-    'Congreso',
-    'Certificación',
-    'Otro'
-  ];
+  listaTiposCapacitacion: string[] = [];
 
   listaPaises: string[] = ['Colombia', 'Venezuela', 'Ecuador', 'Perú', 'Argentina', 'Chile', 'España', 'Estados Unidos', 'Otro'];
 
@@ -45,11 +39,18 @@ export class EducacionInformalComponent {
     anioFin: ''
   };
 
-  constructor() {
+  constructor(private catalogoService: CatalogoService) {
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1970; y--) {
       this.listaAnios.push(y);
     }
+  }
+
+  ngOnInit(): void {
+    this.catalogoService.getByTipo('TIPO_CAPACITACION').subscribe({
+      next: (valores) => this.listaTiposCapacitacion = valores,
+      error: (err) => console.error('Error al cargar tipos de capacitación:', err)
+    });
   }
 
   onTieneEducacionInformalChange(val: string): void {

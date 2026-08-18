@@ -72,13 +72,6 @@
           </div>
 
           <div class="form-group">
-            <label>Título Corto</label>
-            <input type="text" name="preg_titulo_{{i}}" [(ngModel)]="preg.titulo"
-              (ngModelChange)="preguntasChange.emit(preguntas)" required placeholder="Ej. Conciliación Bancaria"
-              style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
-          </div>
-
-          <div class="form-group">
             <label>Peso / Importancia</label>
             <input type="number" name="preg_peso_{{i}}" [(ngModel)]="preg.peso"
               (ngModelChange)="preguntasChange.emit(preguntas)" step="0.1" required
@@ -97,7 +90,7 @@
         <div class="form-group full-width" style="margin-bottom: 1rem; display: flex; flex-direction: column;">
           <label>Enunciado de la Pregunta</label>
           <textarea name="preg_pregunta_{{i}}" rows="3" [(ngModel)]="preg.pregunta"
-            (ngModelChange)="preguntasChange.emit(preguntas)" required
+            (ngModelChange)="onPreguntaTextChange(i)" required
             placeholder="Escriba la pregunta completa aquí..."
             style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.5rem; font-family: inherit; resize: vertical;"></textarea>
         </div>
@@ -132,8 +125,39 @@
           </div>
         </div>
 
-        <!-- Rubric Editor (Abierta) -->
-        <div *ngIf="preg.tipo === 'Abierta'" class="rubric-editor"
+        <!-- Rubric Editor (Criterios Ponderados - formato IA actual) -->
+        <div *ngIf="preg.rubrica_criterios" class="rubric-editor"
+          style="margin-top: 1rem; border-top: 1px dashed #eee; padding-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="margin: 0; font-size: 0.9rem; color: var(--brand-navy); font-weight: 600;">Rúbrica de
+              Evaluación (Criterios Ponderados)</h4>
+            <button type="button" class="btn btn-secondary btn-xs" (click)="addCriterio(i)">+ Añadir Criterio</button>
+          </div>
+
+          <div class="list-entries">
+            <div class="list-item-row" *ngFor="let crit of preg.rubrica_criterios.criterios; let k = index"
+              style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
+              <input type="text" name="preg_{{i}}_crit_desc_{{k}}" [(ngModel)]="crit.descripcion"
+                (ngModelChange)="preguntasChange.emit(preguntas)" placeholder="Descripción del criterio"
+                style="flex: 3; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.9rem;" />
+              <input type="number" name="preg_{{i}}_crit_peso_{{k}}" [(ngModel)]="crit.peso"
+                (ngModelChange)="preguntasChange.emit(preguntas)" placeholder="Peso"
+                style="flex: 1; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem; font-size: 0.9rem;" />
+              <button type="button" class="remove-row-btn" (click)="removeCriterio(i, k)"
+                *ngIf="preg.rubrica_criterios.criterios.length > 1">✕</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="max-width: 220px; margin-top: 0.75rem;">
+            <label style="font-size: 0.8rem;">Puntuación Máxima</label>
+            <input type="number" name="preg_{{i}}_puntuacion_maxima" [(ngModel)]="preg.rubrica_criterios.puntuacion_maxima"
+              (ngModelChange)="preguntasChange.emit(preguntas)"
+              style="width: 100%; border-radius: 4px; border: 1.5px solid #ddd; padding: 0.4rem;" />
+          </div>
+        </div>
+
+        <!-- Rubric Editor (Abierta - formato manual clásico) -->
+        <div *ngIf="preg.tipo === 'Abierta' && !preg.rubrica_criterios" class="rubric-editor"
           style="margin-top: 1rem; border-top: 1px dashed #eee; padding-top: 1rem;">
           <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--brand-navy); font-weight: 600;">Rúbrica de
             Evaluación</h4>

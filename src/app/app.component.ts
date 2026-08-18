@@ -22,9 +22,11 @@ export class AppComponent {
       startWith(null),
       map(() => {
         const url = this.router.url;
-        return !url.startsWith('/ofertas') && 
-               !url.startsWith('/oferta') && 
-               !url.startsWith('/postular') && 
+        return url !== '/' &&
+               !url.startsWith('/ofertas') &&
+               !url.startsWith('/oferta') &&
+               !url.startsWith('/postular') &&
+               !url.startsWith('/candidato') &&
                !url.startsWith('/login');
       })
     );

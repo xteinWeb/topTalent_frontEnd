@@ -22,8 +22,18 @@ export const routes: Routes = [
   { path: 'candidato/registro', component: CandidatoRegistroComponent },
   { path: 'candidato/perfil', component: CandidatoPerfilComponent, canActivate: [candidatoAuthGuard] },
   
+  // Portal Público de Ofertas (Public) - Punto de entrada principal
+  { path: '', component: OfertasPublicasListComponent },
+  { path: 'ofertas', redirectTo: '', pathMatch: 'full' },
+
+  // Detalle de Oferta Público (Public)
+  { path: 'oferta/:id', component: OfertaDetalleComponent },
+
+  // Formulario de Postulación Público (Public)
+  { path: 'postular/:vacanteId', component: PostulacionFormComponent },
+
   // Perfiles de Cargo (Private)
-  { path: '', component: PerfilListComponent, canActivate: [authGuard] },
+  { path: 'dashboard', component: PerfilListComponent, canActivate: [authGuard] },
   { path: 'nuevo', component: PerfilFormComponent, canActivate: [authGuard] },
   { path: 'editar/:id', component: PerfilFormComponent, canActivate: [authGuard] },
 
@@ -35,15 +45,6 @@ export const routes: Routes = [
   // Postulaciones (Private)
   { path: 'postulaciones', component: PostulacionListComponent, canActivate: [authGuard] },
   { path: 'postulaciones/vacante/:vacanteId', component: PostulacionListComponent, canActivate: [authGuard] },
-
-  // Portal Público de Ofertas (Public)
-  { path: 'ofertas', component: OfertasPublicasListComponent },
-  
-  // Detalle de Oferta Público (Public)
-  { path: 'oferta/:id', component: OfertaDetalleComponent },
-
-  // Formulario de Postulación Público (Public)
-  { path: 'postular/:vacanteId', component: PostulacionFormComponent },
 
   { path: '**', redirectTo: '' }
 ];

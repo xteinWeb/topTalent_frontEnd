@@ -1,10 +1,10 @@
 <header class="app-navbar" *ngIf="showNavbar$ | async">
   <div class="nav-container">
-    <div class="nav-brand" routerLink="/">
+    <div class="nav-brand" routerLink="/dashboard">
       <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-blanco).png" alt="Artdecon Logo">
     </div>
     <nav class="nav-links">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Perfiles de Cargo</a>
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Perfiles de Cargo</a>
       <a routerLink="/vacantes" routerLinkActive="active">Vacantes</a>
       <a routerLink="/postulaciones" routerLinkActive="active">Postulaciones</a>
       <button (click)="logout()" class="nav-logout-btn">Cerrar Sesión</button>

@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CatalogoService } from '../../../../services/catalogo.service';
 
 @Component({
   selector: 'app-postulacion-nivel-educativo',
@@ -9,23 +10,15 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './nivel-educativo.component.html',
   styleUrls: ['../../postulacion-form.component.css']
 })
-export class NivelEducativoComponent {
+export class NivelEducativoComponent implements OnInit {
   @Input() tieneEducacionFormal: string = 'No';
   @Output() tieneEducacionFormalChange = new EventEmitter<string>();
 
   @Input() estudios: any[] = [];
   @Output() estudiosChange = new EventEmitter<any[]>();
 
-  listaNivelesEducativos: string[] = [
-    'Bachillerato / Educación Media',
-    'Técnico Profesional',
-    'Tecnólogo',
-    'Universitario / Profesional',
-    'Especialización',
-    'Maestría',
-    'Doctorado'
-  ];
-  
+  listaNivelesEducativos: string[] = [];
+
   listaEstadosEducacion: string[] = ['Graduado', 'En curso', 'Suspendido / Aplazado'];
   listaPaises: string[] = ['Colombia', 'Venezuela', 'Ecuador', 'Perú', 'Argentina', 'Chile', 'España', 'Estados Unidos', 'Otro'];
 
@@ -56,33 +49,7 @@ export class NivelEducativoComponent {
     'Tecnología en Gestión Empresarial'
   ];
 
-  sugerenciasInstituciones: string[] = [
-    'SENA (Servicio Nacional de Aprendizaje)',
-    'Universidad Nacional de Colombia',
-    'Universidad de Antioquia',
-    'Universidad del Valle',
-    'Universidad de los Andes',
-    'Pontificia Universidad Javeriana',
-    'Universidad EAFIT',
-    'Universidad Industrial de Santander (UIS)',
-    'Universidad del Norte',
-    'Universidad de Caldas',
-    'Universidad Tecnológica de Pereira',
-    'Universidad de Medellín',
-    'Universidad de la Sabana',
-    'Universidad Externado de Colombia',
-    'Universidad del Rosario',
-    'Politécnico Grancolombiano',
-    'Corporación Universitaria Minuto de Dios (UNIMINUTO)',
-    'Universidad Cooperativa de Colombia',
-    'Universidad Pedagógica y Tecnológica de Colombia (UPTC)',
-    'Universidad Distrital Francisco José de Caldas',
-    'Universidad Pontificia Bolivariana (UPB)',
-    'Universidad Santo Tomás',
-    'Universidad Libre',
-    'Universidad de Pamplona',
-    'Universidad de Córdoba'
-  ];
+  sugerenciasInstituciones: string[] = [];
 
   listaMeses: string[] = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -105,11 +72,23 @@ export class NivelEducativoComponent {
     tarjetaProfesionalNumero: ''
   };
 
-  constructor() {
+  constructor(private catalogoService: CatalogoService) {
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1970; y--) {
       this.listaAnios.push(y);
     }
+  }
+
+  ngOnInit(): void {
+    this.catalogoService.getByTipo('NIVEL_EDUCATIVO').subscribe({
+      next: (valores) => this.listaNivelesEducativos = valores,
+      error: (err) => console.error('Error al cargar niveles educativos:', err)
+    });
+
+    this.catalogoService.getByTipo('INSTITUCION_EDUCATIVA').subscribe({
+      next: (valores) => this.sugerenciasInstituciones = valores,
+      error: (err) => console.error('Error al cargar instituciones educativas:', err)
+    });
   }
 
   // Buscar universidades dinámicamente desde datos.gov.co en tiempo real

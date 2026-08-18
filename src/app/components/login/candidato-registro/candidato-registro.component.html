@@ -53,10 +53,26 @@
         />
       </div>
 
-      <button type="submit" class="btn btn-login" [disabled]="loading || !email || !password || !confirmPassword">
+      <div class="form-group" style="display: flex; align-items: flex-start; gap: 0.5rem;">
+        <input
+          type="checkbox"
+          id="aceptoTratamientoDatos"
+          name="aceptoTratamientoDatos"
+          [(ngModel)]="aceptoTratamientoDatos"
+          style="margin-top: 0.2rem; width: 16px; height: 16px; flex-shrink: 0;"
+        />
+        <label for="aceptoTratamientoDatos" style="font-size: 0.85rem; font-weight: 400; margin: 0; cursor: pointer;">
+          Acepto el <a href="#" (click)="openTratamientoDatosModal($event)">tratamiento de mis datos personales</a>
+          para el proceso de selección de ARTDECON.
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-login" [disabled]="loading || !email || !password || !confirmPassword || !aceptoTratamientoDatos">
         {{ loading ? 'Registrando...' : 'Registrarse' }}
       </button>
     </form>
+
+   
 
     <!-- Paso 2: Verificación de Código -->
     <form *ngIf="showVerificationStep" (ngSubmit)="verifyCode()" #verifyForm="ngForm" class="login-form">
@@ -98,4 +114,49 @@
       <p>¿Ya tienes una cuenta? <a routerLink="/candidato/login" [queryParams]="{ returnUrl: returnUrl }">Inicia sesión</a></p>
     </div>
   </div>
+   <!-- Modal: Autorización de Tratamiento de Datos Personales -->
+    <div *ngIf="showTratamientoDatosModal" class="custom-modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+      <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 92%; max-width: 640px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); border: 1px solid var(--brand-beige-dark, #D9C5B2);">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1.2rem; font-weight: 700; color: var(--brand-navy, #16313A);">
+          Autorización para el Tratamiento de Datos Personales
+        </h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem;">
+          Proceso de Selección – ARTDECON DE COLOMBIA S.A.S.
+        </p>
+
+        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6; text-align: justify;">
+          <p><strong>1. Autorización.</strong> En mi calidad de titular de los datos personales, autorizo de manera previa, expresa, inequívoca e informada a ARTDECON DE COLOMBIA S.A.S., en adelante ARTDECON, para recolectar, almacenar, usar, consultar, actualizar, conservar y, cuando resulte necesario y procedente, transmitir o transferir mis datos personales, de acuerdo con la legislación colombiana aplicable y con la Política de Tratamiento de Datos Personales de la compañía, para las finalidades relacionadas con mi participación en procesos de selección.</p>
+
+          <p><strong>2. Datos que podrán ser tratados.</strong> La autorización comprende los datos que suministre voluntariamente a través de la plataforma de empleo, hoja de vida, formularios, entrevistas, pruebas y demás etapas del proceso de selección, tales como datos de identificación, contacto, formación académica, experiencia laboral, información profesional, referencias y demás información necesaria para evaluar mi perfil frente a la vacante a la que me postulo.</p>
+
+          <p><strong>3. Finalidades.</strong> ARTDECON podrá tratar mis datos para: (i) gestionar mi postulación; (ii) verificar el cumplimiento de requisitos del cargo; (iii) contactarme durante el proceso; (iv) realizar entrevistas, evaluaciones y pruebas de selección; (v) verificar la información y referencias suministradas cuando corresponda; (vi) documentar y dar trazabilidad al proceso; (vii) comunicar el resultado del proceso; (viii) atender requerimientos de autoridades competentes y cumplir obligaciones legales; y (ix) realizar las actividades administrativas y tecnológicas necesarias para gestionar el proceso de selección.</p>
+
+          <p>Asimismo, la información podrá ser compartida con las empresas vinculadas a la Sociedad, con las autoridades o entidades públicas administrativas, judiciales o gubernativas, cuando estas la soliciten en el ejercicio de sus funciones, con entidades financieras o con sus contratistas, para efectos de cumplir con los fines señalados, pero siempre cumpliendo con los principios de la Ley 1581 de 2012 y demás normas que la complementen y/o sustituyan.</p>
+
+          <p>De igual forma, es entendido que las actuaciones de la Sociedad pueden ser objeto de auditoría y revisión por parte de entidades públicas y privadas, con el fin de verificar el cumplimiento de sus obligaciones legales y/o contractuales, por lo que se podrá poner en conocimiento de las firmas o agentes auditores la referida información.</p>
+
+          <p>El uso al que se destina la información se podrá dar mediante cualquier medio de comunicación existente o que llegue a existir, sea este físico, electrónico o digital.</p>
+
+          <p><strong>4. Datos sensibles.</strong> Entiendo que algunos datos que eventualmente sean solicitados o suministrados pueden tener la condición de datos sensibles conforme a la normativa aplicable. Cuando corresponda, ARTDECON informará su carácter sensible y su suministro será facultativo, salvo que exista una excepción legal que permita su tratamiento. La negativa a suministrar datos sensibles no podrá utilizarse como justificación para una finalidad distinta de aquella para la cual fueron solicitados.</p>
+
+          <p><strong>5. Entrevistas virtuales.</strong> Entiendo que, cuando una entrevista sea grabada en audio y/o video, ARTDECON solicitará una autorización expresa antes de iniciar la sesión. Dicha autorización será registrada en la propia grabación y estará destinada exclusivamente a documentar y respaldar el proceso de selección, conforme a la información que me sea suministrada al momento de la entrevista.</p>
+
+          <p><strong>6. Conservación de la información.</strong> ARTDECON conservará mis datos personales durante el tiempo necesario para cumplir las finalidades informadas, atender obligaciones legales y mantener la trazabilidad del proceso de selección, de acuerdo con sus políticas y procedimientos internos de gestión y protección de datos.</p>
+
+          <p><strong>7. Futuras oportunidades.</strong> En caso de que ARTDECON desee conservar mi información para considerarme en futuros procesos de selección, dicha finalidad será informada y, cuando corresponda, se solicitará la autorización correspondiente.</p>
+
+          <p><strong>8. Encargados y terceros.</strong> Autorizo a ARTDECON para utilizar encargados del tratamiento que apoyen la gestión tecnológica, administrativa o de selección, siempre dentro de las finalidades informadas y bajo las condiciones exigidas por la normativa aplicable.</p>
+
+          <p><strong>9. Derechos del titular.</strong> Declaro que conozco mis derechos como titular de los datos personales, incluidos los de conocer, actualizar, rectificar y solicitar la supresión de mis datos cuando sea procedente, así como solicitar prueba de la autorización, ser informado sobre el uso de mis datos y presentar consultas o reclamos ante ARTDECON y ante la autoridad competente, de conformidad con la legislación aplicable.</p>
+
+          <p><strong>10. Autorización y constancia.</strong> Declaro que he leído la presente autorización y que la información sobre el tratamiento de mis datos personales me ha sido suministrada de manera clara. En consecuencia, autorizo expresamente a ARTDECON DE COLOMBIA S.A.S. para realizar el tratamiento de mis datos personales para las finalidades aquí indicadas.</p>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+          <button type="button" (click)="closeTratamientoDatosModal()" style="background: var(--brand-navy, #16313A); color: white; padding: 0.6rem 1.5rem; border-radius: 0.375rem; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem;">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
 </div>

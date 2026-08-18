@@ -21,6 +21,7 @@ export interface CandidatoPerfil {
   perfil_completo_json?: any;
   hv_archivo_nombre?: string;
   hv_archivo_ruta?: string;
+  acepto_tratamiento_datos?: boolean;
 }
 
 @Injectable({
@@ -45,8 +46,8 @@ export class CandidatoService {
     });
   }
 
-  registro(email: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/registro`, { email, password });
+  registro(email: string, password: string, aceptoTratamientoDatos: boolean): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/registro`, { email, password, acepto_tratamiento_datos: aceptoTratamientoDatos });
   }
 
   verificarCodigo(email: string, codigo: string): Observable<CandidatoResponse> {
@@ -103,7 +104,12 @@ export class CandidatoService {
     );
   }
 
-  updatePerfil(perfil: { perfil_completo_json: any, hv_archivo_nombre?: string, hv_archivo_ruta?: string }): Observable<any> {
-    return this.http.put(`${this.apiUrl}/perfil`, perfil, { headers: this.getHeaders() });
+  updatePerfil(perfil: { perfil_completo_json: any }, archivo?: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('perfil_completo_json', JSON.stringify(perfil.perfil_completo_json));
+    if (archivo) {
+      formData.append('hv_archivo', archivo, archivo.name);
+    }
+    return this.http.put(`${this.apiUrl}/perfil`, formData, { headers: this.getHeaders() });
   }
 }

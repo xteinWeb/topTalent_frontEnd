@@ -71,18 +71,8 @@ export class CandidatoPerfilComponent implements OnInit {
   habilidades: any = { tecnicas: [], interpersonales: [], otros: [] };
 
   // Selectors list (Shared with main form)
-  listaNivelesEducativos = [
-    'Bachillerato / Educación Media',
-    'Técnico Profesional',
-    'Tecnólogo',
-    'Universitario / Profesional',
-    'Especialización',
-    'Maestría',
-    'Doctorado'
-  ];
   listaEstadosEducacion = ['Graduado', 'En curso', 'Suspendido / Aplazado'];
   listaPaises = ['Colombia', 'Venezuela', 'Ecuador', 'Perú', 'Argentina', 'Chile', 'España', 'Estados Unidos', 'Otro'];
-  listaTiposCapacitacion = ['Curso', 'Diplomado', 'Seminario', 'Congreso', 'Certificación', 'Otro'];
   listaTiposExperiencia = ['Laboral', 'Práctica Profesional / Pasantía', 'Independiente / Emprendimiento', 'Voluntariado'];
   listaSectores = ['Administración / Oficina', 'Ventas / Comercial', 'Producción / Operarios', 'Sistemas / Tecnología', 'Contabilidad / Finanzas', 'Logística / Distribución', 'Recursos Humanos', 'Salud', 'Educación', 'Otros'];
   listaIdiomas = ['Español', 'Inglés', 'Portugués', 'Alemán', 'Francés', 'Italiano', 'Mandarín', 'Otro'];
@@ -236,12 +226,10 @@ export class CandidatoPerfilComponent implements OnInit {
         capacitaciones: this.capacitaciones,
         idiomas: this.idiomas,
         habilidades: this.habilidades
-      },
-      hv_archivo_nombre: this.archivoNombre,
-      hv_archivo_ruta: '' // Manejado si deciden subirlo físicamente
+      }
     };
 
-    this.candidatoService.updatePerfil(profilePayload).subscribe({
+    this.candidatoService.updatePerfil(profilePayload, this.archivoHv).subscribe({
       next: () => {
         this.saving = false;
         this.showSuccessModal = true;

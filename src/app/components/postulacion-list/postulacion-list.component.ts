@@ -115,6 +115,15 @@ export class PostulacionListComponent implements OnInit {
     this.selectedCandidate = postulacion;
   }
 
+  // Guards against legacy records that were saved with the literal text "undefined"
+  // (from template-literal interpolation of missing fields before it was fixed).
+  cleanText(val: any): string {
+    if (val === undefined || val === null) return '';
+    const str = String(val).trim();
+    if (!str || str.toLowerCase().split(/\s+/).every(w => w === 'undefined' || w === 'de')) return '';
+    return str;
+  }
+
   closeDetails(): void {
     this.selectedCandidate = undefined;
   }

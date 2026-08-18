@@ -22,8 +22,8 @@ export interface Postulacion {
     tecnicas?: string[];
     interpersonales?: string[];
     otros?: string[];
-    preguntas_respondidas?: any[];
   };
+  preguntas_respondidas?: any[];
   hv_archivo_nombre?: string;
   hv_archivo_ruta?: string;
   fecha_postulacion?: string;
@@ -64,6 +64,8 @@ export class PostulacionService {
     formData.append('estudios_json', JSON.stringify(postulacion.estudios_json));
     formData.append('idiomas_json', JSON.stringify(postulacion.idiomas_json));
     formData.append('habilidades_json', JSON.stringify(postulacion.habilidades_json));
+    formData.append('preguntas_respondidas_json', JSON.stringify(postulacion.preguntas_respondidas || []));
+    formData.append('acepto_tratamiento_datos', postulacion.acepto_tratamiento_datos ? 'true' : 'false');
     if (postulacion.candidato_id) {
       formData.append('candidato_id', postulacion.candidato_id);
     }
@@ -71,26 +73,6 @@ export class PostulacionService {
       formData.append('hv_archivo', archivo, archivo.name);
     }
     return this.http.post<any>(this.apiUrl, formData);
-  }
-
-  postularWebhook(postulacion: any, archivo: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('vacante_id', postulacion.vacante_id);
-    formData.append('nombre_completo', postulacion.nombre_completo);
-    formData.append('correo', postulacion.correo);
-    formData.append('telefono', postulacion.telefono || '');
-    formData.append('perfil_profesional', JSON.stringify(postulacion.perfil_profesional));
-    formData.append('experiencias_json', JSON.stringify(postulacion.experiencias_json));
-    formData.append('estudios_json', JSON.stringify(postulacion.estudios_json));
-    formData.append('idiomas_json', JSON.stringify(postulacion.idiomas_json));
-    formData.append('habilidades_json', JSON.stringify(postulacion.habilidades_json));
-    if (postulacion.candidato_id) {
-      formData.append('candidato_id', postulacion.candidato_id);
-    }
-    if (archivo) {
-      formData.append('hv_archivo', archivo, archivo.name);
-    }
-    return this.http.post<any>('https://agentes.colchonessunmoon.com/webhook/ef34c04b-32a1-4358-b8d8-28a4d7948690', formData);
   }
 
   getPostulaciones(): Observable<Postulacion[]> {

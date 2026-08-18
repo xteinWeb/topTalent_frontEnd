@@ -84,8 +84,8 @@ export class PerfilService {
     );
   }
 
-  generateQuestions(area: string, cargo: string, perfilJson: PerfilJson): Observable<any> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/generate-questions`, { area, cargo, perfil_json: perfilJson }).pipe(
+  generateQuestions(id: string | undefined, area: string, cargo: string, perfilJson: PerfilJson): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/generate-questions`, { id, area, cargo, perfil_json: perfilJson }).pipe(
       map(res => res.data)
     );
   }

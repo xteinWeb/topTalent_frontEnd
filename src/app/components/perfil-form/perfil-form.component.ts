@@ -201,7 +201,7 @@ Reglas del contenido:
           error: (err) => console.error('Error al enviar Perfil IA:', err)
         });
         this.submitting = false;
-        this.router.navigate(['/']);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         alert('Error al guardar el perfil: ' + (err.error?.error || err.message));
@@ -251,7 +251,7 @@ Reglas del contenido:
 
     this.generatingQuestions = true;
 
-    this.perfilService.generateQuestions(this.area, this.cargo, perfilJson).subscribe({
+    this.perfilService.generateQuestions(this.id, this.area, this.cargo, perfilJson).subscribe({
       next: (preguntas) => {
         this.preguntas = this.parsePreguntas(preguntas);
         this.generatingQuestions = false;
@@ -276,6 +276,8 @@ Reglas del contenido:
       }
     } else if (data.preguntas && Array.isArray(data.preguntas)) {
       list = data.preguntas;
+    } else if (data.data && Array.isArray(data.data)) {
+      list = data.data;
     } else {
       return [];
     }
@@ -286,12 +288,21 @@ Reglas del contenido:
       // Look for any key containing "rubri" case-insensitively
       const rubricaKey = Object.keys(p).find(k => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('rubri'));
       const rawRubrica = rubricaKey ? p[rubricaKey] : null;
+      const esRubricaPonderada = !!rawRubrica && typeof rawRubrica === 'object' && Array.isArray(rawRubrica.criterios);
 
       return {
         ...p,
+        id: p.id !== undefined && p.id !== null ? String(p.id) : '',
         tipo: tipoNormalized,
         categoria: this.normalizeCategory(p.categoria),
-        rubrica_evaluacion: tipoNormalized === 'Abierta' ? this.normalizeRubrica(rawRubrica) : undefined
+        titulo: p.titulo || (p.pregunta ? p.pregunta.substring(0, 60) : ''),
+        peso: p.peso !== undefined ? p.peso : 1,
+        obligatoria: p.obligatoria !== undefined ? p.obligatoria : true,
+        tiempo_estimado_segundos: p.tiempo_estimado_segundos !== undefined ? p.tiempo_estimado_segundos : 120,
+        rubrica_criterios: esRubricaPonderada
+          ? { criterios: rawRubrica.criterios, puntuacion_maxima: rawRubrica.puntuacion_maxima ?? 100 }
+          : undefined,
+        rubrica_evaluacion: (tipoNormalized === 'Abierta' && !esRubricaPonderada) ? this.normalizeRubrica(rawRubrica) : undefined
       };
     });
   }

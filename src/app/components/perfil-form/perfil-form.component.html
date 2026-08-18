@@ -1,7 +1,7 @@
 <div class="form-container">
   <header class="form-header">
     <div class="header-left">
-      <button class="back-link" routerLink="/">
+      <button class="back-link" routerLink="/dashboard">
         <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">arrow_back</span> Volver al Listado
       </button>
       <h1>{{ isEditMode ? 'Editar Perfil de Cargo' : 'Nuevo Perfil de Cargo' }}</h1>
@@ -20,7 +20,7 @@
 
   <div *ngIf="errorMsg" class="error-state">
     <p>{{ errorMsg }}</p>
-    <button class="btn btn-secondary" routerLink="/">Volver</button>
+    <button class="btn btn-secondary" routerLink="/dashboard">Volver</button>
   </div>
 
   <form *ngIf="!loading && !errorMsg" (ngSubmit)="onSubmit()" #perfilForm="ngForm" class="profile-form">
@@ -102,7 +102,7 @@
 
     <!-- Actions -->
     <div class="form-actions-footer">
-      <button type="button" class="btn btn-secondary" routerLink="/">Cancelar</button>
+      <button type="button" class="btn btn-secondary" routerLink="/dashboard">Cancelar</button>
       <button type="submit" class="btn btn-primary" [disabled]="submitting || !perfilForm.form.valid">
         {{ submitting ? 'Guardando...' : 'Guardar Perfil de Cargo' }}
       </button>

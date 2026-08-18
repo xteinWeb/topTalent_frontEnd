@@ -10,6 +10,7 @@ import { NivelEducativoComponent } from './subcomponents/nivel-educativo/nivel-e
 import { ExperienciaLaboralComponent } from './subcomponents/experiencia-laboral/experiencia-laboral.component';
 import { EducacionInformalComponent } from './subcomponents/educacion-informal/educacion-informal.component';
 import { IdiomasHabilidadesComponent } from './subcomponents/idiomas-habilidades/idiomas-habilidades.component';
+import { PreguntasCargoComponent } from './subcomponents/preguntas-cargo/preguntas-cargo.component';
 
 @Component({
   selector: 'app-postulacion-form',
@@ -22,7 +23,8 @@ import { IdiomasHabilidadesComponent } from './subcomponents/idiomas-habilidades
     NivelEducativoComponent,
     ExperienciaLaboralComponent,
     EducacionInformalComponent,
-    IdiomasHabilidadesComponent
+    IdiomasHabilidadesComponent,
+    PreguntasCargoComponent
   ],
   templateUrl: './postulacion-form.component.html',
   styleUrls: ['./postulacion-form.component.css']
@@ -124,27 +126,8 @@ export class PostulacionFormComponent implements OnInit {
     };
 
   // Selectors list
-  listaNivelesEducativos: string[] = [
-    'Bachillerato / Educación Media',
-    'Técnico Profesional',
-    'Tecnólogo',
-    'Universitario / Profesional',
-    'Especialización',
-    'Maestría',
-    'Doctorado'
-  ];
-
   listaEstadosEducacion: string[] = ['Graduado', 'En curso', 'Suspendido / Aplazado'];
   listaPaises: string[] = ['Colombia', 'Venezuela', 'Ecuador', 'Perú', 'Argentina', 'Chile', 'España', 'Estados Unidos', 'Otro'];
-
-  listaTiposCapacitacion: string[] = [
-    'Curso',
-    'Diplomado',
-    'Seminario',
-    'Congreso',
-    'Certificación',
-    'Otro'
-  ];
 
   listaTiposExperiencia: string[] = [
     'Laboral',
@@ -232,6 +215,14 @@ export class PostulacionFormComponent implements OnInit {
   archivoNombre: string = '';
   archivoInvalido: boolean = false;
 
+  // Preguntas del cargo (vienen del perfil de cargo vinculado a la vacante)
+  preguntas: any[] = [];
+
+  // Tratamiento de Datos Personales
+  aceptoTratamientoDatos: boolean = false;
+  showTratamientoDatosModal: boolean = false;
+  tratamientoDatosModalMode: 'ver' | 'aceptar' = 'ver';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -263,6 +254,8 @@ export class PostulacionFormComponent implements OnInit {
     this.vacanteService.getVacante(id).subscribe({
       next: (data) => {
         this.vacante = data;
+        this.preguntas = (data.perfil_completo_json?.preguntas || []).map((p: any) => ({ ...p, respuesta: '' }));
+
         if (data.estado === 'INACTIVA') {
           this.errorMsg = 'Esta oferta de empleo ya no se encuentra activa.';
           this.loading = false;
@@ -296,6 +289,7 @@ export class PostulacionFormComponent implements OnInit {
             next: (profile) => {
               this.correo = profile.email;
               this.archivoNombre = profile.hv_archivo_nombre || '';
+              this.aceptoTratamientoDatos = !!profile.acepto_tratamiento_datos;
               if (profile.perfil_completo_json) {
                 let p = profile.perfil_completo_json;
                 if (typeof p === 'string') {
@@ -341,8 +335,23 @@ export class PostulacionFormComponent implements OnInit {
     this.activeTab = tab;
   }
 
+  isTabHabilitada(tabName: string): boolean {
+    if (tabName === 'preguntas') {
+      return this.preguntas.length > 0;
+    }
+    const tabMapping: { [key: string]: string } = {
+      'basica': 'informacion_basica',
+      'educacion': 'nivel_educativo',
+      'experiencia': 'experiencia_laboral',
+      'informal': 'educacion_informal',
+      'idiomas': 'idiomas_habilidades'
+    };
+    const configKey = tabMapping[tabName];
+    return this.campos_requeridos[configKey] !== false;
+  }
+
   nextTab(): void {
-    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
+    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas', 'preguntas'];
     const idx = tabs.indexOf(this.activeTab);
     if (idx < tabs.length - 1) {
       // Basic validations before changing tabs
@@ -351,26 +360,17 @@ export class PostulacionFormComponent implements OnInit {
           alert('Por favor complete la información obligatoria de contacto.');
           return;
         }
-        if (!this.archivoHv) {
+        if (!this.archivoHv && !this.archivoNombre) {
           alert('Debe adjuntar su archivo de Hoja de Vida para continuar.');
           return;
         }
       }
-      
+
       // Find the next available tab that is required
       let nextIdx = idx + 1;
-      const tabMapping: { [key: string]: string } = {
-        'basica': 'informacion_basica',
-        'educacion': 'nivel_educativo',
-        'experiencia': 'experiencia_laboral',
-        'informal': 'educacion_informal',
-        'idiomas': 'idiomas_habilidades'
-      };
-
       while (nextIdx < tabs.length) {
         const nextTabName = tabs[nextIdx];
-        const configKey = tabMapping[nextTabName];
-        if (this.campos_requeridos[configKey] !== false) {
+        if (this.isTabHabilitada(nextTabName)) {
           this.activeTab = nextTabName;
           break;
         }
@@ -380,22 +380,13 @@ export class PostulacionFormComponent implements OnInit {
   }
 
   prevTab(): void {
-    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
+    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas', 'preguntas'];
     const idx = tabs.indexOf(this.activeTab);
     if (idx > 0) {
       let prevIdx = idx - 1;
-      const tabMapping: { [key: string]: string } = {
-        'basica': 'informacion_basica',
-        'educacion': 'nivel_educativo',
-        'experiencia': 'experiencia_laboral',
-        'informal': 'educacion_informal',
-        'idiomas': 'idiomas_habilidades'
-      };
-
       while (prevIdx >= 0) {
         const prevTabName = tabs[prevIdx];
-        const configKey = tabMapping[prevTabName];
-        if (this.campos_requeridos[configKey] !== false) {
+        if (this.isTabHabilitada(prevTabName)) {
           this.activeTab = prevTabName;
           break;
         }
@@ -614,6 +605,26 @@ export class PostulacionFormComponent implements OnInit {
     this.errorMessageModalText = '';
   }
 
+  tienePreguntasObligatoriasSinResponder(): boolean {
+    return this.preguntas.some(p => p.obligatoria && !String(p.respuesta || '').trim());
+  }
+
+  openTratamientoDatosModal(event?: Event): void {
+    if (event) event.preventDefault();
+    this.tratamientoDatosModalMode = 'ver';
+    this.showTratamientoDatosModal = true;
+  }
+
+  closeTratamientoDatosModal(): void {
+    this.showTratamientoDatosModal = false;
+  }
+
+  confirmarAceptacionTratamientoDatos(): void {
+    this.aceptoTratamientoDatos = true;
+    this.showTratamientoDatosModal = false;
+    this.onSubmit();
+  }
+
   onSubmit(): void {
     if (!this.nombre_completo.trim() || !this.correo.trim()) {
       this.triggerErrorModal('Por favor complete la información obligatoria de contacto.');
@@ -622,6 +633,17 @@ export class PostulacionFormComponent implements OnInit {
 
     if (!this.archivoHv && !this.archivoNombre) {
       this.triggerErrorModal('Debe adjuntar su archivo de Hoja de Vida (PDF) para completar la postulación.');
+      return;
+    }
+
+    if (this.tienePreguntasObligatoriasSinResponder()) {
+      this.triggerErrorModal('Debe responder todas las preguntas obligatorias del cargo para completar la postulación.');
+      return;
+    }
+
+    if (!this.aceptoTratamientoDatos) {
+      this.tratamientoDatosModalMode = 'aceptar';
+      this.showTratamientoDatosModal = true;
       return;
     }
 
@@ -640,7 +662,7 @@ export class PostulacionFormComponent implements OnInit {
     const mappedEstudios = this.tieneEducacionFormal === 'Si' ? this.estudios.map(est => ({
       nivel: est.nivel,
       institucion: est.institucion,
-      fecha_inicio: `${est.estado}`, // Map to existing schema keys as best as possible
+      fecha_inicio: est.estado || '', // Map to existing schema keys as best as possible
       fecha_fin: (est.mesFin && est.anioFin) ? `${est.mesFin} de ${est.anioFin}` : (est.observaciones || ''),
       en_curso: est.estado === 'En curso',
       // Store additional metadata
@@ -658,9 +680,9 @@ export class PostulacionFormComponent implements OnInit {
     const mappedExperiencias = this.experiencias.map(exp => ({
       cargo: exp.cargo,
       empresa: exp.empresa,
-      descripcion: exp.telefono ? `Tel: ${exp.telefono}. Funciones: ${exp.funciones}` : `Funciones: ${exp.funciones}`,
-      fecha_inicio: `${exp.mesIngreso} ${exp.anioIngreso}`,
-      fecha_fin: exp.actualmente ? 'Actualidad' : `${exp.mesRetiro} ${exp.anioRetiro}`,
+      descripcion: exp.telefono ? `Tel: ${exp.telefono}. Funciones: ${exp.funciones || ''}` : `Funciones: ${exp.funciones || ''}`,
+      fecha_inicio: (exp.mesIngreso && exp.anioIngreso) ? `${exp.mesIngreso} ${exp.anioIngreso}` : '',
+      fecha_fin: exp.actualmente ? 'Actualidad' : ((exp.mesRetiro && exp.anioRetiro) ? `${exp.mesRetiro} ${exp.anioRetiro}` : ''),
       actualmente: exp.actualmente,
       tipo: exp.tipo,
       pais: exp.pais
@@ -705,20 +727,23 @@ export class PostulacionFormComponent implements OnInit {
       estudios_json: mappedEstudios,
       idiomas_json: this.idiomas,
       habilidades_json: this.habilidades,
+      preguntas_respondidas: this.preguntas.map(p => ({
+        id: p.id,
+        categoria: p.categoria,
+        titulo: p.titulo,
+        pregunta: p.pregunta,
+        tipo: p.tipo,
+        obligatoria: p.obligatoria,
+        respuesta: p.respuesta,
+        rubrica_criterios: p.rubrica_criterios,
+        rubrica_evaluacion: p.rubrica_evaluacion
+      })),
+      acepto_tratamiento_datos: this.aceptoTratamientoDatos,
       candidato_id: this.candidato_id
     };
 
     this.postulacionService.postular(postulacionPayload, this.archivoHv as File).subscribe({
       next: (res) => {
-        if (this.archivoHv) {
-          this.postulacionService.postularWebhook(postulacionPayload, this.archivoHv).subscribe({
-            next: (resWebhook) => console.log('Postulación enviada correctamente a Webhook:', resWebhook),
-            error: (errWebhook) => console.error('Error al enviar la postulación a Webhook:', errWebhook)
-          });
-        } else {
-          console.log('Postulación enviada sin archivo nuevo.');
-        }
-
         this.submitting = false;
         this.successMsg = true;
       },

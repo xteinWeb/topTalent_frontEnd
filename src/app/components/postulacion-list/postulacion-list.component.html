@@ -200,11 +200,11 @@
         </div>
 
         <!-- Cargo Questions Answers (Show Prominently) -->
-        <div class="detail-section" *ngIf="selectedCandidate.habilidades_json?.preguntas_respondidas?.length">
+        <div class="detail-section" *ngIf="selectedCandidate.preguntas_respondidas?.length">
           <h4>Preguntas del Cargo Respondidas</h4>
           <div class="questions-answers-container"
             style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
-            <div class="qa-item-card" *ngFor="let q of selectedCandidate.habilidades_json.preguntas_respondidas"
+            <div class="qa-item-card" *ngFor="let q of selectedCandidate.preguntas_respondidas"
               style="background: #fafafa; border: 1.5px solid #eee; border-radius: 8px; padding: 1.25rem;">
 
               <div
@@ -227,8 +227,20 @@
                 </p>
               </div>
 
-              <!-- Rubric Info (for open questions) -->
-              <div *ngIf="q.tipo === 'Abierta' && q.rubrica_evaluacion"
+              <!-- Rubric Info (Criterios Ponderados - formato IA actual) -->
+              <div *ngIf="q.rubrica_criterios"
+                style="font-size: 0.85rem; color: #666; border-top: 1px dashed #eee; padding-top: 0.75rem; margin-top: 0.75rem;">
+                <strong style="display: block; margin-bottom: 0.35rem; color: #444;">Rúbrica de Evaluación para
+                  Calificar (Puntuación Máxima: {{ q.rubrica_criterios.puntuacion_maxima }}):</strong>
+                <ul style="margin: 0; padding-left: 1.1rem;">
+                  <li *ngFor="let crit of q.rubrica_criterios.criterios">
+                    {{ crit.descripcion }} <strong>(Peso: {{ crit.peso }})</strong>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Rubric Info (formato manual clásico) -->
+              <div *ngIf="!q.rubrica_criterios && q.tipo === 'Abierta' && q.rubrica_evaluacion"
                 style="font-size: 0.85rem; color: #666; border-top: 1px dashed #eee; padding-top: 0.75rem; margin-top: 0.75rem;">
                 <strong style="display: block; margin-bottom: 0.35rem; color: #444;">Rúbrica de Evaluación para
                   Calificar:</strong>
@@ -258,32 +270,22 @@
           </div>
         </div>
 
-        <!-- Section 1: Professional Profile (Only show if not basic candidate application) -->
-        <div class="detail-section"
-          *ngIf="selectedCandidate.perfil_profesional?.titulo && selectedCandidate.perfil_profesional.titulo !== 'Postulación Básica'">
-          <h4>Sección 1: Perfil Profesional</h4>
-          <div class="section-card">
-            <h5 class="profile-title-text">{{ selectedCandidate.perfil_profesional.titulo }}</h5>
-            <p class="profile-summary-text">{{ selectedCandidate.perfil_profesional.resumen }}</p>
-          </div>
-        </div>
-
-        <!-- Section 2: Experiences (Only show if not empty) -->
+        <!-- Section 1: Experiences (Only show if not empty) -->
         <div class="detail-section"
           *ngIf="selectedCandidate.experiencias_json && selectedCandidate.experiencias_json.length > 0">
-          <h4>Sección 2: Experiencia Profesional</h4>
+          <h4>Sección 1: Experiencia Profesional</h4>
           <div class="history-list">
             <div class="history-item" *ngFor="let exp of selectedCandidate.experiencias_json">
               <div class="history-meta">
                 <span class="history-period">
-                  {{ exp.fecha_inicio && exp.fecha_inicio.includes('-') ? (exp.fecha_inicio | date:'MM/yyyy') : exp.fecha_inicio }} -
-                  {{ exp.actualmente ? 'Actualidad' : (exp.fecha_fin && exp.fecha_fin.includes('-') ? (exp.fecha_fin | date:'MM/yyyy') : exp.fecha_fin) }}
+                  {{ exp.fecha_inicio && exp.fecha_inicio.includes('-') ? (exp.fecha_inicio | date:'MM/yyyy') : cleanText(exp.fecha_inicio) }} -
+                  {{ exp.actualmente ? 'Actualidad' : (exp.fecha_fin && exp.fecha_fin.includes('-') ? (exp.fecha_fin | date:'MM/yyyy') : cleanText(exp.fecha_fin)) }}
                 </span>
                 <span class="history-company">{{ exp.empresa }}</span>
               </div>
               <div class="history-detail">
                 <strong class="history-title">{{ exp.cargo }} <span *ngIf="exp.tipo" style="font-weight: normal; font-size: 0.85em; color: #666;">({{ exp.tipo }})</span></strong>
-                <p class="history-desc">{{ exp.descripcion }}</p>
+                <p class="history-desc">{{ cleanText(exp.descripcion) }}</p>
                 <p class="history-desc" *ngIf="exp.cargoEquivalente" style="font-style: italic; font-size: 0.9em; margin-top: 0.25rem;">Cargo equivalente: {{ exp.cargoEquivalente }}</p>
               </div>
             </div>
@@ -293,12 +295,12 @@
         <!-- Section 3: Studies (Only show if not empty) -->
         <div class="detail-section"
           *ngIf="selectedCandidate.estudios_json && selectedCandidate.estudios_json.length > 0">
-          <h4>Sección 3: Estudios y Formación</h4>
+          <h4>Sección 2: Estudios y Formación</h4>
           <div class="history-list">
             <div class="history-item" *ngFor="let est of selectedCandidate.estudios_json">
               <div class="history-meta">
                 <span class="history-period">
-                  {{ est.fecha_inicio && est.fecha_inicio.includes('-') ? (est.fecha_inicio | date:'MM/yyyy') : est.fecha_inicio }}
+                  {{ est.fecha_inicio && est.fecha_inicio.includes('-') ? (est.fecha_inicio | date:'MM/yyyy') : cleanText(est.fecha_inicio) }}
                 </span>
                 <span class="history-company">{{ est.institucion }}</span>
               </div>
@@ -315,7 +317,7 @@
 
         <!-- Section 4: Languages (Only show if not empty) -->
         <div class="detail-section" *ngIf="selectedCandidate.idiomas_json && selectedCandidate.idiomas_json.length > 0">
-          <h4>Sección 4: Idiomas</h4>
+          <h4>Sección 3: Idiomas</h4>
           <div class="badges-row">
             <span class="detail-tag language-tag" *ngFor="let lang of selectedCandidate.idiomas_json">
               {{ lang.idioma }} ({{ lang.nivel }})
@@ -326,7 +328,7 @@
         <!-- Section 5: Skills (Only show if tech/interpersonal/other skills contain items) -->
         <div class="detail-section"
           *ngIf="selectedCandidate.habilidades_json?.tecnicas?.length || selectedCandidate.habilidades_json?.interpersonales?.length || selectedCandidate.habilidades_json?.otros?.length">
-          <h4>Sección 5: Conocimientos y Habilidades</h4>
+          <h4>Sección 4: Conocimientos y Habilidades</h4>
 
           <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.tecnicas?.length">
             <h5>Conocimientos Técnicos</h5>
