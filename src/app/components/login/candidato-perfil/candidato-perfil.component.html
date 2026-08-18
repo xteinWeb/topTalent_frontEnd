@@ -45,17 +45,20 @@
         <button class="tab-btn" [class.active]="activeTab === 'basica'" (click)="setTab('basica')">
           1. Información Básica
         </button>
+        <button class="tab-btn" [class.active]="activeTab === 'adicional'" (click)="setTab('adicional')">
+          2. Datos Adicionales
+        </button>
         <button class="tab-btn" [class.active]="activeTab === 'educacion'" (click)="setTab('educacion')">
-          2. Nivel Educativo
+          3. Nivel Educativo
         </button>
         <button class="tab-btn" [class.active]="activeTab === 'experiencia'" (click)="setTab('experiencia')">
-          3. Experiencia Laboral
+          4. Experiencia Laboral
         </button>
         <button class="tab-btn" [class.active]="activeTab === 'informal'" (click)="setTab('informal')">
-          4. Cursos y Certificaciones
+          5. Cursos y Certificaciones
         </button>
         <button class="tab-btn" [class.active]="activeTab === 'idiomas'" (click)="setTab('idiomas')">
-          5. Habilidades e Idiomas
+          6. Habilidades e Idiomas
         </button>
       </div>
 
@@ -69,7 +72,16 @@
           </app-postulacion-informacion-basica>
         </div>
 
-        <!-- PESTAÑA 2: NIVEL EDUCATIVO (FORMAL) -->
+        <!-- PESTAÑA 2: DATOS ADICIONALES -->
+        <div *ngIf="activeTab === 'adicional'">
+          <app-postulacion-datos-adicionales [(edad)]="edad" [(estado_civil)]="estado_civil" [(eps)]="eps"
+            [(fondo_pension)]="fondo_pension" [(direccion)]="direccion" [(barrio)]="barrio" [(ciudad)]="ciudad"
+            [(talla_camisa)]="talla_camisa" [(talla_pantalon)]="talla_pantalon" [(talla_zapato)]="talla_zapato"
+            [(personas_a_cargo)]="personas_a_cargo">
+          </app-postulacion-datos-adicionales>
+        </div>
+
+        <!-- PESTAÑA 3: NIVEL EDUCATIVO (FORMAL) -->
         <div *ngIf="activeTab === 'educacion'">
           <app-postulacion-nivel-educativo [(tieneEducacionFormal)]="tieneEducacionFormal" [(estudios)]="estudios">
           </app-postulacion-nivel-educativo>

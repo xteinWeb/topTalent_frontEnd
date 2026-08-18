@@ -6,6 +6,7 @@ import { CandidatoService } from '../../services/candidato.service';
 import { VacanteService, Vacante } from '../../services/vacante.service';
 import { PostulacionService } from '../../services/postulacion.service';
 import { InformacionBasicaComponent } from './subcomponents/informacion-basica/informacion-basica.component';
+import { DatosAdicionalesComponent } from './subcomponents/datos-adicionales/datos-adicionales.component';
 import { NivelEducativoComponent } from './subcomponents/nivel-educativo/nivel-educativo.component';
 import { ExperienciaLaboralComponent } from './subcomponents/experiencia-laboral/experiencia-laboral.component';
 import { EducacionInformalComponent } from './subcomponents/educacion-informal/educacion-informal.component';
@@ -20,6 +21,7 @@ import { PreguntasCargoComponent } from './subcomponents/preguntas-cargo/pregunt
     RouterModule,
     FormsModule,
     InformacionBasicaComponent,
+    DatosAdicionalesComponent,
     NivelEducativoComponent,
     ExperienciaLaboralComponent,
     EducacionInformalComponent,
@@ -57,7 +59,13 @@ export class PostulacionFormComponent implements OnInit {
       puntos += 10;
     }
 
-    // 2. Nivel Educativo (si está activo en campos requeridos)
+    // 2. Datos Personales Adicionales (siempre requerida)
+    totalPuntosPosibles += 20;
+    if (this.camposAdicionalesCompletos()) {
+      puntos += 20;
+    }
+
+    // 3. Nivel Educativo (si está activo en campos requeridos)
     if (this.campos_requeridos.nivel_educativo !== false) {
       totalPuntosPosibles += 20;
       if (this.estudios && this.estudios.length > 0) {
@@ -65,7 +73,7 @@ export class PostulacionFormComponent implements OnInit {
       }
     }
 
-    // 3. Experiencia Laboral (si está activo en campos requeridos)
+    // 4. Experiencia Laboral (si está activo en campos requeridos)
     if (this.campos_requeridos.experiencia_laboral !== false) {
       totalPuntosPosibles += 20;
       if (this.experiencias && this.experiencias.length > 0) {
@@ -73,7 +81,7 @@ export class PostulacionFormComponent implements OnInit {
       }
     }
 
-    // 4. Idiomas y habilidades (si está activo en campos requeridos)
+    // 5. Idiomas y habilidades (si está activo en campos requeridos)
     if (this.campos_requeridos.idiomas_habilidades !== false) {
       totalPuntosPosibles += 20;
       let habilidadesLlenas = (this.habilidades.tecnicas.length > 0 || this.habilidades.interpersonales.length > 0 || this.habilidades.otros.length > 0);
@@ -92,6 +100,17 @@ export class PostulacionFormComponent implements OnInit {
   telefono: string = '';
   cedula: string = '';
   fecha_nacimiento: string = '';
+  edad: string = '';
+  eps: string = '';
+  fondo_pension: string = '';
+  direccion: string = '';
+  barrio: string = '';
+  ciudad: string = '';
+  estado_civil: string = '';
+  talla_camisa: string = '';
+  talla_pantalon: string = '';
+  talla_zapato: string = '';
+  personas_a_cargo: any[] = [];
 
 
   // Tab navigation
@@ -303,6 +322,17 @@ export class PostulacionFormComponent implements OnInit {
                 this.telefono = p.telefono || '';
                 this.cedula = p.cedula || '';
                 this.fecha_nacimiento = p.fecha_nacimiento || '';
+                this.edad = p.edad || '';
+                this.eps = p.eps || '';
+                this.fondo_pension = p.fondo_pension || '';
+                this.direccion = p.direccion || '';
+                this.barrio = p.barrio || '';
+                this.ciudad = p.ciudad || '';
+                this.estado_civil = p.estado_civil || '';
+                this.talla_camisa = p.talla_camisa || '';
+                this.talla_pantalon = p.talla_pantalon || '';
+                this.talla_zapato = p.talla_zapato || '';
+                this.personas_a_cargo = p.personas_a_cargo || [];
                 this.tieneEducacionFormal = p.tieneEducacionFormal || 'No';
                 this.tieneEducacionInformal = p.tieneEducacionInformal || 'No';
                 this.estudios = p.estudios || [];
@@ -609,6 +639,12 @@ export class PostulacionFormComponent implements OnInit {
     return this.preguntas.some(p => p.obligatoria && !String(p.respuesta || '').trim());
   }
 
+  camposAdicionalesCompletos(): boolean {
+    return !!(this.edad && String(this.edad).trim() && this.estado_civil.trim() && this.eps.trim() &&
+      this.fondo_pension.trim() && this.direccion.trim() && this.barrio.trim() && this.ciudad.trim() &&
+      this.talla_camisa.trim() && this.talla_pantalon.trim() && this.talla_zapato.trim());
+  }
+
   openTratamientoDatosModal(event?: Event): void {
     if (event) event.preventDefault();
     this.tratamientoDatosModalMode = 'ver';
@@ -633,6 +669,11 @@ export class PostulacionFormComponent implements OnInit {
 
     if (!this.archivoHv && !this.archivoNombre) {
       this.triggerErrorModal('Debe adjuntar su archivo de Hoja de Vida (PDF) para completar la postulación.');
+      return;
+    }
+
+    if (!this.camposAdicionalesCompletos()) {
+      this.triggerErrorModal('Debe completar todos los datos personales adicionales obligatorios (edad, estado civil, EPS, fondo de pensión, dirección, barrio, ciudad y tallas).');
       return;
     }
 
@@ -719,6 +760,17 @@ export class PostulacionFormComponent implements OnInit {
       telefono: this.telefono,
       cedula: this.cedula,
       fecha_nacimiento: this.fecha_nacimiento,
+      edad: this.edad,
+      eps: this.eps,
+      fondo_pension: this.fondo_pension,
+      direccion: this.direccion,
+      barrio: this.barrio,
+      ciudad: this.ciudad,
+      estado_civil: this.estado_civil,
+      talla_camisa: this.talla_camisa,
+      talla_pantalon: this.talla_pantalon,
+      talla_zapato: this.talla_zapato,
+      personas_a_cargo: this.personas_a_cargo,
       perfil_profesional: {
         titulo: 'Postulación Detallada',
         resumen: `Candidato (CC: ${this.cedula}, F.Nac: ${this.fecha_nacimiento}) completó el formulario de postulación dinámico estructurado.`

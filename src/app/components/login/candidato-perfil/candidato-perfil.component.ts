@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { CandidatoService, CandidatoPerfil } from '../../../services/candidato.service';
 import { InformacionBasicaComponent } from '../../postulacion-form/subcomponents/informacion-basica/informacion-basica.component';
+import { DatosAdicionalesComponent } from '../../postulacion-form/subcomponents/datos-adicionales/datos-adicionales.component';
 import { NivelEducativoComponent } from '../../postulacion-form/subcomponents/nivel-educativo/nivel-educativo.component';
 import { ExperienciaLaboralComponent } from '../../postulacion-form/subcomponents/experiencia-laboral/experiencia-laboral.component';
 import { EducacionInformalComponent } from '../../postulacion-form/subcomponents/educacion-informal/educacion-informal.component';
@@ -17,6 +18,7 @@ import { IdiomasHabilidadesComponent } from '../../postulacion-form/subcomponent
     FormsModule, 
     RouterModule,
     InformacionBasicaComponent,
+    DatosAdicionalesComponent,
     NivelEducativoComponent,
     ExperienciaLaboralComponent,
     EducacionInformalComponent,
@@ -31,28 +33,37 @@ export class CandidatoPerfilComponent implements OnInit {
   saving = false;
   activeTab = 'basica';
 
+  // Campos obligatorios de la pestaña "Datos Adicionales"
+  camposAdicionalesCompletos(): boolean {
+    return !!(this.edad && String(this.edad).trim() && this.estado_civil.trim() && this.eps.trim() &&
+      this.fondo_pension.trim() && this.direccion.trim() && this.barrio.trim() && this.ciudad.trim() &&
+      this.talla_camisa.trim() && this.talla_pantalon.trim() && this.talla_zapato.trim());
+  }
+
   // Calcular porcentaje de completitud del perfil de candidato (100% total)
   getCompletitudPorcentaje(): number {
     let puntos = 0;
-    const totalPuntosPosibles = 100; // Estructura fija en perfil personal
 
-    // 1. Información básica (40%)
-    if (this.nombre_completo.trim()) puntos += 10;
-    if (this.correo.trim()) puntos += 10;
-    if (this.telefono.trim()) puntos += 10;
-    if (this.archivoHv || this.archivoNombre) puntos += 10;
+    // 1. Información básica (30%)
+    if (this.nombre_completo.trim()) puntos += 7.5;
+    if (this.correo.trim()) puntos += 7.5;
+    if (this.telefono.trim()) puntos += 7.5;
+    if (this.archivoHv || this.archivoNombre) puntos += 7.5;
 
-    // 2. Nivel Educativo (20%)
+    // 2. Datos Adicionales (10%)
+    if (this.camposAdicionalesCompletos()) puntos += 10;
+
+    // 3. Nivel Educativo (20%)
     if (this.estudios && this.estudios.length > 0) puntos += 20;
 
-    // 3. Experiencia Laboral (20%)
+    // 4. Experiencia Laboral (20%)
     if (this.experiencias && this.experiencias.length > 0) puntos += 20;
 
-    // 4. Idiomas y Habilidades (20%)
+    // 5. Idiomas y Habilidades (20%)
     let habilidadesLlenas = (this.habilidades.tecnicas.length > 0 || this.habilidades.interpersonales.length > 0 || this.habilidades.otros.length > 0);
     if (habilidadesLlenas || this.idiomas.length > 0) puntos += 20;
 
-    return puntos;
+    return Math.round(puntos);
   }
 
   // Profile data fields
@@ -61,6 +72,17 @@ export class CandidatoPerfilComponent implements OnInit {
   telefono = '';
   cedula = '';
   fecha_nacimiento = '';
+  edad = '';
+  eps = '';
+  fondo_pension = '';
+  direccion = '';
+  barrio = '';
+  ciudad = '';
+  estado_civil = '';
+  talla_camisa = '';
+  talla_pantalon = '';
+  talla_zapato = '';
+  personas_a_cargo: any[] = [];
   tieneEducacionFormal = 'No';
   tieneEducacionInformal = 'No';
 
@@ -143,6 +165,17 @@ export class CandidatoPerfilComponent implements OnInit {
           this.telefono = p.telefono || '';
           this.cedula = p.cedula || '';
           this.fecha_nacimiento = p.fecha_nacimiento || '';
+          this.edad = p.edad || '';
+          this.eps = p.eps || '';
+          this.fondo_pension = p.fondo_pension || '';
+          this.direccion = p.direccion || '';
+          this.barrio = p.barrio || '';
+          this.ciudad = p.ciudad || '';
+          this.estado_civil = p.estado_civil || '';
+          this.talla_camisa = p.talla_camisa || '';
+          this.talla_pantalon = p.talla_pantalon || '';
+          this.talla_zapato = p.talla_zapato || '';
+          this.personas_a_cargo = p.personas_a_cargo || [];
           this.tieneEducacionFormal = p.tieneEducacionFormal || 'No';
           this.tieneEducacionInformal = p.tieneEducacionInformal || 'No';
           this.estudios = p.estudios || [];
@@ -170,11 +203,15 @@ export class CandidatoPerfilComponent implements OnInit {
   }
 
   nextTab(): void {
-    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
+    const tabs = ['basica', 'adicional', 'educacion', 'experiencia', 'informal', 'idiomas'];
     const idx = tabs.indexOf(this.activeTab);
     if (idx < tabs.length - 1) {
       if (this.activeTab === 'basica' && (!this.nombre_completo.trim() || !this.correo.trim())) {
         alert('Por favor complete la información obligatoria de contacto.');
+        return;
+      }
+      if (this.activeTab === 'adicional' && !this.camposAdicionalesCompletos()) {
+        alert('Por favor complete todos los datos personales adicionales obligatorios.');
         return;
       }
       this.activeTab = tabs[idx + 1];
@@ -182,7 +219,7 @@ export class CandidatoPerfilComponent implements OnInit {
   }
 
   prevTab(): void {
-    const tabs = ['basica', 'educacion', 'experiencia', 'informal', 'idiomas'];
+    const tabs = ['basica', 'adicional', 'educacion', 'experiencia', 'informal', 'idiomas'];
     const idx = tabs.indexOf(this.activeTab);
     if (idx > 0) {
       this.activeTab = tabs[idx - 1];
@@ -219,6 +256,17 @@ export class CandidatoPerfilComponent implements OnInit {
         telefono: this.telefono,
         cedula: this.cedula,
         fecha_nacimiento: this.fecha_nacimiento,
+        edad: this.edad,
+        eps: this.eps,
+        fondo_pension: this.fondo_pension,
+        direccion: this.direccion,
+        barrio: this.barrio,
+        ciudad: this.ciudad,
+        estado_civil: this.estado_civil,
+        talla_camisa: this.talla_camisa,
+        talla_pantalon: this.talla_pantalon,
+        talla_zapato: this.talla_zapato,
+        personas_a_cargo: this.personas_a_cargo,
         tieneEducacionFormal: this.tieneEducacionFormal,
         tieneEducacionInformal: this.tieneEducacionInformal,
         estudios: this.estudios,

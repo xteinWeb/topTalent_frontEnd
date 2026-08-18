@@ -1,0 +1,117 @@
+<div class="tab-pane">
+  <fieldset class="form-fieldset">
+    <legend>Datos Personales Adicionales</legend>
+    <div class="form-grid">
+      <div class="form-group required">
+        <label for="edad">Edad</label>
+        <input type="number" id="edad" name="edad" [ngModel]="edad" (ngModelChange)="onEdadChange($event)"
+          required min="0" placeholder="Ej. 28" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="estado_civil">Estado Civil</label>
+        <select id="estado_civil" name="estado_civil" [ngModel]="estado_civil" (ngModelChange)="onEstadoCivilChange($event)"
+          required class="form-control" [disabled]="readOnly">
+          <option value="">Seleccione...</option>
+          <option value="Soltero(a)">Soltero(a)</option>
+          <option value="Casado(a)">Casado(a)</option>
+          <option value="Unión Libre">Unión Libre</option>
+          <option value="Divorciado(a)">Divorciado(a)</option>
+          <option value="Viudo(a)">Viudo(a)</option>
+        </select>
+      </div>
+      <div class="form-group required">
+        <label for="eps">EPS</label>
+        <input type="text" id="eps" name="eps" [ngModel]="eps" (ngModelChange)="onEpsChange($event)"
+          required placeholder="Ej. Sura, Nueva EPS..." class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="fondo_pension">Fondo de Pensión</label>
+        <input type="text" id="fondo_pension" name="fondo_pension" [ngModel]="fondo_pension" (ngModelChange)="onFondoPensionChange($event)"
+          required placeholder="Ej. Porvenir, Colpensiones..." class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="direccion">Dirección</label>
+        <input type="text" id="direccion" name="direccion" [ngModel]="direccion" (ngModelChange)="onDireccionChange($event)"
+          required placeholder="Ej. Calle 10 # 20-30" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="barrio">Barrio</label>
+        <input type="text" id="barrio" name="barrio" [ngModel]="barrio" (ngModelChange)="onBarrioChange($event)"
+          required placeholder="Ej. El Prado" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="ciudad">Ciudad</label>
+        <input type="text" id="ciudad" name="ciudad" [ngModel]="ciudad" (ngModelChange)="onCiudadChange($event)"
+          required placeholder="Ej. Barranquilla" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="talla_camisa">Talla de Camisa</label>
+        <input type="text" id="talla_camisa" name="talla_camisa" [ngModel]="talla_camisa" (ngModelChange)="onTallaCamisaChange($event)"
+          required placeholder="Ej. M" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="talla_pantalon">Talla de Pantalón</label>
+        <input type="text" id="talla_pantalon" name="talla_pantalon" [ngModel]="talla_pantalon" (ngModelChange)="onTallaPantalonChange($event)"
+          required placeholder="Ej. 32" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+      <div class="form-group required">
+        <label for="talla_zapato">Talla de Zapato</label>
+        <input type="text" id="talla_zapato" name="talla_zapato" [ngModel]="talla_zapato" (ngModelChange)="onTallaZapatoChange($event)"
+          required placeholder="Ej. 40" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Personas a Cargo -->
+  <fieldset class="form-fieldset">
+    <legend>Personas a Cargo (Nº {{ personas_a_cargo.length }})</legend>
+
+    <div class="list-entries" *ngIf="personas_a_cargo.length > 0" style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="text-align: left; padding: 0.4rem; border-bottom: 2px solid var(--brand-beige-dark, #ddd); font-size: 0.85rem;">Parentesco</th>
+            <th style="text-align: left; padding: 0.4rem; border-bottom: 2px solid var(--brand-beige-dark, #ddd); font-size: 0.85rem;">Nombres</th>
+            <th style="text-align: left; padding: 0.4rem; border-bottom: 2px solid var(--brand-beige-dark, #ddd); font-size: 0.85rem;">Número de Identificación</th>
+            <th style="text-align: left; padding: 0.4rem; border-bottom: 2px solid var(--brand-beige-dark, #ddd); font-size: 0.85rem;">Edad</th>
+            <th style="border-bottom: 2px solid var(--brand-beige-dark, #ddd);"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let persona of personas_a_cargo; let i = index">
+            <td style="padding: 0.4rem;">
+              <select name="persona_parentesco_{{i}}" [(ngModel)]="persona.parentesco" (ngModelChange)="onPersonaCargoChange()"
+                class="form-control" [disabled]="readOnly">
+                <option value="">Seleccione...</option>
+                <option value="Cónyuge / Compañero(a) Permanente">Cónyuge / Compañero(a) Permanente</option>
+                <option value="Hijo(a)">Hijo(a)</option>
+                <option value="Padre">Padre</option>
+                <option value="Madre">Madre</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </td>
+            <td style="padding: 0.4rem;">
+              <input type="text" name="persona_nombres_{{i}}" [(ngModel)]="persona.nombres" (ngModelChange)="onPersonaCargoChange()"
+                class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+            </td>
+            <td style="padding: 0.4rem;">
+              <input type="text" name="persona_documento_{{i}}" [(ngModel)]="persona.numero_identificacion" (ngModelChange)="onPersonaCargoChange()"
+                class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+            </td>
+            <td style="padding: 0.4rem;">
+              <input type="number" name="persona_edad_{{i}}" [(ngModel)]="persona.edad" (ngModelChange)="onPersonaCargoChange()"
+                min="0" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+            </td>
+            <td style="padding: 0.4rem; text-align: center;">
+              <button *ngIf="!readOnly" type="button" class="remove-row-btn" (click)="removePersonaCargo(i)">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button *ngIf="!readOnly" type="button" class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;" (click)="addPersonaCargo()">
+      <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">add</span> Agregar Persona a Cargo
+    </button>
+  </fieldset>
+</div>
