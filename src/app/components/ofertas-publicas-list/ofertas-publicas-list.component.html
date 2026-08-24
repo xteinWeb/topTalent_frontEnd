@@ -118,14 +118,12 @@
       <div class="offers-scroll-list">
         <div class="job-master-card" *ngFor="let vacante of filteredVacantes"
           [class.selected]="selectedVacante?.id === vacante.id" (click)="selectVacante(vacante)">
-          <div class="card-time-badge">Convocatoria Abierta</div>
+          
           <h3 class="card-title">{{ vacante.titulo }}</h3>
 
           <div class="card-company-info">
             <span class="company-name">Artdecon S.A.S.</span>
             <span class="bullet-dot">•</span>
-            <span class="contract-type">{{ vacante.perfil_completo_json?.identificacion?.tipo_contrato || 'Término
-              Indefinido' }}</span>
           </div>
 
           <div class="card-verified-row">
@@ -168,11 +166,7 @@
         <header class="detail-main-header">
           <div class="header-title-block">
             <h1>{{ selectedVacante.titulo }}</h1>
-            <p class="company-subline">
-              <span class="company-highlight">Artdecon S.A.S.</span>
-              | {{ selectedVacante.perfil_completo_json?.identificacion?.tipo_contrato || 'Término Indefinido' }}
-              | Convocatoria Abierta
-            </p>
+            
           </div>
 
           <!-- CTA Actions Bar -->
