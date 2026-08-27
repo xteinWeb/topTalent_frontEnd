@@ -31,6 +31,14 @@
           </select>
         </div>
 
+        <div class="form-group full-width">
+          <label for="estado">Estado de la Vacante</label>
+          <select id="estado" name="estado" [(ngModel)]="estado" class="form-control">
+            <option value="ACTIVA"> ACTIVA (Pública para postulaciones)</option>
+            <option value="INACTIVA">INACTIVA (Oculta para candidatos)</option>
+          </select>
+        </div>
+
         <div class="form-group required full-width">
           <label for="titulo">Título de la Vacante</label>
           <input type="text" id="titulo" name="titulo" [(ngModel)]="titulo" required
@@ -42,14 +50,6 @@
           <textarea id="descripcion" name="descripcion" [(ngModel)]="descripcion" required rows="8"
             placeholder="Describe las funciones, requisitos, salario, jornada y beneficios del puesto de trabajo..."
             class="form-control"></textarea>
-        </div>
-
-        <div class="form-group full-width">
-          <label for="estado">Estado de la Vacante</label>
-          <select id="estado" name="estado" [(ngModel)]="estado" class="form-control">
-            <option value="ACTIVA"> ACTIVA (Pública para postulaciones)</option>
-            <option value="INACTIVA">INACTIVA (Oculta para candidatos)</option>
-          </select>
         </div>
 
         <div class="form-group full-width checkbox-group"
