@@ -37,7 +37,10 @@ export class CandidatoPerfilComponent implements OnInit {
   camposAdicionalesCompletos(): boolean {
     return !!(this.edad && String(this.edad).trim() && this.estado_civil.trim() && this.eps.trim() &&
       this.fondo_pension.trim() && this.direccion.trim() && this.barrio.trim() && this.ciudad.trim() &&
-      this.talla_camisa.trim() && this.talla_pantalon.trim() && this.talla_zapato.trim());
+      this.talla_camisa.trim() && this.talla_pantalon.trim() && this.talla_zapato.trim() &&
+      this.tiene_familiares_empresa.trim() &&
+      (this.tiene_familiares_empresa !== 'Si' || this.detalle_familiares_empresa.trim()) &&
+      this.funciones_desempenar.trim());
   }
 
   // Calcular porcentaje de completitud del perfil de candidato (100% total)
@@ -83,6 +86,9 @@ export class CandidatoPerfilComponent implements OnInit {
   talla_pantalon = '';
   talla_zapato = '';
   personas_a_cargo: any[] = [];
+  tiene_familiares_empresa = '';
+  detalle_familiares_empresa = '';
+  funciones_desempenar = '';
   tieneEducacionFormal = 'No';
   tieneEducacionInformal = 'No';
 
@@ -176,6 +182,9 @@ export class CandidatoPerfilComponent implements OnInit {
           this.talla_pantalon = p.talla_pantalon || '';
           this.talla_zapato = p.talla_zapato || '';
           this.personas_a_cargo = p.personas_a_cargo || [];
+          this.tiene_familiares_empresa = p.tiene_familiares_empresa || '';
+          this.detalle_familiares_empresa = p.detalle_familiares_empresa || '';
+          this.funciones_desempenar = p.funciones_desempenar || '';
           this.tieneEducacionFormal = p.tieneEducacionFormal || 'No';
           this.tieneEducacionInformal = p.tieneEducacionInformal || 'No';
           this.estudios = p.estudios || [];
@@ -227,6 +236,16 @@ export class CandidatoPerfilComponent implements OnInit {
   }
 
   saveProfile(): void {
+    // Nunca permitir que un guardado (parcial o no) sobrescriba el perfil con
+    // identidad vacía: perfil_completo_json se reemplaza por completo en el backend,
+    // así que un guardado accidental desde una carga fallida borraría datos ya válidos.
+    if (!this.nombre_completo.trim() || !this.correo.trim() || !this.cedula.trim() ||
+      !this.fecha_nacimiento.trim() || !this.telefono.trim()) {
+      alert('Antes de guardar, complete su información básica de contacto (nombre, correo, teléfono, cédula y fecha de nacimiento).');
+      this.activeTab = 'basica';
+      return;
+    }
+
     // Auto-commit pending studies form if filled out
     if (this.showEstudioForm && this.nuevoEstudio.nivel && this.nuevoEstudio.titulo && this.nuevoEstudio.institucion && this.nuevoEstudio.estado) {
       this.estudios.push({ ...this.nuevoEstudio });
@@ -267,6 +286,9 @@ export class CandidatoPerfilComponent implements OnInit {
         talla_pantalon: this.talla_pantalon,
         talla_zapato: this.talla_zapato,
         personas_a_cargo: this.personas_a_cargo,
+        tiene_familiares_empresa: this.tiene_familiares_empresa,
+        detalle_familiares_empresa: this.detalle_familiares_empresa,
+        funciones_desempenar: this.funciones_desempenar,
         tieneEducacionFormal: this.tieneEducacionFormal,
         tieneEducacionInformal: this.tieneEducacionInformal,
         estudios: this.estudios,

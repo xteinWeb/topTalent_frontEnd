@@ -23,10 +23,10 @@
         <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" [ngModel]="fecha_nacimiento"
           (ngModelChange)="onFechaNacimientoChange($event)" required class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
-      <div class="form-group full-width">
+      <div class="form-group required full-width">
         <label for="telefono">Teléfono / Celular</label>
         <input type="text" id="telefono" name="telefono" [ngModel]="telefono" (ngModelChange)="onTelefonoChange($event)"
-          placeholder="+57 300 123 4567" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
+          required placeholder="+57 300 123 4567" class="form-control" [readonly]="readOnly" [disabled]="readOnly" />
       </div>
     </div>
   </fieldset>

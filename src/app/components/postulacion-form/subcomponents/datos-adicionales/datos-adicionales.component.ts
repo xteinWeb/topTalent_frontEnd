@@ -43,6 +43,15 @@ export class DatosAdicionalesComponent {
   @Input() personas_a_cargo: any[] = [];
   @Output() personas_a_cargoChange = new EventEmitter<any[]>();
 
+  @Input() tiene_familiares_empresa: string = '';
+  @Output() tiene_familiares_empresaChange = new EventEmitter<string>();
+
+  @Input() detalle_familiares_empresa: string = '';
+  @Output() detalle_familiares_empresaChange = new EventEmitter<string>();
+
+  @Input() funciones_desempenar: string = '';
+  @Output() funciones_desempenarChange = new EventEmitter<string>();
+
   @Input() readOnly: boolean = false;
 
   onEdadChange(val: string): void {
@@ -83,6 +92,23 @@ export class DatosAdicionalesComponent {
 
   onTallaZapatoChange(val: string): void {
     this.talla_zapatoChange.emit(val);
+  }
+
+  onTieneFamiliaresEmpresaChange(val: string): void {
+    this.tiene_familiares_empresa = val;
+    if (val !== 'Si') {
+      this.detalle_familiares_empresa = '';
+      this.detalle_familiares_empresaChange.emit('');
+    }
+    this.tiene_familiares_empresaChange.emit(val);
+  }
+
+  onDetalleFamiliaresEmpresaChange(val: string): void {
+    this.detalle_familiares_empresaChange.emit(val);
+  }
+
+  onFuncionesDesempenarChange(val: string): void {
+    this.funciones_desempenarChange.emit(val);
   }
 
   addPersonaCargo(): void {

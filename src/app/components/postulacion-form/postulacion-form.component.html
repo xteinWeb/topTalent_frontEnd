@@ -69,7 +69,7 @@
     <app-postulacion-informacion-basica [(nombre_completo)]="nombre_completo"
       [(correo)]="correo" [(telefono)]="telefono" [(cedula)]="cedula" [(fecha_nacimiento)]="fecha_nacimiento"
       [(archivoHv)]="archivoHv" [(archivoNombre)]="archivoNombre" [(archivoInvalido)]="archivoInvalido"
-      [readOnly]="isLoggedIn" (fileSelected)="onFileSelected($event)">
+      [readOnly]="isLoggedIn && identidadCompleta()" (fileSelected)="onFileSelected($event)">
     </app-postulacion-informacion-basica>
 
     <!-- Preguntas del Cargo (si el perfil de cargo vinculado a la vacante tiene banco de preguntas) -->

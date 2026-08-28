@@ -72,6 +72,9 @@ export class PostulacionService {
     formData.append('talla_pantalon', postulacion.talla_pantalon || '');
     formData.append('talla_zapato', postulacion.talla_zapato || '');
     formData.append('personas_a_cargo_json', JSON.stringify(postulacion.personas_a_cargo || []));
+    formData.append('tiene_familiares_empresa', postulacion.tiene_familiares_empresa || '');
+    formData.append('detalle_familiares_empresa', postulacion.detalle_familiares_empresa || '');
+    formData.append('funciones_desempenar', postulacion.funciones_desempenar || '');
     formData.append('perfil_profesional', JSON.stringify(postulacion.perfil_profesional));
     formData.append('experiencias_json', JSON.stringify(postulacion.experiencias_json));
     formData.append('estudios_json', JSON.stringify(postulacion.estudios_json));

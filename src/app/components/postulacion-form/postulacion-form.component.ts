@@ -111,6 +111,9 @@ export class PostulacionFormComponent implements OnInit {
   talla_pantalon: string = '';
   talla_zapato: string = '';
   personas_a_cargo: any[] = [];
+  tiene_familiares_empresa: string = '';
+  detalle_familiares_empresa: string = '';
+  funciones_desempenar: string = '';
 
 
   // Tab navigation
@@ -333,6 +336,9 @@ export class PostulacionFormComponent implements OnInit {
                 this.talla_pantalon = p.talla_pantalon || '';
                 this.talla_zapato = p.talla_zapato || '';
                 this.personas_a_cargo = p.personas_a_cargo || [];
+                this.tiene_familiares_empresa = p.tiene_familiares_empresa || '';
+                this.detalle_familiares_empresa = p.detalle_familiares_empresa || '';
+                this.funciones_desempenar = p.funciones_desempenar || '';
                 this.tieneEducacionFormal = p.tieneEducacionFormal || 'No';
                 this.tieneEducacionInformal = p.tieneEducacionInformal || 'No';
                 this.estudios = p.estudios || [];
@@ -642,7 +648,10 @@ export class PostulacionFormComponent implements OnInit {
   camposAdicionalesCompletos(): boolean {
     return !!(this.edad && String(this.edad).trim() && this.estado_civil.trim() && this.eps.trim() &&
       this.fondo_pension.trim() && this.direccion.trim() && this.barrio.trim() && this.ciudad.trim() &&
-      this.talla_camisa.trim() && this.talla_pantalon.trim() && this.talla_zapato.trim());
+      this.talla_camisa.trim() && this.talla_pantalon.trim() && this.talla_zapato.trim() &&
+      this.tiene_familiares_empresa.trim() &&
+      (this.tiene_familiares_empresa !== 'Si' || this.detalle_familiares_empresa.trim()) &&
+      this.funciones_desempenar.trim());
   }
 
   openTratamientoDatosModal(event?: Event): void {
@@ -661,9 +670,17 @@ export class PostulacionFormComponent implements OnInit {
     this.onSubmit();
   }
 
+  // Los campos de identidad quedan bloqueados (readonly) una vez completados, para
+  // evitar que se alteren tras el registro inicial; mientras falten, deben ser editables.
+  identidadCompleta(): boolean {
+    return !!(this.nombre_completo.trim() && this.correo.trim() && this.cedula.trim() &&
+      this.fecha_nacimiento.trim() && this.telefono.trim());
+  }
+
   onSubmit(): void {
-    if (!this.nombre_completo.trim() || !this.correo.trim()) {
-      this.triggerErrorModal('Por favor complete la información obligatoria de contacto.');
+    if (!this.nombre_completo.trim() || !this.correo.trim() || !this.cedula.trim() ||
+      !this.fecha_nacimiento.trim() || !this.telefono.trim()) {
+      this.triggerErrorModal('Por favor complete la información obligatoria de contacto (nombre, correo, teléfono, cédula y fecha de nacimiento).');
       return;
     }
 
@@ -771,6 +788,9 @@ export class PostulacionFormComponent implements OnInit {
       talla_pantalon: this.talla_pantalon,
       talla_zapato: this.talla_zapato,
       personas_a_cargo: this.personas_a_cargo,
+      tiene_familiares_empresa: this.tiene_familiares_empresa,
+      detalle_familiares_empresa: this.detalle_familiares_empresa,
+      funciones_desempenar: this.funciones_desempenar,
       perfil_profesional: {
         titulo: 'Postulación Detallada',
         resumen: `Candidato (CC: ${this.cedula}, F.Nac: ${this.fecha_nacimiento}) completó el formulario de postulación dinámico estructurado.`
