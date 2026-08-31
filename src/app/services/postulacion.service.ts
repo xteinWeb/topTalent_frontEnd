@@ -8,6 +8,7 @@ export interface Postulacion {
   id?: string;
   vacante_id: string;
   vacante_titulo?: string;
+  candidato_id?: string;
   nombre_completo: string;
   correo: string;
   telefono?: string;
@@ -43,6 +44,18 @@ export interface Postulacion {
     conclusion?: string;
   };
   estado_ia?: string;
+  puntuacion_ia?: number;
+  posicion?: number | null;
+  segunda_validacion?: boolean | number | null;
+  json_analisis_ia?: {
+    posicion?: number;
+    puntaje_fase_1?: number;
+    puntaje_comparativo?: number;
+    ventaja_competitiva?: string;
+    diferenciador_tecnico?: string;
+    riesgo_menor_o_brecha?: string;
+    pregunta_clave_entrevista?: string;
+  };
 }
 
 @Injectable({
@@ -103,7 +116,16 @@ export class PostulacionService {
     );
   }
 
+  ejecutarValidacion(vacanteId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/vacante/${vacanteId}/validar`, {});
+  }
+
   getDownloadUrl(filename: string): string {
     return `${this.apiUrl}/download/${filename}`;
+  }
+
+  getHojaVidaCorporativaUrl(candidatoId: string, vacanteTitulo: string, fechaPostulacion: string): string {
+    const params = new URLSearchParams({ vacante: vacanteTitulo || '', fecha: fechaPostulacion || '' });
+    return `${this.apiUrl}/candidato/${candidatoId}/hoja-vida-docx?${params.toString()}`;
   }
 }

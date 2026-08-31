@@ -19,6 +19,8 @@ export class PostulacionListComponent implements OnInit {
   selectedVacanteId: string = '';
   loading: boolean = true;
   errorMsg: string = '';
+  ejecutandoValidacion: boolean = false;
+  validacionErrorMsg: string = '';
 
   // Modal / Detail view
   selectedCandidate?: Postulacion;
@@ -62,7 +64,7 @@ export class PostulacionListComponent implements OnInit {
 
     request$.subscribe({
       next: (data) => {
-        // Parsear respuesta_ia si viene como string
+        // Parsear respuesta_ia y json_analisis_ia si vienen como string
         const parsedData = data.map(item => {
           const rawRespuesta = item.respuesta_ia as any;
           if (rawRespuesta && typeof rawRespuesta === 'string') {
@@ -85,14 +87,32 @@ export class PostulacionListComponent implements OnInit {
               }
             }
           }
+
+          const rawAnalisis = item.json_analisis_ia as any;
+          if (rawAnalisis && typeof rawAnalisis === 'string') {
+            try {
+              item.json_analisis_ia = JSON.parse(rawAnalisis);
+            } catch (e) {
+              console.error('Error al parsear json_analisis_ia:', e);
+              item.json_analisis_ia = undefined;
+            }
+          }
+
           return item;
         });
 
-        // Ordenar de mayor a menor por puntaje de IA
+        // Orden por posición (1 = mejor ubicado), agrupado por vacante.
+        // Sin posición asignada (null/undefined) se considera descartado y va al final.
         const sortedData = parsedData.sort((a, b) => {
-          const scoreA = a.respuesta_ia?.puntaje ?? -1;
-          const scoreB = b.respuesta_ia?.puntaje ?? -1;
-          return scoreB - scoreA;
+          const vacanteCompare = (a.vacante_titulo || '').localeCompare(b.vacante_titulo || '');
+          if (vacanteCompare !== 0) return vacanteCompare;
+
+          const posA = a.posicion ?? null;
+          const posB = b.posicion ?? null;
+          if (posA === null && posB === null) return 0;
+          if (posA === null) return 1;
+          if (posB === null) return -1;
+          return posA - posB;
         });
         this.postulaciones = sortedData;
         this.filteredPostulaciones = sortedData;
@@ -107,8 +127,34 @@ export class PostulacionListComponent implements OnInit {
     });
   }
 
+  // Estado de la posición: con número asignado ("ranked"), revisada en segunda
+  // validación pero sin quedar rankeada ("descartado"), o aún sin revisar ("pendiente").
+  getEstadoPosicion(item: Postulacion): 'ranked' | 'descartado' | 'pendiente' {
+    if (item.posicion !== null && item.posicion !== undefined) return 'ranked';
+    return item.segunda_validacion ? 'descartado' : 'pendiente';
+  }
+
   onVacanteFilterChange(): void {
     this.loadPostulaciones();
+  }
+
+  ejecutarValidacion(): void {
+    if (!this.selectedVacanteId || this.ejecutandoValidacion) return;
+
+    this.ejecutandoValidacion = true;
+    this.validacionErrorMsg = '';
+
+    this.postulacionService.ejecutarValidacion(this.selectedVacanteId).subscribe({
+      next: () => {
+        this.ejecutandoValidacion = false;
+        this.loadPostulaciones();
+      },
+      error: (err) => {
+        this.ejecutandoValidacion = false;
+        this.validacionErrorMsg = 'Error al ejecutar la validación: ' + (err.error?.error || err.message);
+        console.error(err);
+      }
+    });
   }
 
   viewDetails(postulacion: Postulacion): void {
@@ -131,6 +177,16 @@ export class PostulacionListComponent implements OnInit {
   downloadResume(filename: string | undefined): void {
     if (!filename) return;
     const url = this.postulacionService.getDownloadUrl(filename);
+    window.open(url, '_blank');
+  }
+
+  downloadHojaVidaCorporativa(postulacion: Postulacion): void {
+    if (!postulacion.candidato_id) return;
+    const url = this.postulacionService.getHojaVidaCorporativaUrl(
+      postulacion.candidato_id,
+      postulacion.vacante_titulo || '',
+      postulacion.fecha_postulacion || ''
+    );
     window.open(url, '_blank');
   }
 }

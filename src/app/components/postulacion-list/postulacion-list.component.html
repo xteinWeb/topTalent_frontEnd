@@ -18,7 +18,15 @@
         </option>
       </select>
     </div>
+    <div class="filter-group" *ngIf="selectedVacanteId">
+      <button class="btn btn-primary" [disabled]="ejecutandoValidacion" (click)="ejecutarValidacion()">
+        {{ ejecutandoValidacion ? 'Ejecutando Validación...' : 'Ejecutar Validación' }}
+      </button>
+    </div>
   </div>
+  <p *ngIf="validacionErrorMsg" style="color: #c62828; font-weight: 600; font-size: 0.9rem; margin: -1rem 0 1.5rem 0;">
+    {{ validacionErrorMsg }}
+  </p>
 
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
@@ -47,8 +55,10 @@
           <th>Teléfono</th>
           <th>Vacante Aplicada</th>
           <th>Fecha de Postulación</th>
-          <th>Resultado (IA)</th>
-          <th>Puntaje (IA)</th>
+          <th>Resultado incial (IA)</th>
+          <th>Puntaje incial (IA)</th>
+          <th>Posición</th>
+          <th>Puntaje final (IA)</th>
           <th class="text-right">Acciones</th>
         </tr>
       </thead>
@@ -83,6 +93,27 @@
               -
             </span>
           </td>
+          <td>
+            <span class="puntaje-badge" *ngIf="getEstadoPosicion(item) === 'ranked'">
+              #{{ item.posicion }}
+            </span>
+            <span class="resultado-badge no-viable" *ngIf="getEstadoPosicion(item) === 'descartado'">
+              Descartado
+            </span>
+            <span class="resultado-badge evaluando" *ngIf="getEstadoPosicion(item) === 'pendiente'">
+              Pendiente
+            </span>
+          </td>
+          <td>
+            <span class="puntaje-badge"
+              *ngIf="item.puntuacion_ia !== undefined && item.puntuacion_ia !== null">
+              {{ item.puntuacion_ia }} / 100
+            </span>
+            <span class="no-puntaje"
+              *ngIf="item.puntuacion_ia === undefined || item.puntuacion_ia === null">
+              -
+            </span>
+          </td>
           <td class="text-right table-actions">
             <button class="btn btn-secondary btn-sm" (click)="viewDetails(item)">
               Ver Perfil
@@ -113,9 +144,12 @@
           <p class="candidate-contact">
             {{ selectedCandidate.correo }} | <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">smartphone</span> {{ selectedCandidate.telefono || 'Sin teléfono' }}
           </p>
-          <div class="cv-download-section">
+          <div class="cv-download-section" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <button class="btn btn-primary btn-sm" (click)="downloadResume(selectedCandidate.hv_archivo_ruta)">
               Descargar Hoja de Vida Original ({{ selectedCandidate.hv_archivo_nombre }})
+            </button>
+            <button class="btn btn-secondary btn-sm" (click)="downloadHojaVidaCorporativa(selectedCandidate)">
+              Exportar Hoja de Vida Corporativa (FTO-GH-001)
             </button>
           </div>
         </div>
@@ -195,6 +229,56 @@
               <ul>
                 <li *ngFor="let item of selectedCandidate.respuesta_ia.validaciones_requeridas">{{ item }}</li>
               </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparative AI Analysis Section (Show if available) -->
+        <div class="detail-section ai-eval-section" *ngIf="selectedCandidate.json_analisis_ia">
+          <h4>Análisis Comparativo de IA</h4>
+
+          <div class="ai-eval-summary-card">
+            <div class="ai-eval-header-grid">
+              <div class="ai-eval-stat">
+                <span class="stat-label">Posición:</span>
+                <span class="resultado-badge" [ngClass]="{
+                  'viable': getEstadoPosicion(selectedCandidate) === 'ranked',
+                  'no-viable': getEstadoPosicion(selectedCandidate) === 'descartado',
+                  'evaluando': getEstadoPosicion(selectedCandidate) === 'pendiente'
+                }">
+                  {{ getEstadoPosicion(selectedCandidate) === 'ranked' ? ('#' + selectedCandidate.posicion) : (getEstadoPosicion(selectedCandidate) === 'descartado' ? 'Descartado' : 'Pendiente') }}
+                </span>
+              </div>
+              <div class="ai-eval-stat" *ngIf="selectedCandidate.json_analisis_ia.puntaje_fase_1 !== undefined">
+                <span class="stat-label">Puntaje Fase 1:</span>
+                <span class="stat-value puntaje-value">{{ selectedCandidate.json_analisis_ia.puntaje_fase_1 }} / 100</span>
+              </div>
+              <div class="ai-eval-stat" *ngIf="selectedCandidate.json_analisis_ia.puntaje_comparativo !== undefined">
+                <span class="stat-label">Puntaje Comparativo:</span>
+                <span class="stat-value puntaje-value">{{ selectedCandidate.json_analisis_ia.puntaje_comparativo }} / 100</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-eval-lists-grid">
+            <div class="ai-eval-card-list success-card-list" *ngIf="selectedCandidate.json_analisis_ia.ventaja_competitiva">
+              <h5>Ventaja Competitiva</h5>
+              <p>{{ selectedCandidate.json_analisis_ia.ventaja_competitiva }}</p>
+            </div>
+
+            <div class="ai-eval-card-list success-card-list" *ngIf="selectedCandidate.json_analisis_ia.diferenciador_tecnico">
+              <h5>Diferenciador Técnico</h5>
+              <p>{{ selectedCandidate.json_analisis_ia.diferenciador_tecnico }}</p>
+            </div>
+
+            <div class="ai-eval-card-list danger-card-list" *ngIf="selectedCandidate.json_analisis_ia.riesgo_menor_o_brecha">
+              <h5>Riesgo Menor / Brecha</h5>
+              <p>{{ selectedCandidate.json_analisis_ia.riesgo_menor_o_brecha }}</p>
+            </div>
+
+            <div class="ai-eval-card-list warning-card-list" *ngIf="selectedCandidate.json_analisis_ia.pregunta_clave_entrevista">
+              <h5>Pregunta Clave para Entrevista</h5>
+              <p>{{ selectedCandidate.json_analisis_ia.pregunta_clave_entrevista }}</p>
             </div>
           </div>
         </div>
