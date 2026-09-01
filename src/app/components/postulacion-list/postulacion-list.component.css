@@ -462,7 +462,7 @@
 }
 
 .resultado-badge.viable {
-  background-color: var(--brand-beige-light);
+  background-color: #e3f5e6;
   color: var(--brand-green-pine, #344F2C);
   border-color: var(--brand-green-pine, #344F2C);
 }
@@ -474,7 +474,7 @@
 }
 
 .resultado-badge.no-viable {
-  background-color: var(--brand-beige-light);
+  background-color: #fbe4e0;
   color: var(--brand-terracotta, #A35E3E);
   border-color: var(--brand-terracotta, #A35E3E);
 }

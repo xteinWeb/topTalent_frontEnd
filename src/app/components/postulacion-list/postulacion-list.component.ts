@@ -134,6 +134,20 @@ export class PostulacionListComponent implements OnInit {
     return item.segunda_validacion ? 'descartado' : 'pendiente';
   }
 
+  // Estadísticas de la vacante filtrada: viables (1ra evaluación IA), viables que
+  // además quedaron rankeados en la segunda validación, y descartados en la segunda validación.
+  getStatViables(): number {
+    return this.filteredPostulaciones.filter(p => p.respuesta_ia?.resultado === 'VIABLE').length;
+  }
+
+  getStatViablesConValidacion(): number {
+    return this.filteredPostulaciones.filter(p => p.respuesta_ia?.resultado === 'VIABLE' && this.getEstadoPosicion(p) === 'ranked').length;
+  }
+
+  getStatDescartados(): number {
+    return this.filteredPostulaciones.filter(p => this.getEstadoPosicion(p) === 'descartado').length;
+  }
+
   onVacanteFilterChange(): void {
     this.loadPostulaciones();
   }

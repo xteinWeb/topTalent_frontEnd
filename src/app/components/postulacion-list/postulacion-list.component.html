@@ -23,6 +23,17 @@
         {{ ejecutandoValidacion ? 'Ejecutando Validación...' : 'Ejecutar Validación' }}
       </button>
     </div>
+    <div class="filter-group vacante-stats" *ngIf="selectedVacanteId">
+      <span class="resultado-badge viable" title="Viables en la primera evaluación de IA">
+        Viables: {{ getStatViables() }}
+      </span>
+      <span class="resultado-badge condicionado" title="Viables que además quedaron rankeados en la segunda validación">
+        Viables con validación: {{ getStatViablesConValidacion() }}
+      </span>
+      <span class="resultado-badge no-viable" title="Descartados en la segunda validación">
+        Descartados: {{ getStatDescartados() }}
+      </span>
+    </div>
   </div>
   <p *ngIf="validacionErrorMsg" style="color: #c62828; font-weight: 600; font-size: 0.9rem; margin: -1rem 0 1.5rem 0;">
     {{ validacionErrorMsg }}
