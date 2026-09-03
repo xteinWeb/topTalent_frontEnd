@@ -145,7 +145,11 @@ export class PostulacionListComponent implements OnInit {
   }
 
   getStatDescartados(): number {
-    return this.filteredPostulaciones.filter(p => this.getEstadoPosicion(p) === 'descartado').length;
+    return this.filteredPostulaciones.filter(p =>
+      p.respuesta_ia?.resultado === 'NO VIABLE' ||
+      p.respuesta_ia?.resultado === 'NO_VIABLE' ||
+      p.respuesta_ia?.resultado === 'DESCARTADO'
+    ).length;
   }
 
   onVacanteFilterChange(): void {

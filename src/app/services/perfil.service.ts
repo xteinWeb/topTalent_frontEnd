@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface PerfilJson {
   contractual?: string;
@@ -34,6 +35,8 @@ export interface PerfilJson {
 
 export interface PerfilCargo {
   id?: string;
+  empresa_id?: string;
+  empresa_nombre?: string;
   area: string;
   cargo: string;
   perfil_json: PerfilJson;
@@ -52,10 +55,19 @@ interface ApiResponse<T> {
 export class PerfilService {
   private apiUrl = `${environment.apiUrl}/perfiles`;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) { }
 
-  getPerfiles(): Observable<PerfilCargo[]> {
-    return this.http.get<ApiResponse<PerfilCargo[]>>(this.apiUrl).pipe(
+  getPerfiles(empresaId?: string): Observable<PerfilCargo[]> {
+    const user = this.authService.getCurrentUser();
+    const targetEmpresa = empresaId || user?.empresa_id;
+    let params = new HttpParams();
+    if (targetEmpresa) {
+      params = params.set('empresa_id', targetEmpresa);
+    }
+    return this.http.get<ApiResponse<PerfilCargo[]>>(this.apiUrl, { params }).pipe(
       map(res => res.data)
     );
   }
@@ -67,6 +79,10 @@ export class PerfilService {
   }
 
   createPerfil(perfil: PerfilCargo): Observable<any> {
+    const user = this.authService.getCurrentUser();
+    if (!perfil.empresa_id && user?.empresa_id) {
+      perfil.empresa_id = user.empresa_id;
+    }
     return this.http.post<ApiResponse<any>>(this.apiUrl, perfil).pipe(
       map(res => res.data)
     );

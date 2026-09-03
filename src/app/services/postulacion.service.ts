@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface Postulacion {
   id?: string;
@@ -64,7 +65,10 @@ export interface Postulacion {
 export class PostulacionService {
   private apiUrl = `${environment.apiUrl}/postulaciones`;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) { }
 
   postular(postulacion: any, archivo: File): Observable<any> {
     const formData = new FormData();
@@ -104,8 +108,14 @@ export class PostulacionService {
     return this.http.post<any>(this.apiUrl, formData);
   }
 
-  getPostulaciones(): Observable<Postulacion[]> {
-    return this.http.get<{ data: Postulacion[] }>(this.apiUrl).pipe(
+  getPostulaciones(empresaId?: string): Observable<Postulacion[]> {
+    const user = this.authService.getCurrentUser();
+    const targetEmpresa = empresaId || user?.empresa_id;
+    let params = new HttpParams();
+    if (targetEmpresa) {
+      params = params.set('empresa_id', targetEmpresa);
+    }
+    return this.http.get<{ data: Postulacion[] }>(this.apiUrl, { params }).pipe(
       map(res => res.data)
     );
   }

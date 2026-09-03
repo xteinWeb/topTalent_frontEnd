@@ -1,13 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 import { PerfilJson } from './perfil.service';
 
 export interface Vacante {
   id?: string;
+  empresa_id?: string;
+  empresa_nombre?: string;
   perfil_id: string;
   perfil_cargo?: string;
   perfil_completo_json?: PerfilJson;
@@ -31,16 +34,29 @@ interface ApiResponse<T> {
 export class VacanteService {
   private apiUrl = `${environment.apiUrl}/vacantes`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
-  getVacantes(): Observable<Vacante[]> {
-    return this.http.get<ApiResponse<Vacante[]>>(this.apiUrl).pipe(
+  getVacantes(empresaId?: string): Observable<Vacante[]> {
+    const user = this.authService.getCurrentUser();
+    const targetEmpresa = empresaId || user?.empresa_id;
+    let params = new HttpParams();
+    if (targetEmpresa) {
+      params = params.set('empresa_id', targetEmpresa);
+    }
+    return this.http.get<ApiResponse<Vacante[]>>(this.apiUrl, { params }).pipe(
       map(res => res.data)
     );
   }
 
-  getVacantesActivas(): Observable<Vacante[]> {
-    return this.http.get<ApiResponse<Vacante[]>>(`${this.apiUrl}/public`).pipe(
+  getVacantesActivas(empresaId?: string): Observable<Vacante[]> {
+    let params = new HttpParams();
+    if (empresaId) {
+      params = params.set('empresa_id', empresaId);
+    }
+    return this.http.get<ApiResponse<Vacante[]>>(`${this.apiUrl}/public`, { params }).pipe(
       map(res => res.data)
     );
   }
@@ -52,6 +68,10 @@ export class VacanteService {
   }
 
   createVacante(vacante: Vacante): Observable<any> {
+    const user = this.authService.getCurrentUser();
+    if (!vacante.empresa_id && user?.empresa_id) {
+      vacante.empresa_id = user.empresa_id;
+    }
     return this.http.post<ApiResponse<any>>(this.apiUrl, vacante).pipe(
       map(res => res.data)
     );

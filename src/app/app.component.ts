@@ -36,6 +36,10 @@ export class AppComponent {
     );
   }
 
+  get currentUser() {
+    return this.authService.getCurrentUser();
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);

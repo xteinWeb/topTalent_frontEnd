@@ -4,9 +4,17 @@
       <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-blanco).png" alt="Artdecon Logo">
     </div>
     <nav class="nav-links">
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Perfiles de Cargo</a>
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Perfiles de
+        Cargo</a>
       <a routerLink="/vacantes" routerLinkActive="active">Vacantes</a>
       <a routerLink="/postulaciones" routerLinkActive="active">Postulaciones</a>
+      <a routerLink="/empresa/perfil" routerLinkActive="active-profile" class="nav-user-info" *ngIf="currentUser" title="Configuración de Empresa y Credenciales">
+        <span class="nav-empresa-tag" [title]="currentUser.empresa_nombre || 'Empresa'">
+          {{ currentUser.empresa_nombre || currentUser.empresa_id || 'ARTDECON' }}
+        </span>
+        <span class="nav-user-tag">{{ currentUser.nombre || currentUser.username }}</span>
+        <span class="nav-settings-icon">⚙️</span>
+      </a>
       <button (click)="logout()" class="nav-logout-btn">Cerrar Sesión</button>
     </nav>
   </div>

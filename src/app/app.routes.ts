@@ -11,6 +11,7 @@ import { LoginComponent } from './components/login/login.component';
 import { CandidatoLoginComponent } from './components/login/candidato-login/candidato-login.component';
 import { CandidatoRegistroComponent } from './components/login/candidato-registro/candidato-registro.component';
 import { CandidatoPerfilComponent } from './components/login/candidato-perfil/candidato-perfil.component';
+import { EmpresaPerfilComponent } from './components/empresa-perfil/empresa-perfil.component';
 import { authGuard } from './guards/auth.guard';
 import { candidatoAuthGuard } from './guards/candidato-auth.guard';
 
@@ -45,6 +46,9 @@ export const routes: Routes = [
   // Postulaciones (Private)
   { path: 'postulaciones', component: PostulacionListComponent, canActivate: [authGuard] },
   { path: 'postulaciones/vacante/:vacanteId', component: PostulacionListComponent, canActivate: [authGuard] },
+
+  // Configuración de Empresa y Credenciales (Private)
+  { path: 'empresa/perfil', component: EmpresaPerfilComponent, canActivate: [authGuard] },
 
   { path: '**', redirectTo: '' }
 ];

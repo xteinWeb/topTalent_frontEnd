@@ -4,7 +4,12 @@ import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface UserSession {
+  id?: string;
   username: string;
+  nombre?: string;
+  email?: string;
+  empresa_id?: string;
+  empresa_nombre?: string;
   role: string;
 }
 
@@ -14,11 +19,28 @@ export interface LoginResponse {
   user: UserSession;
 }
 
+export interface AdminProfileResponse {
+  data: {
+    id: string;
+    empresa_id: string;
+    empresa_nombre: string;
+    empresa_activo?: boolean;
+    empresa_fecha_creacion?: string;
+    nombre: string;
+    username: string;
+    email: string;
+    rol: string;
+    activo: boolean;
+    fecha_creacion: string;
+    fecha_actualizacion: string;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = `${environment.apiUrl}/auth/login`;
+  private baseAuthUrl = `${environment.apiUrl}/auth`;
   
   // Keep track of logged in status
   private loggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
@@ -31,7 +53,7 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.apiUrl, { username, password }).pipe(
+    return this.http.post<LoginResponse>(`${this.baseAuthUrl}/login`, { username, password }).pipe(
       tap(res => {
         if (res && res.token) {
           localStorage.setItem('auth_token', res.token);
@@ -40,6 +62,35 @@ export class AuthService {
         }
       })
     );
+  }
+
+  getPerfilAdmin(id: string): Observable<AdminProfileResponse> {
+    return this.http.get<AdminProfileResponse>(`${this.baseAuthUrl}/perfil/${id}`);
+  }
+
+  updateCredenciales(payload: {
+    id: string;
+    nombre?: string;
+    email?: string;
+    password_actual?: string;
+    password_nuevo?: string;
+  }): Observable<{ success: boolean; message: string; user: UserSession }> {
+    return this.http.put<{ success: boolean; message: string; user: UserSession }>(
+      `${this.baseAuthUrl}/credenciales`,
+      payload
+    ).pipe(
+      tap(res => {
+        if (res && res.user) {
+          this.updateLocalSessionUser(res.user);
+        }
+      })
+    );
+  }
+
+  updateLocalSessionUser(updatedUser: UserSession): void {
+    const current = this.getCurrentUser() || {} as UserSession;
+    const merged = { ...current, ...updatedUser };
+    localStorage.setItem('auth_user', JSON.stringify(merged));
   }
 
   logout(): void {

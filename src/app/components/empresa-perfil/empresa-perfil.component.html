@@ -1,0 +1,255 @@
+<div class="perfil-empresa-container">
+  <!-- Header Title -->
+  <div class="header-section">
+    <div class="title-group">
+      <div class="icon-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18"/>
+          <path d="M9 8h1"/>
+          <path d="M9 12h1"/>
+          <path d="M9 16h1"/>
+          <path d="M14 8h1"/>
+          <path d="M14 12h1"/>
+          <path d="M14 16h1"/>
+          <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Configuración de Empresa y Credenciales</h1>
+        <p class="subtitle">Consulta los datos corporativos de la empresa y actualiza tus accesos de administrador.</p>
+      </div>
+    </div>
+    <a routerLink="/dashboard" class="btn-back">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      Volver al Dashboard
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando información corporativa y de usuario...</p>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div *ngIf="!loading" class="cards-grid">
+    <!-- Card 1: Datos de la Empresa -->
+    <div class="card corporate-card">
+      <div class="card-header">
+        <div class="badge-icon gold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+        </div>
+        <div>
+          <h2>Información Corporativa</h2>
+          <span class="card-subtitle">Datos de la empresa asignada a tu cuenta</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Identificador de Empresa:</span>
+          <span class="info-badge">{{ adminData.empresa_id || '00' }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Razón Social / Nombre:</span>
+          <span class="info-value font-bold">{{ adminData.empresa_nombre || 'ARTDECON DE COLOMBIA S.A.S' }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Estado de la Empresa:</span>
+          <span class="status-badge active">
+            <span class="dot"></span>
+            Activa en el Sistema
+          </span>
+        </div>
+
+        <div class="info-row" *ngIf="adminData.empresa_fecha_creacion">
+          <span class="info-label">Fecha de Registro:</span>
+          <span class="info-value">{{ adminData.empresa_fecha_creacion | date:'dd/MM/yyyy, h:mm a' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 & 3: Formulario de Perfil y Credenciales -->
+    <div class="card form-card">
+      <form (ngSubmit)="onSubmit()">
+        <!-- Sección Administrador -->
+        <div class="card-header">
+          <div class="badge-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div>
+            <h2>Perfil de Administrador</h2>
+            <span class="card-subtitle">Datos de contacto y nombre público</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group-grid">
+            <div class="form-group">
+              <label for="editNombre">Nombre del Administrador <span class="req">*</span></label>
+              <input
+                id="editNombre"
+                type="text"
+                class="form-control"
+                [(ngModel)]="editNombre"
+                name="editNombre"
+                placeholder="Ej. Administrador Artdecon"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editEmail">Correo Electrónico</label>
+              <input
+                id="editEmail"
+                type="email"
+                class="form-control"
+                [(ngModel)]="editEmail"
+                name="editEmail"
+                placeholder="admin@artdecon.com"
+              />
+            </div>
+          </div>
+
+          <div class="readonly-grid">
+            <div class="readonly-item">
+              <span class="ro-label">Usuario de Acceso:</span>
+              <span class="ro-val">{{ adminData.username }}</span>
+            </div>
+            <div class="readonly-item">
+              <span class="ro-label">Rol del Sistema:</span>
+              <span class="ro-val role-tag">{{ adminData.rol || 'ADMIN' }}</span>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <hr class="section-divider" />
+
+          <!-- Sección Cambio de Contraseña -->
+          <div class="password-header">
+            <div class="badge-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div>
+              <h3>Actualizar Contraseña de Acceso</h3>
+              <p class="pw-help">Deja los siguientes campos vacíos si no deseas cambiar tu contraseña.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="passwordActual">Contraseña Actual</label>
+            <div class="input-pw-wrapper">
+              <input
+                id="passwordActual"
+                [type]="showPasswordActual ? 'text' : 'password'"
+                class="form-control"
+                [(ngModel)]="passwordActual"
+                name="passwordActual"
+                placeholder="Ingresa tu contraseña actual"
+              />
+              <button
+                type="button"
+                class="btn-toggle-pw"
+                (click)="showPasswordActual = !showPasswordActual"
+                [title]="showPasswordActual ? 'Ocultar' : 'Mostrar'"
+              >
+                {{ showPasswordActual ? '👁️' : '🔒' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group-grid">
+            <div class="form-group">
+              <label for="passwordNuevo">Nueva Contraseña</label>
+              <div class="input-pw-wrapper">
+                <input
+                  id="passwordNuevo"
+                  [type]="showPasswordNuevo ? 'text' : 'password'"
+                  class="form-control"
+                  [(ngModel)]="passwordNuevo"
+                  name="passwordNuevo"
+                  placeholder="Mínimo 6 caracteres"
+                />
+                <button
+                  type="button"
+                  class="btn-toggle-pw"
+                  (click)="showPasswordNuevo = !showPasswordNuevo"
+                  [title]="showPasswordNuevo ? 'Ocultar' : 'Mostrar'"
+                >
+                  {{ showPasswordNuevo ? '👁️' : '🔒' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="passwordConfirm">Confirmar Nueva Contraseña</label>
+              <div class="input-pw-wrapper">
+                <input
+                  id="passwordConfirm"
+                  [type]="showPasswordConfirm ? 'text' : 'password'"
+                  class="form-control"
+                  [(ngModel)]="passwordConfirm"
+                  name="passwordConfirm"
+                  placeholder="Repite la nueva contraseña"
+                />
+                <button
+                  type="button"
+                  class="btn-toggle-pw"
+                  (click)="showPasswordConfirm = !showPasswordConfirm"
+                  [title]="showPasswordConfirm ? 'Ocultar' : 'Mostrar'"
+                >
+                  {{ showPasswordConfirm ? '👁️' : '🔒' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn-save"
+              [disabled]="saving"
+            >
+              <svg *ngIf="!saving" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <span>{{ saving ? 'Guardando Cambios...' : 'Guardar Cambios' }}</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
