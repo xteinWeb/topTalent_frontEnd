@@ -54,6 +54,7 @@ export class OfertaDetalleComponent implements OnInit {
       },
       error: (err) => {
         this.errorMsg = 'No se pudo cargar el detalle de la oferta de empleo.';
+        this.seoService.update({ title: 'Oferta no disponible', noindex: true });
         this.loading = false;
         console.error(err);
       }
