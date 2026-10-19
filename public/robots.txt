@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /dashboard
+Disallow: /nuevo
+Disallow: /editar/
+Disallow: /vacantes
+Disallow: /postulaciones
+Disallow: /empresa/
+Disallow: /candidato/perfil
+Disallow: /postular/
+
+Sitemap: https://empleo.artdecon.com/sitemap.xml

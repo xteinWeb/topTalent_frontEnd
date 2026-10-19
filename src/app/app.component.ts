@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth.service';
+import { SeoService } from './services/seo.service';
 import { filter, map, startWith } from 'rxjs/operators';
 import { combineLatest, Observable } from 'rxjs';
 
@@ -16,7 +17,9 @@ export class AppComponent {
   title = 'frontend';
   showNavbar$: Observable<boolean>;
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(private authService: AuthService, private router: Router, seoService: SeoService) {
+    seoService.init();
+
     const isNotPublicRoute$ = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       startWith(null),

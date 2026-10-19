@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { VacanteService, Vacante } from '../../services/vacante.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-oferta-detalle',
@@ -19,7 +20,8 @@ export class OfertaDetalleComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private vacanteService: VacanteService
+    private vacanteService: VacanteService,
+    private seoService: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -39,6 +41,12 @@ export class OfertaDetalleComponent implements OnInit {
     this.vacanteService.getVacante(id).subscribe({
       next: (data) => {
         this.vacante = data;
+        const cargo = data.perfil_cargo || data.titulo;
+        this.seoService.update({
+          title: cargo ? `Empleo: ${cargo}` : 'Oferta de empleo',
+          description: `Vacante de ${cargo || 'empleo'}${data.empresa_nombre ? ' en ' + data.empresa_nombre : ''}. Conoce los requisitos y postúlate en línea enviando tu hoja de vida.`,
+          noindex: data.estado === 'INACTIVA'
+        });
         if (data.estado === 'INACTIVA') {
           this.errorMsg = 'Esta oferta laboral ya no se encuentra disponible.';
         }
