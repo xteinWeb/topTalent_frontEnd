@@ -37,6 +37,10 @@ export const routes: Routes = [
   { path: 'vacantes/nueva', loadComponent: () => import('./components/vacante-form/vacante-form.component').then(m => m.VacanteFormComponent), canActivate: [authGuard], data: { seo: { noindex: true } } },
   { path: 'vacantes/editar/:id', loadComponent: () => import('./components/vacante-form/vacante-form.component').then(m => m.VacanteFormComponent), canActivate: [authGuard], data: { seo: { noindex: true } } },
 
+  // Solicitudes de Personal / Requerimientos de Líderes y Autorizaciones TH (Private)
+  { path: 'solicitudes-vacantes', loadComponent: () => import('./components/solicitud-vacante-list/solicitud-vacante-list.component').then(m => m.SolicitudVacanteListComponent), canActivate: [authGuard], data: { seo: { noindex: true } } },
+  { path: 'solicitudes', redirectTo: 'solicitudes-vacantes', pathMatch: 'full' },
+
   // Postulaciones (Private)
   { path: 'postulaciones', loadComponent: () => import('./components/postulacion-list/postulacion-list.component').then(m => m.PostulacionListComponent), canActivate: [authGuard], data: { seo: { noindex: true } } },
   { path: 'postulaciones/vacante/:vacanteId', loadComponent: () => import('./components/postulacion-list/postulacion-list.component').then(m => m.PostulacionListComponent), canActivate: [authGuard], data: { seo: { noindex: true } } },

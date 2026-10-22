@@ -23,7 +23,7 @@
       <div class="form-grid">
         <div class="form-group required full-width">
           <label for="perfil_id">Asociar a Perfil de Cargo</label>
-          <select id="perfil_id" name="perfil_id" [(ngModel)]="perfil_id" required class="form-control">
+          <select id="perfil_id" name="perfil_id" [(ngModel)]="perfil_id" (change)="onPerfilChange()" required class="form-control">
             <option value="" disabled selected>Seleccione un perfil de cargo existente...</option>
             <option *ngFor="let perfil of perfiles" [value]="perfil.id">
               {{ perfil.cargo }} ({{ perfil.area }})
@@ -31,29 +31,82 @@
           </select>
         </div>
 
-        <div class="form-group full-width">
+        <div class="form-group">
+          <label for="seccion_area">Área / Sección de la Empresa *</label>
+          <input type="text" id="seccion_area" name="seccion_area" [(ngModel)]="seccion_area"
+            placeholder="Ej: Planta de Producción, Comercial, Logística" class="form-control" />
+        </div>
+
+        <div class="form-group">
           <label for="estado">Estado de la Vacante</label>
           <select id="estado" name="estado" [(ngModel)]="estado" class="form-control">
-            <option value="ACTIVA"> ACTIVA (Pública para postulaciones)</option>
-            <option value="INACTIVA">INACTIVA (Oculta para candidatos)</option>
+            <option value="ACTIVA">🟢 ACTIVA (Pública para postulaciones)</option>
+            <option value="INACTIVA">⚪ INACTIVA (Oculta para candidatos)</option>
           </select>
         </div>
 
         <div class="form-group required full-width">
           <label for="titulo">Título de la Vacante</label>
           <input type="text" id="titulo" name="titulo" [(ngModel)]="titulo" required
-            placeholder=" Desarrollador Angular Senior - Medellín" class="form-control" />
+            placeholder="Ej: Auxiliar de Costura y Tapicería - Planta Sabaneta" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="tipo_requerimiento">Tipo de Requerimiento</label>
+          <select id="tipo_requerimiento" name="tipo_requerimiento" [(ngModel)]="tipo_requerimiento" class="form-control">
+            <option value="NUEVO_CARGO">Creación de Nuevo Cargo</option>
+            <option value="REEMPLAZO">Reemplazo de Personal</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="tipo_requerimiento === 'REEMPLAZO'">
+          <label for="nombre_reemplaza">Colaborador a Quien Reemplaza *</label>
+          <input type="text" id="nombre_reemplaza" name="nombre_reemplaza" [(ngModel)]="nombre_reemplaza"
+            placeholder="Nombre completo de quien deja el cargo" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="salario_min">Salario Mínimo Estimado (COP)</label>
+          <input type="number" id="salario_min" name="salario_min" [(ngModel)]="salario_min"
+            placeholder="Ej: 1600000" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="salario_max">Salario Máximo Estimado (COP)</label>
+          <input type="number" id="salario_max" name="salario_max" [(ngModel)]="salario_max"
+            placeholder="Ej: 2200000" class="form-control" />
         </div>
 
         <div class="form-group required full-width">
-          <label for="descripcion">Descripción de la Vacante / Requisitos Adicionales</label>
-          <textarea id="descripcion" name="descripcion" [(ngModel)]="descripcion" required rows="8"
-            placeholder="Describe las funciones, requisitos, salario, jornada y beneficios del puesto de trabajo..."
+          <label for="descripcion">Descripción de la Vacante / Requisitos y Beneficios</label>
+          <textarea id="descripcion" name="descripcion" [(ngModel)]="descripcion" required rows="6"
+            placeholder="Describe las funciones principales, requisitos académicos y de experiencia, jornada laboral y beneficios..."
             class="form-control"></textarea>
         </div>
 
+        <!-- Criterios Internos (Perfil Oculto) -->
+        <div class="form-group full-width" style="border-top: 1px dashed var(--brand-beige-dark, #D9C5B2); padding-top: 1.25rem; margin-top: 0.5rem;">
+          <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: var(--brand-navy, #16313A);">🔒 Criterios Internos / Perfil Oculto (Confidencial)</h3>
+          <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 1rem 0;">Información interna para el equipo de selección; no se muestra en la oferta pública.</p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 700;">Edad Preferida</label>
+              <input type="text" name="edad_preferida" [(ngModel)]="perfil_oculto.edad_preferida" class="form-control" placeholder="Ej: 20 a 45 años" />
+            </div>
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 700;">Turnos / Horario</label>
+              <input type="text" name="turnos" [(ngModel)]="perfil_oculto.turnos" class="form-control" placeholder="Ej: Turnos rotativos 6-2, 2-10" />
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 0.825rem; font-weight: 700;">Observaciones de Urgencia o Notas de Selección</label>
+              <input type="text" name="observaciones_confidenciales" [(ngModel)]="perfil_oculto.observaciones_confidenciales" class="form-control" placeholder="Ej: Priorizar candidatos que vivan en Sabaneta o municipios aledaños." />
+            </div>
+          </div>
+        </div>
+
         <div class="form-group full-width checkbox-group"
-          style="margin-top: 1rem; border-top: 1px dashed var(--brand-beige-dark); padding-top: 1rem;">
+          style="margin-top: 1rem; border-top: 1px dashed var(--brand-beige-dark, #D9C5B2); padding-top: 1rem;">
           <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer;">
             <input type="checkbox" name="requiere_registro" [(ngModel)]="requiere_registro"
               style="width: 18px; height: 18px;">
@@ -99,8 +152,8 @@
 
     <footer class="form-footer-actions">
       <button type="button" class="btn btn-secondary" routerLink="/vacantes">Cancelar</button>
-      <button type="submit" class="btn btn-primary" [disabled]="submitting || !vacanteForm.form.valid">
-        {{ submitting ? 'Guardando...' : 'Guardar Vacante' }}
+      <button type="submit" class="btn btn-primary" [disabled]="submitting">
+        {{ submitting ? 'Guardando...' : (isEditMode ? 'Actualizar Vacante' : 'Publicar Vacante') }}
       </button>
     </footer>
   </form>

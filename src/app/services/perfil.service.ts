@@ -40,6 +40,7 @@ export interface PerfilCargo {
   area: string;
   cargo: string;
   perfil_json: PerfilJson;
+  matriz_competencias_json?: any;
   fecha_creacion?: string;
   fecha_actualizacion?: string;
 }
@@ -47,6 +48,19 @@ export interface PerfilCargo {
 interface ApiResponse<T> {
   data: T;
   token?: string;
+}
+
+function normalizePerfil(p: any): PerfilCargo {
+  if (!p) return p;
+  if (typeof p.perfil_json === 'string') {
+    try { p.perfil_json = JSON.parse(p.perfil_json); } catch (e) { p.perfil_json = {}; }
+  } else if (!p.perfil_json) {
+    p.perfil_json = {};
+  }
+  if (typeof p.matriz_competencias_json === 'string') {
+    try { p.matriz_competencias_json = JSON.parse(p.matriz_competencias_json); } catch (e) {}
+  }
+  return p;
 }
 
 @Injectable({
@@ -68,13 +82,13 @@ export class PerfilService {
       params = params.set('empresa_id', targetEmpresa);
     }
     return this.http.get<ApiResponse<PerfilCargo[]>>(this.apiUrl, { params }).pipe(
-      map(res => res.data)
+      map(res => (res.data || []).map(normalizePerfil))
     );
   }
 
   getPerfil(id: string): Observable<PerfilCargo> {
     return this.http.get<ApiResponse<PerfilCargo>>(`${this.apiUrl}/${id}`).pipe(
-      map(res => res.data)
+      map(res => normalizePerfil(res.data))
     );
   }
 

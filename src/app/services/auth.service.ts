@@ -11,6 +11,7 @@ export interface UserSession {
   empresa_id?: string;
   empresa_nombre?: string;
   role: string;
+  area?: string;
 }
 
 export interface LoginResponse {
@@ -115,5 +116,25 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  isSuperAdmin(): boolean {
+    const role = this.getCurrentUser()?.role?.toUpperCase();
+    return role === 'SUPERADMIN' || role === 'ADMIN' || role === 'ADMINISTRATOR';
+  }
+
+  isGerencia(): boolean {
+    const role = this.getCurrentUser()?.role?.toUpperCase();
+    return role === 'GERENCIA' || this.isSuperAdmin();
+  }
+
+  isTalentoHumano(): boolean {
+    const role = this.getCurrentUser()?.role?.toUpperCase();
+    return role === 'TALENTO_HUMANO' || role === 'TALENTO' || this.isSuperAdmin();
+  }
+
+  isLiderArea(): boolean {
+    const role = this.getCurrentUser()?.role?.toUpperCase();
+    return role === 'LIDER_AREA';
   }
 }

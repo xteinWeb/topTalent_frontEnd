@@ -18,8 +18,15 @@ export class LoginComponent {
   errorMessage: string = '';
 
   constructor(private authService: AuthService, private router: Router) {
-    // If already logged in, redirect to dashboard
     if (this.authService.isLoggedIn()) {
+      this.redirectByRole();
+    }
+  }
+
+  private redirectByRole(): void {
+    if (this.authService.isLiderArea()) {
+      this.router.navigate(['/solicitudes-vacantes']);
+    } else {
       this.router.navigate(['/dashboard']);
     }
   }
@@ -36,7 +43,7 @@ export class LoginComponent {
     this.authService.login(this.username, this.password).subscribe({
       next: (res) => {
         this.loading = false;
-        this.router.navigate(['/dashboard']);
+        this.redirectByRole();
       },
       error: (err) => {
         this.loading = false;

@@ -30,6 +30,22 @@ export class VacanteFormComponent implements OnInit {
     idiomas_habilidades: true
   };
 
+  // Requerimientos extendidos Octubre 2026
+  seccion_area: string = '';
+  tipo_requerimiento: 'NUEVO_CARGO' | 'REEMPLAZO' = 'NUEVO_CARGO';
+  nombre_reemplaza: string = '';
+  salario_min: number | null = null;
+  salario_max: number | null = null;
+  perfil_oculto: {
+    edad_preferida: string;
+    turnos: string;
+    observaciones_confidenciales: string;
+  } = {
+    edad_preferida: '',
+    turnos: 'Diurno Ordinario',
+    observaciones_confidenciales: ''
+  };
+
   perfiles: PerfilCargo[] = [];
   submitting: boolean = false;
   loading: boolean = false;
@@ -65,6 +81,17 @@ export class VacanteFormComponent implements OnInit {
     });
   }
 
+  onPerfilChange(): void {
+    const sel = this.perfiles.find(p => p.id === this.perfil_id);
+    if (sel) {
+      if (!this.titulo) this.titulo = sel.cargo;
+      if (!this.seccion_area) this.seccion_area = sel.area;
+      if (!this.descripcion && sel.perfil_json?.proposito) {
+        this.descripcion = sel.perfil_json.proposito;
+      }
+    }
+  }
+
   loadVacante(id: string): void {
     this.loading = true;
     this.vacanteService.getVacante(id).subscribe({
@@ -74,6 +101,27 @@ export class VacanteFormComponent implements OnInit {
         this.descripcion = data.descripcion;
         this.estado = data.estado || 'ACTIVA';
         this.requiere_registro = data.requiere_registro !== undefined ? data.requiere_registro : true;
+        this.seccion_area = data.seccion_area || '';
+        this.tipo_requerimiento = (data.tipo_requerimiento as any) || 'NUEVO_CARGO';
+        this.nombre_reemplaza = data.nombre_reemplaza || '';
+        this.salario_min = data.salario_min ? Number(data.salario_min) : null;
+        this.salario_max = data.salario_max ? Number(data.salario_max) : null;
+
+        if (data.perfil_oculto_json) {
+          try {
+            const raw = typeof data.perfil_oculto_json === 'string'
+              ? JSON.parse(data.perfil_oculto_json)
+              : data.perfil_oculto_json;
+            this.perfil_oculto = {
+              edad_preferida: raw.edad_preferida || '',
+              turnos: raw.turnos || 'Diurno Ordinario',
+              observaciones_confidenciales: raw.observaciones_confidenciales || ''
+            };
+          } catch (e) {
+            console.error('Error al parsear perfil_oculto_json:', e);
+          }
+        }
+
         if (data.configuracion_json) {
           try {
             this.campos_requeridos = typeof data.configuracion_json === 'string' 
@@ -99,6 +147,11 @@ export class VacanteFormComponent implements OnInit {
       return;
     }
 
+    if (this.tipo_requerimiento === 'REEMPLAZO' && !this.nombre_reemplaza.trim()) {
+      alert('Por favor indique el nombre de la persona a quien reemplaza.');
+      return;
+    }
+
     this.submitting = true;
 
     const payload: Vacante = {
@@ -107,7 +160,13 @@ export class VacanteFormComponent implements OnInit {
       descripcion: this.descripcion,
       estado: this.estado,
       requiere_registro: this.requiere_registro,
-      configuracion_json: this.campos_requeridos
+      configuracion_json: this.campos_requeridos,
+      seccion_area: this.seccion_area,
+      tipo_requerimiento: this.tipo_requerimiento,
+      nombre_reemplaza: this.tipo_requerimiento === 'REEMPLAZO' ? this.nombre_reemplaza : undefined,
+      salario_min: this.salario_min || undefined,
+      salario_max: this.salario_max || undefined,
+      perfil_oculto_json: this.perfil_oculto
     };
 
     const request$ = this.isEditMode

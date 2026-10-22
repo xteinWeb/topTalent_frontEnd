@@ -1,71 +1,392 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
     <div class="header-title">
-      <h1>Vacantes Laborales</h1>
-      <p class="subtitle">Gestiona y publica ofertas de empleo vinculadas a los perfiles de cargo</p>
+      <h1>Gestión y Solicitudes de Vacantes</h1>
+      <p class="subtitle">Flujo de gobierno, autorización gerencial y publicación de ofertas de empleo</p>
     </div>
-    <button class="btn btn-primary" routerLink="/vacantes/nueva">
-      <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">add</span> Nueva Vacante
-    </button>
+    <div class="header-actions">
+      <!-- Botón para Líderes de Área y Talento Humano -->
+      <button class="btn btn-secondary" (click)="openSolicitudModal()" *ngIf="authService.isLiderArea() || authService.isTalentoHumano() || authService.isSuperAdmin()">
+        <span class="material-icons">post_add</span> Solicitar Requerimiento
+      </button>
+
+      <!-- Botón directo para Talento Humano y Superadmin -->
+      <button class="btn btn-primary" routerLink="/vacantes/nueva" *ngIf="authService.isTalentoHumano() || authService.isSuperAdmin()">
+        <span class="material-icons">add</span> Nueva Vacante Directa
+      </button>
+    </div>
   </header>
 
-  <div class="search-bar-container">
-    <input type="text" class="search-input" placeholder="Buscar por vacante o perfil..." [(ngModel)]="searchTerm"
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab-btn" [class.active]="activeTab === 'activas'" (click)="setTab('activas')">
+      <span class="material-icons">work</span> Vacantes Publicadas
+    </button>
+    
+    <button class="nav-tab-btn" [class.active]="activeTab === 'autorizaciones'" (click)="setTab('autorizaciones')" 
+            *ngIf="authService.isGerencia() || authService.isTalentoHumano() || authService.isSuperAdmin()">
+      <span class="material-icons">verified_user</span> Bandeja de Autorizaciones
+      <span class="tab-badge" *ngIf="pendientesAutorizacion.length > 0">{{ pendientesAutorizacion.length }}</span>
+    </button>
+
+    <button class="nav-tab-btn" [class.active]="activeTab === 'solicitudes'" (click)="setTab('solicitudes')">
+      <span class="material-icons">assignment</span> Solicitudes de Área
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar-container" *ngIf="activeTab !== 'autorizaciones'">
+    <input type="text" class="search-input" placeholder="Buscar por vacante, perfil o área..." [(ngModel)]="searchTerm"
       (input)="filterVacantes()" />
   </div>
 
+  <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
-    <p>Cargando vacantes...</p>
+    <p>Cargando información...</p>
   </div>
 
+  <!-- Error State -->
   <div *ngIf="errorMsg" class="error-state">
     <p>{{ errorMsg }}</p>
-    <button class="btn btn-secondary" (click)="loadVacantes()">Reintentar</button>
+    <button class="btn btn-secondary" (click)="loadData()">Reintentar</button>
   </div>
 
-  <div *ngIf="!loading && !errorMsg && filteredVacantes.length === 0" class="empty-state">
-    <div class="empty-icon">
-      <span class="material-icons" style="font-size: 3rem; color: var(--brand-gold, #B39C70);">work_outline</span>
+  <!-- TAB: BANDEJA DE AUTORIZACIONES (GERENCIA) -->
+  <div *ngIf="!loading && activeTab === 'autorizaciones'">
+    <div *ngIf="pendientesAutorizacion.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <span class="material-icons" style="font-size: 3rem; color: #10b981;">task_alt</span>
+      </div>
+      <h3>No hay solicitudes pendientes de autorización</h3>
+      <p>Todas las solicitudes de requerimiento de personal han sido evaluadas por Gerencia.</p>
     </div>
-    <h3>No se encontraron vacantes</h3>
-      <p>Comienza publicando tu primera oferta de empleo para los candidatos.</p>
-      <button class="btn btn-primary" routerLink="/vacantes/nueva">Crear primera vacante</button>
+
+    <div *ngIf="pendientesAutorizacion.length > 0" class="autorizaciones-list">
+      <div class="autorizacion-card" *ngFor="let item of pendientesAutorizacion">
+        <div class="card-top-ribbon">
+          <span class="tipo-tag" [ngClass]="item.tipo_requerimiento === 'REEMPLAZO' ? 'reemplazo' : 'nuevo'">
+            {{ item.tipo_requerimiento === 'REEMPLAZO' ? '🔄 Reemplazo de Personal' : '✨ Nuevo Cargo' }}
+          </span>
+          <span class="fecha-solicitud">
+            📅 Solicitado: {{ item.fecha_solicitud | date:'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+
+        <div class="card-main-info">
+          <div class="title-area">
+            <h2>{{ item.titulo }}</h2>
+            <p class="area-badge">🏢 Área: <strong>{{ item.seccion_area || item.perfil_area || 'General' }}</strong></p>
+          </div>
+          <div class="solicitante-info">
+            <span class="label">Solicitante:</span>
+            <span class="val">{{ item.solicitado_por_nombre || 'Líder de Área' }}</span>
+          </div>
+        </div>
+
+        <div class="card-details-grid">
+          <div class="detail-box" *ngIf="item.tipo_requerimiento === 'REEMPLAZO'">
+            <span class="detail-label">Persona a quien reemplaza:</span>
+            <span class="detail-val highlight">{{ item.nombre_reemplaza || 'No especificado' }}</span>
+          </div>
+
+          <div class="detail-box">
+            <span class="detail-label">Rango Salarial Estimado:</span>
+            <span class="detail-val">
+              <ng-container *ngIf="item.salario_min || item.salario_max">
+                ${{ item.salario_min | number:'1.0-0' }} - ${{ item.salario_max | number:'1.0-0' }} COP
+              </ng-container>
+              <ng-container *ngIf="!item.salario_min && !item.salario_max">A convenir / Por definir</ng-container>
+            </span>
+          </div>
+
+          <div class="detail-box full-width" *ngIf="item.descripcion">
+            <span class="detail-label">Justificación / Descripción:</span>
+            <p class="detail-text">{{ item.descripcion }}</p>
+          </div>
+
+          <!-- Perfil Oculto / Criterios Gerenciales -->
+          <div class="detail-box full-width perfil-oculto-box" *ngIf="item.perfil_oculto_json">
+            <span class="detail-label">🔒 Criterios de Perfil Interno (Confidencial):</span>
+            <div class="oculto-tags">
+              <span class="oculto-item" *ngIf="item.perfil_oculto_json.edad_preferida">
+                <strong>Edad preferida:</strong> {{ item.perfil_oculto_json.edad_preferida }}
+              </span>
+              <span class="oculto-item" *ngIf="item.perfil_oculto_json.turnos">
+                <strong>Turno/Disponibilidad:</strong> {{ item.perfil_oculto_json.turnos }}
+              </span>
+            </div>
+            <p class="oculto-obs" *ngIf="item.perfil_oculto_json.observaciones_confidenciales">
+              <strong>Observaciones:</strong> {{ item.perfil_oculto_json.observaciones_confidenciales }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Acciones de Decisión Gerencial -->
+        <div class="card-decision-bar">
+          <div class="current-status">
+            Estado Actual: <span class="badge-status pendiente">{{ item.estado_aprobacion || 'PENDIENTE' }}</span>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-decision btn-aprobar" (click)="openAutorizarModal(item)">
+              <span class="material-icons">gavel</span> Evaluar y Autorizar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div *ngIf="!loading && !errorMsg && filteredVacantes.length > 0" class="profiles-grid">
-    <div class="profile-card" *ngFor="let vacante of filteredVacantes"
-      [ngClass]="{'inactive-card': vacante.estado === 'INACTIVA'}">
-      <div class="card-header">
-        <span class="badge">{{ vacante.perfil_cargo }}</span>
-        <div class="card-actions">
-          <button class="action-btn" (click)="toggleEstado(vacante)"
-            [title]="vacante.estado === 'ACTIVA' ? 'Desactivar vacante' : 'Activar vacante'">
-            <span class="material-icons" style="font-size: 0.9rem; vertical-align: middle;"
-              [style.color]="vacante.estado === 'ACTIVA' ? '#2e7d32' : '#c62828'">circle</span>
-            {{ vacante.estado === 'ACTIVA' ? ' Activa' : ' Inactiva' }}
+  <!-- TAB: VACANTES PUBLICADAS Y ACTIVAS / SOLICITUDES DE ÁREA -->
+  <div *ngIf="!loading && (activeTab === 'activas' || activeTab === 'solicitudes')">
+    <div *ngIf="filteredVacantes.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <span class="material-icons" style="font-size: 3rem; color: var(--brand-gold, #B39C70);">work_outline</span>
+      </div>
+      <h3>No se encontraron registros</h3>
+      <p>No hay vacantes o solicitudes que coincidan con la búsqueda actual.</p>
+    </div>
+
+    <div *ngIf="filteredVacantes.length > 0" class="profiles-grid">
+      <div class="profile-card" *ngFor="let vacante of filteredVacantes"
+        [ngClass]="{'inactive-card': vacante.estado === 'INACTIVA'}">
+        
+        <!-- Fila 1: Perfil/Área y Botones de Edición / Eliminación -->
+        <div class="card-header">
+          <span class="badge cargo-badge" [title]="vacante.perfil_cargo || vacante.seccion_area || 'Cargo General'">
+            {{ vacante.perfil_cargo || vacante.seccion_area || 'Cargo General' }}
+          </span>
+
+          <div class="card-actions" *ngIf="authService.isTalentoHumano() || authService.isSuperAdmin()">
+            <button class="action-btn edit-btn" [routerLink]="['/vacantes/editar', vacante.id]" title="Editar vacante">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="action-btn delete-btn" (click)="deleteVacante(vacante.id)" title="Eliminar vacante">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Fila 2: Barra de Estados (Publicación y Aprobación Gerencial) -->
+        <div class="card-status-bar">
+          <!-- Toggle Estado de Publicación -->
+          <button class="status-pill" [class.activa]="vacante.estado === 'ACTIVA'"
+            *ngIf="authService.isTalentoHumano() || authService.isSuperAdmin()"
+            (click)="vacante.estado === 'ACTIVA' ? desactivarVacante(vacante) : activarVacante(vacante)"
+            [title]="vacante.estado === 'ACTIVA' ? 'Pausar publicación de vacante' : 'Publicar vacante'">
+            <span class="status-dot"></span>
+            <span class="status-label">{{ vacante.estado === 'ACTIVA' ? 'Publicada' : 'Inactiva' }}</span>
           </button>
-          <button class="action-btn edit-btn" [routerLink]="['/vacantes/editar', vacante.id]" title="Editar vacante">
-            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">edit</span>
-          </button>
-          <button class="action-btn delete-btn" (click)="deleteVacante(vacante.id)" title="Eliminar vacante">
-            <span class="material-icons" style="font-size: 1.1rem; vertical-align: middle;">delete</span>
-          </button>
+
+          <!-- Badge Aprobación Gerencial -->
+          <span class="badge-aprobacion" *ngIf="vacante.estado_aprobacion" [ngClass]="{
+            'aprobado': vacante.estado_aprobacion === 'Aprobado' || vacante.estado_aprobacion === 'APROBADA',
+            'reservas': vacante.estado_aprobacion === 'Aprobado con reservas',
+            'pendiente': vacante.estado_aprobacion === 'PENDIENTE' || vacante.estado_aprobacion === 'Pendiente',
+            'observaciones': vacante.estado_aprobacion === 'Con observaciones',
+            'rechazado': vacante.estado_aprobacion === 'No aprobado'
+          }">
+            <span class="material-icons aprobacion-icon" *ngIf="vacante.estado_aprobacion === 'Aprobado' || vacante.estado_aprobacion === 'APROBADA'">check_circle</span>
+            <span class="material-icons aprobacion-icon" *ngIf="vacante.estado_aprobacion === 'Aprobado con reservas'">verified</span>
+            <span class="material-icons aprobacion-icon" *ngIf="vacante.estado_aprobacion === 'PENDIENTE' || vacante.estado_aprobacion === 'Pendiente'">schedule</span>
+            <span class="material-icons aprobacion-icon" *ngIf="vacante.estado_aprobacion === 'Con observaciones'">info</span>
+            <span class="material-icons aprobacion-icon" *ngIf="vacante.estado_aprobacion === 'No aprobado'">cancel</span>
+            <span class="aprobacion-text">{{ vacante.estado_aprobacion }}</span>
+          </span>
+        </div>
+
+        <!-- Cuerpo de la Tarjeta -->
+        <div class="card-body">
+          <h3 class="profile-title" [title]="vacante.titulo">{{ vacante.titulo }}</h3>
+          <p class="area-sub" *ngIf="vacante.seccion_area">
+            <span class="material-icons area-icon">apartment</span> Área: <strong>{{ vacante.seccion_area }}</strong>
+          </p>
+          <p class="profile-purpose">
+            {{ vacante.descripcion | slice:0:140 }}{{ vacante.descripcion.length > 140 ? '...' : '' }}
+          </p>
+
+          <div class="meta-row" *ngIf="vacante.tipo_requerimiento || vacante.salario_min || vacante.salario_max">
+            <span class="tag-meta" *ngIf="vacante.tipo_requerimiento">
+              <span class="material-icons meta-icon">{{ vacante.tipo_requerimiento === 'REEMPLAZO' ? 'swap_horiz' : 'add_circle_outline' }}</span>
+              {{ vacante.tipo_requerimiento === 'REEMPLAZO' ? 'Reemplazo' : 'Cargo Nuevo' }}
+            </span>
+            <span class="tag-salario" *ngIf="vacante.salario_min || vacante.salario_max">
+              <span class="material-icons salario-icon">payments</span>
+              ${{ vacante.salario_min | number:'1.0-0' }} - ${{ vacante.salario_max | number:'1.0-0' }}
+            </span>
+          </div>
+
+          <!-- Observaciones de Aprobación si existen -->
+          <div class="obs-banner" *ngIf="vacante.observaciones_aprobacion">
+            <span class="material-icons obs-icon">rate_review</span>
+            <div class="obs-text">
+              <strong>Nota Gerencia:</strong> {{ vacante.observaciones_aprobacion }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer">
+          <span class="date">
+            <span class="material-icons date-icon">calendar_today</span>
+            {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}
+          </span>
+          <div class="footer-actions">
+            <!-- Botón activar vacante si está aprobada pero inactiva -->
+            <button class="btn btn-primary btn-sm" 
+                    *ngIf="(authService.isTalentoHumano() || authService.isSuperAdmin()) && vacante.estado !== 'ACTIVA' && (vacante.estado_aprobacion === 'Aprobado' || vacante.estado_aprobacion === 'Aprobado con reservas')"
+                    (click)="activarVacante(vacante)">
+              Publicar
+            </button>
+
+            <button class="btn btn-secondary btn-sm" [routerLink]="['/postulaciones/vacante', vacante.id]">
+              <span class="material-icons btn-icon">groups</span> Candidatos
+            </button>
+          </div>
         </div>
       </div>
-      <div class="card-body">
-        <h3 class="profile-title">{{ vacante.titulo }}</h3>
-        <p class="profile-purpose">
-          {{ vacante.descripcion | slice:0:150 }}{{ vacante.descripcion.length > 150 ? '...' : '' }}
-        </p>
-      </div>
-      <div class="card-footer">
-        <span class="date">Creado: {{ vacante.fecha_creacion | date:'dd/MM/yyyy' }}</span>
-        <div class="footer-actions">
-          <button class="btn btn-secondary btn-sm" [routerLink]="['/postulaciones/vacante', vacante.id]">
-            Candidatos
-          </button>
+    </div>
+  </div>
+
+  <!-- MODAL: SOLICITAR REQUERIMIENTO DE VACANTE (LÍDER DE ÁREA) -->
+  <div class="custom-modal-backdrop" *ngIf="showSolicitudModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="material-icons header-icon">post_add</span>
+          <div>
+            <h3>Solicitud de Requerimiento de Vacante</h3>
+            <p class="modal-subtitle">Remite una nueva necesidad de contratación a Gerencia General para su autorización.</p>
+          </div>
         </div>
+        <button class="btn-close" (click)="closeSolicitudModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Perfil del Cargo Base *</label>
+            <select class="form-control" [(ngModel)]="nuevaSolicitud.perfil_id" (change)="onPerfilChange()">
+              <option value="">-- Seleccionar Perfil --</option>
+              <option *ngFor="let p of perfiles" [value]="p.id">{{ p.cargo }} ({{ p.area }})</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label>Área o Sección *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevaSolicitud.seccion_area" placeholder="Ej: Planta de Producción, Comercial" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-12">
+            <label>Título de la Convocatoria / Vacante *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevaSolicitud.titulo" placeholder="Ej: Operario de Máquina CNC - Turno Rotativo" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Tipo de Requerimiento *</label>
+            <select class="form-control" [(ngModel)]="nuevaSolicitud.tipo_requerimiento">
+              <option value="NUEVO_CARGO">Creación de Nuevo Cargo</option>
+              <option value="REEMPLAZO">Reemplazo de Personal</option>
+            </select>
+          </div>
+          <div class="form-group col-6" *ngIf="nuevaSolicitud.tipo_requerimiento === 'REEMPLAZO'">
+            <label>Colaborador a Quien Reemplaza *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevaSolicitud.nombre_reemplaza" placeholder="Nombre completo del saliente" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Salario Estimado Mínimo (COP)</label>
+            <input type="number" class="form-control" [(ngModel)]="nuevaSolicitud.salario_min" placeholder="Ej: 1600000" />
+          </div>
+          <div class="form-group col-6">
+            <label>Salario Estimado Máximo (COP)</label>
+            <input type="number" class="form-control" [(ngModel)]="nuevaSolicitud.salario_max" placeholder="Ej: 2100000" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Justificación y Funciones Principales *</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="nuevaSolicitud.descripcion" placeholder="Indique la justificación de la vacante, carga laboral o proyectos asociados..."></textarea>
+        </div>
+
+        <!-- Criterios Ocultos / Internos -->
+        <div class="section-divider">
+          <span>Criterios Internos de Preselección (Confidenciales)</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Rango de Edad Sugerido</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevaSolicitud.edad_preferida" placeholder="Ej: 22 a 40 años" />
+          </div>
+          <div class="form-group col-6">
+            <label>Turnos / Horario</label>
+            <select class="form-control" [(ngModel)]="nuevaSolicitud.turnos">
+              <option value="Diurno Ordinario">Diurno Ordinario (L-V)</option>
+              <option value="Turnos Rotativos (6-2, 2-10, 10-6)">Turnos Rotativos (6-2, 2-10, 10-6)</option>
+              <option value="Fines de Semana">Fines de Semana</option>
+              <option value="Disponibilidad Total">Disponibilidad Total</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones de Urgencia o Restricciones</label>
+          <input type="text" class="form-control" [(ngModel)]="nuevaSolicitud.observaciones_confidenciales" placeholder="Ej: Requiere incorporación en menos de 10 días por pico de producción." />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeSolicitudModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="enviarSolicitudVacante()" [disabled]="solicitudSubmitting">
+          {{ solicitudSubmitting ? 'Enviando...' : 'Remitir a Gerencia' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DECISIÓN GERENCIAL DE AUTORIZACIÓN -->
+  <div class="custom-modal-backdrop" *ngIf="showAutorizarModal">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="material-icons header-icon decision-icon">gavel</span>
+          <div>
+            <h3>Resolución de Requerimiento</h3>
+            <p class="modal-subtitle">{{ vacanteParaAutorizar?.titulo }}</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeAutorizarModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Decisión de Gerencia *</label>
+          <select class="form-control select-decision" [(ngModel)]="decisionAutorizacion.estado_aprobacion">
+            <option value="Aprobado">✅ Aprobado (Autorizar proceso)</option>
+            <option value="Aprobado con reservas">⚠️ Aprobado con reservas (Requiere ajustes presupuestales/perfil)</option>
+            <option value="Con observaciones">💬 Con observaciones (Devolver para aclaración)</option>
+            <option value="No aprobado">❌ No aprobado (Denegar requerimiento)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones o Directrices para Talento Humano</label>
+          <textarea class="form-control" rows="4" [(ngModel)]="decisionAutorizacion.observaciones_aprobacion"
+            placeholder="Ingrese las condiciones de contratación, techo salarial autorizado o motivos de la decisión..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeAutorizarModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="confirmarAutorizacion()" [disabled]="autorizarSubmitting">
+          {{ autorizarSubmitting ? 'Registrando...' : 'Confirmar Resolución' }}
+        </button>
       </div>
     </div>
   </div>

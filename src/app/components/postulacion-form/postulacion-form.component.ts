@@ -626,11 +626,6 @@ export class PostulacionFormComponent implements OnInit {
     return false;
   }
 
-  confirmPostulateAnyway(): void {
-    this.showIncompleteWarningModal = false;
-    this.executePostulation();
-  }
-
   triggerErrorModal(msg: string): void {
     this.errorMessageModalText = msg;
     this.showErrorModal = true;

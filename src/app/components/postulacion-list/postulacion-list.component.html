@@ -1,43 +1,58 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
     <div class="header-title">
-      <h1>Postulaciones y Hojas de Vida</h1>
-      <p class="subtitle">Consulta y analiza las postulaciones enviadas por los candidatos</p>
+      <h1>Postulaciones y Proceso de Selección</h1>
+      <p class="subtitle">Evaluación de candidatos, expediente psicológico (FOR-TH-001) y agendamiento de entrevistas</p>
     </div>
   </header>
 
-  <!-- Filtro por Vacante -->
+  <!-- Filtro por Vacante y Estado -->
   <div class="filter-bar">
     <div class="filter-group">
-      <label for="filter_vacante">Filtrar por Vacante:</label>
-      <select id="filter_vacante" [(ngModel)]="selectedVacanteId" (change)="onVacanteFilterChange()"
-        class="form-control filter-select">
+      <label for="filter_vacante">Vacante:</label>
+      <select id="filter_vacante" [(ngModel)]="selectedVacanteId" (change)="onVacanteFilterChange()" class="form-control filter-select">
         <option value="">Todas las vacantes</option>
         <option *ngFor="let vacante of vacantes" [value]="vacante.id">
           {{ vacante.titulo }}
         </option>
       </select>
     </div>
+
+    <div class="filter-group">
+      <label for="filter_estado">Estado en Selección:</label>
+      <select id="filter_estado" [(ngModel)]="selectedEstadoFilter" (change)="filterPostulaciones()" class="form-control filter-select">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let est of catalogoEstados" [value]="est.nombre">
+          {{ (est.icono ? (est.icono + ' ') : '') + est.nombre }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-group search-group">
+      <label for="filter_search">Buscar Candidato:</label>
+      <input id="filter_search" type="text" class="form-control" placeholder="Nombre, correo o teléfono..." [(ngModel)]="searchTerm" (input)="filterPostulaciones()" />
+    </div>
+
     <div class="filter-group" *ngIf="selectedVacanteId">
-      <button class="btn btn-primary" [disabled]="ejecutandoValidacion" (click)="ejecutarValidacion()">
-        {{ ejecutandoValidacion ? 'Ejecutando Validación...' : 'Ejecutar Validación' }}
+      <label>&nbsp;</label>
+      <button class="btn btn-secondary" [disabled]="ejecutandoValidacion" (click)="ejecutarValidacion()">
+        {{ ejecutandoValidacion ? 'Analizando IA...' : 'Reejecutar IA' }}
       </button>
     </div>
-    <div class="filter-group vacante-stats" *ngIf="selectedVacanteId">
-      <span class="resultado-badge viable" title="Viables en la primera evaluación de IA">
-        Viables: {{ getStatViables() }}
-      </span>
-      <span class="resultado-badge condicionado" title="Viables que además quedaron rankeados en la segunda validación">
-        Viables con validación: {{ getStatViablesConValidacion() }}
-      </span>
-      <span class="resultado-badge no-viable" title="Descartados en la primera evaluación de IA">
-        Descartados: {{ getStatDescartados() }}
-      </span>
-    </div>
   </div>
-  <p *ngIf="validacionErrorMsg" style="color: #c62828; font-weight: 600; font-size: 0.9rem; margin: -1rem 0 1.5rem 0;">
-    {{ validacionErrorMsg }}
-  </p>
+
+  <!-- Mini Pipeline / KPIs Ribbon Dinámico desde BD -->
+  <div class="pipeline-ribbon" *ngIf="estadosPipeline.length > 0">
+    <ng-container *ngFor="let est of estadosPipeline; let last = last">
+      <div class="pipeline-pill"
+           (click)="toggleEstadoFilter(est.nombre)"
+           [class.active-pill]="selectedEstadoFilter === est.nombre">
+        <span class="count">{{ getCountByEstado(est.nombre) }}</span>
+        <span class="text">{{ est.icono ? (est.icono + ' ') : '' }}{{ est.nombre }}</span>
+      </div>
+      <span class="arrow" *ngIf="!last">➔</span>
+    </ng-container>
+  </div>
 
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
@@ -53,7 +68,7 @@
   <div *ngIf="!loading && !errorMsg && filteredPostulaciones.length === 0" class="empty-state">
     <div class="empty-icon">👥</div>
     <h3>No hay postulaciones registradas</h3>
-    <p>Aún ningún candidato se ha postulado para esta convocatoria.</p>
+    <p>Aún ningún candidato coincide con los filtros seleccionados.</p>
   </div>
 
   <!-- Candidates Table -->
@@ -61,77 +76,81 @@
     <table class="candidates-table">
       <thead>
         <tr>
-          <th>Nombre del Candidato</th>
-          <th>Correo Electrónico</th>
-          <th>Teléfono</th>
-          <th>Vacante Aplicada</th>
-          <th>Fecha de Postulación</th>
-          <th>Resultado incial (IA)</th>
-          <th>Puntaje incial (IA)</th>
-          <th>Posición</th>
-          <th>Puntaje final (IA)</th>
-          <th class="text-right">Acciones</th>
+          <th>Candidato</th>
+          <th>Cargo Postulado</th>
+          <th>Fecha</th>
+          <th>Estado en Selección</th>
+          <th>Evaluación IA</th>
+          <th class="text-right">Expediente</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of filteredPostulaciones">
-          <td class="candidate-name">{{ item.nombre_completo }}</td>
-          <td>{{ item.correo }}</td>
-          <td>{{ item.telefono || 'No especificado' }}</td>
-          <td>
-            <div class="vacante-badge">
-              <span class="">{{ item.vacante_titulo }}</span>
+        <tr *ngFor="let item of filteredPostulaciones" class="candidate-row" (click)="openDrawer(item, 'perfil')">
+          <td class="candidate-cell">
+            <div class="candidate-avatar-wrap">
+              <div class="avatar-circle">{{ getInitials(item.nombre_completo) }}</div>
+              <div class="candidate-meta">
+                <strong class="candidate-name">{{ item.nombre_completo }}</strong>
+                <div class="candidate-sub">
+                  <span class="sub-contact" *ngIf="item.correo">✉️ {{ item.correo }}</span>
+                  <span class="sub-contact" *ngIf="item.telefono">📞 {{ item.telefono }}</span>
+                </div>
+              </div>
             </div>
           </td>
-          <td>{{ item.fecha_postulacion | date:'dd/MM/yyyy HH:mm' }}</td>
           <td>
-            <span class="resultado-badge" [ngClass]="{
-              'viable': item.respuesta_ia?.resultado === 'VIABLE',
-              'condicionado': item.respuesta_ia?.resultado?.includes('CONDICIONADO') || item.respuesta_ia?.resultado?.includes('Condicionado'),
-              'no-viable': item.respuesta_ia?.resultado === 'NO VIABLE' || item.respuesta_ia?.resultado === 'NO_VIABLE' || item.respuesta_ia?.resultado === 'DESCARTADO',
-              'evaluando': !item.respuesta_ia?.resultado
-            }">
-              {{ item.respuesta_ia?.resultado || 'PENDIENTE' }}
+            <span class="vacante-badge-clean" [title]="item.vacante_titulo">
+              {{ item.vacante_titulo }}
             </span>
           </td>
-          <td>
-            <span class="puntaje-badge"
-              *ngIf="item.respuesta_ia?.puntaje !== undefined && item.respuesta_ia?.puntaje !== null">
-              {{ item.respuesta_ia?.puntaje }} / 100
-            </span>
-            <span class="no-puntaje"
-              *ngIf="item.respuesta_ia?.puntaje === undefined || item.respuesta_ia?.puntaje === null">
-              -
-            </span>
+          <td class="date-cell">
+            <span class="date-main">{{ item.fecha_postulacion | date:'dd/MM/yyyy' }}</span>
+            <span class="date-sub">{{ item.fecha_postulacion | date:'HH:mm' }}</span>
           </td>
           <td>
-            <span class="puntaje-badge" *ngIf="getEstadoPosicion(item) === 'ranked'">
-              #{{ item.posicion }}
-            </span>
-            <span class="resultado-badge no-viable" *ngIf="getEstadoPosicion(item) === 'descartado'">
-              Descartado
-            </span>
-            <span class="resultado-badge evaluando" *ngIf="getEstadoPosicion(item) === 'pendiente'">
-              Pendiente
-            </span>
+            <div class="status-cell-wrap" (click)="$event.stopPropagation()">
+              <select class="status-select"
+                [ngModel]="item.estado_postulante"
+                (ngModelChange)="cambiarEstado(item, $event)"
+                [ngStyle]="getEstadoBadgeStyle(item.estado_postulante)"
+                [ngClass]="{
+                  'status-postulado': item.estado_postulante === 'Postulado',
+                  'status-preseleccionado': item.estado_postulante === 'Preseleccionado',
+                  'status-citado': item.estado_postulante === 'Citado a Entrevista',
+                  'status-aprobado': item.estado_postulante === 'Aprobado',
+                  'status-reservas': item.estado_postulante === 'Aprobado con reservas',
+                  'status-no-aprobado': item.estado_postulante === 'No aprobado',
+                  'status-observaciones': item.estado_postulante === 'Con observaciones'
+                }">
+                <option *ngFor="let st of catalogoEstados" [value]="st.nombre">
+                  {{ (st.icono ? (st.icono + ' ') : '') + st.nombre }}
+                </option>
+              </select>
+
+              <div class="cita-preview" *ngIf="item.cita_entrevista_json?.fecha" (click)="openDrawer(item, 'cita'); $event.stopPropagation()" title="Ver citación agendada">
+                📅 {{ item.cita_entrevista_json?.fecha }} {{ item.cita_entrevista_json?.hora }}
+              </div>
+            </div>
           </td>
           <td>
-            <span class="puntaje-badge"
-              *ngIf="item.puntuacion_ia !== undefined && item.puntuacion_ia !== null">
-              {{ item.puntuacion_ia }} / 100
-            </span>
-            <span class="no-puntaje"
-              *ngIf="item.puntuacion_ia === undefined || item.puntuacion_ia === null">
-              -
-            </span>
+            <div class="ai-cell-wrap">
+              <span class="resultado-badge" [ngClass]="{
+                'viable': item.respuesta_ia?.resultado === 'VIABLE',
+                'condicionado': item.respuesta_ia?.resultado?.includes('CONDICIONADO') || item.respuesta_ia?.resultado?.includes('Condicionado'),
+                'no-viable': item.respuesta_ia?.resultado === 'NO VIABLE' || item.respuesta_ia?.resultado === 'NO_VIABLE' || item.respuesta_ia?.resultado === 'DESCARTADO',
+                'evaluando': !item.respuesta_ia?.resultado
+              }">
+                {{ item.respuesta_ia?.resultado || 'PENDIENTE' }}
+              </span>
+              <span class="puntaje-tag" *ngIf="item.respuesta_ia?.puntaje !== undefined">
+                {{ item.respuesta_ia?.puntaje }} pts
+              </span>
+            </div>
           </td>
-          <td class="text-right table-actions">
-            <button class="btn btn-secondary btn-sm" (click)="viewDetails(item)">
-              Ver Perfil
-            </button>
-            <button class="btn btn-primary btn-sm" (click)="downloadResume(item.hv_archivo_ruta)"
-              title="Descargar Hoja de Vida física">
-              HV
+          <td class="text-right" (click)="$event.stopPropagation()">
+            <button class="btn-drawer-trigger" (click)="openDrawer(item, 'perfil')">
+              <span>Ver Ficha</span>
+              <span class="material-icons">arrow_forward</span>
             </button>
           </td>
         </tr>
@@ -139,326 +158,805 @@
     </table>
   </div>
 
-  <!-- Candidate Details Modal / Side Drawer -->
-  <div class="modal-backdrop" *ngIf="selectedCandidate" (click)="closeDetails()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <header class="modal-header">
-        <h2>Detalle Profesional del Candidato</h2>
-        <button class="modal-close-btn" (click)="closeDetails()">×</button>
-      </header>
-
-      <div class="modal-body">
-
-        <!-- General Info Header -->
-        <div class="candidate-info-card">
-          <h3>{{ selectedCandidate.nombre_completo }}</h3>
-          <p class="candidate-contact">
-            {{ selectedCandidate.correo }} | <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">smartphone</span> {{ selectedCandidate.telefono || 'Sin teléfono' }}
-          </p>
-          <div class="cv-download-section" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button class="btn btn-primary btn-sm" (click)="downloadResume(selectedCandidate.hv_archivo_ruta)">
-              Descargar Hoja de Vida Original ({{ selectedCandidate.hv_archivo_nombre }})
-            </button>
-            <button class="btn btn-secondary btn-sm" (click)="downloadHojaVidaCorporativa(selectedCandidate)">
-              Exportar Hoja de Vida Corporativa (FTO-GH-001)
-            </button>
+  <!-- MODAL: AGENDAR ENTREVISTA -->
+  <div class="custom-modal-backdrop" *ngIf="showAgendarModal && postulacionParaAgendar">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="material-icons header-icon calendar-icon">event_available</span>
+          <div>
+            <h3>Citación a Entrevista Laboral</h3>
+            <p class="modal-subtitle">
+              Candidato: <strong>{{ postulacionParaAgendar.nombre_completo }}</strong> | Vacante: <strong>{{ postulacionParaAgendar.vacante_titulo }}</strong>
+            </p>
           </div>
         </div>
-
-        <!-- AI Evaluation Section (Show if available) -->
-        <div class="detail-section ai-eval-section" *ngIf="selectedCandidate.respuesta_ia">
-          <h4>Evaluación de Inteligencia Artificial</h4>
-
-          <div class="ai-eval-summary-card">
-            <div class="ai-eval-header-grid">
-              <div class="ai-eval-stat">
-                <span class="stat-label">Resultado General:</span>
-                <span class="resultado-badge" [ngClass]="{
-                  'viable': selectedCandidate.respuesta_ia.resultado === 'VIABLE',
-                  'condicionado': selectedCandidate.respuesta_ia.resultado?.includes('CONDICIONADO') || selectedCandidate.respuesta_ia.resultado?.includes('Condicionado'),
-                  'no-viable': selectedCandidate.respuesta_ia.resultado === 'NO VIABLE' || selectedCandidate.respuesta_ia.resultado === 'NO_VIABLE' || selectedCandidate.respuesta_ia.resultado === 'DESCARTADO'
-                }">
-                  {{ selectedCandidate.respuesta_ia.resultado }}
-                </span>
-              </div>
-              <div class="ai-eval-stat">
-                <span class="stat-label">Puntaje de Ajuste:</span>
-                <span class="stat-value puntaje-value">{{ selectedCandidate.respuesta_ia.puntaje }} / 100</span>
-              </div>
-              <div class="ai-eval-stat">
-                <span class="stat-label">Confiabilidad:</span>
-                <span class="stat-value">{{ selectedCandidate.respuesta_ia.confiabilidad }}</span>
-              </div>
-              <div class="ai-eval-stat">
-                <span class="stat-label">Cumplimiento Requisitos:</span>
-                <span class="stat-value">{{ selectedCandidate.respuesta_ia.cumplimiento_requisitos }}</span>
-              </div>
-              <div class="ai-eval-stat" *ngIf="selectedCandidate.respuesta_ia.estabilidad_laboral">
-                <span class="stat-label">Estabilidad Laboral:</span>
-                <span class="stat-value">{{ selectedCandidate.respuesta_ia.estabilidad_laboral }}</span>
-              </div>
-              <div class="ai-eval-stat" *ngIf="selectedCandidate.respuesta_ia.fit_cultural">
-                <span class="stat-label">Fit Cultural:</span>
-                <span class="stat-value">{{ selectedCandidate.respuesta_ia.fit_cultural }}</span>
-              </div>
-            </div>
-
-            <div class="ai-eval-conclusion" *ngIf="selectedCandidate.respuesta_ia.conclusion">
-              <h5>Conclusión del Análisis:</h5>
-              <p>{{ selectedCandidate.respuesta_ia.conclusion }}</p>
-            </div>
-          </div>
-
-          <div class="ai-eval-lists-grid">
-            <div class="ai-eval-card-list success-card-list"
-              *ngIf="selectedCandidate.respuesta_ia.experiencia_relevante?.length">
-              <h5>Experiencia Relevante</h5>
-              <ul>
-                <li *ngFor="let item of selectedCandidate.respuesta_ia.experiencia_relevante">{{ item }}</li>
-              </ul>
-            </div>
-
-            <div class="ai-eval-card-list success-card-list"
-              *ngIf="selectedCandidate.respuesta_ia.fortalezas_documentales?.length">
-              <h5>Fortalezas Documentales</h5>
-              <ul>
-                <li *ngFor="let item of selectedCandidate.respuesta_ia.fortalezas_documentales">{{ item }}</li>
-              </ul>
-            </div>
-
-            <div class="ai-eval-card-list danger-card-list"
-              *ngIf="selectedCandidate.respuesta_ia.brechas_riesgos?.length">
-              <h5>Brechas y Riesgos</h5>
-              <ul>
-                <li *ngFor="let item of selectedCandidate.respuesta_ia.brechas_riesgos">{{ item }}</li>
-              </ul>
-            </div>
-
-            <div class="ai-eval-card-list warning-card-list"
-              *ngIf="selectedCandidate.respuesta_ia.validaciones_requeridas?.length">
-              <h5>Validaciones Requeridas</h5>
-              <ul>
-                <li *ngFor="let item of selectedCandidate.respuesta_ia.validaciones_requeridas">{{ item }}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- Comparative AI Analysis Section (Show if available) -->
-        <div class="detail-section ai-eval-section" *ngIf="selectedCandidate.json_analisis_ia">
-          <h4>Análisis Comparativo de IA</h4>
-
-          <div class="ai-eval-summary-card">
-            <div class="ai-eval-header-grid">
-              <div class="ai-eval-stat">
-                <span class="stat-label">Posición:</span>
-                <span class="resultado-badge" [ngClass]="{
-                  'viable': getEstadoPosicion(selectedCandidate) === 'ranked',
-                  'no-viable': getEstadoPosicion(selectedCandidate) === 'descartado',
-                  'evaluando': getEstadoPosicion(selectedCandidate) === 'pendiente'
-                }">
-                  {{ getEstadoPosicion(selectedCandidate) === 'ranked' ? ('#' + selectedCandidate.posicion) : (getEstadoPosicion(selectedCandidate) === 'descartado' ? 'Descartado' : 'Pendiente') }}
-                </span>
-              </div>
-              <div class="ai-eval-stat" *ngIf="selectedCandidate.json_analisis_ia.puntaje_fase_1 !== undefined">
-                <span class="stat-label">Puntaje Fase 1:</span>
-                <span class="stat-value puntaje-value">{{ selectedCandidate.json_analisis_ia.puntaje_fase_1 }} / 100</span>
-              </div>
-              <div class="ai-eval-stat" *ngIf="selectedCandidate.json_analisis_ia.puntaje_comparativo !== undefined">
-                <span class="stat-label">Puntaje Comparativo:</span>
-                <span class="stat-value puntaje-value">{{ selectedCandidate.json_analisis_ia.puntaje_comparativo }} / 100</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="ai-eval-lists-grid">
-            <div class="ai-eval-card-list success-card-list" *ngIf="selectedCandidate.json_analisis_ia.ventaja_competitiva">
-              <h5>Ventaja Competitiva</h5>
-              <p>{{ selectedCandidate.json_analisis_ia.ventaja_competitiva }}</p>
-            </div>
-
-            <div class="ai-eval-card-list success-card-list" *ngIf="selectedCandidate.json_analisis_ia.diferenciador_tecnico">
-              <h5>Diferenciador Técnico</h5>
-              <p>{{ selectedCandidate.json_analisis_ia.diferenciador_tecnico }}</p>
-            </div>
-
-            <div class="ai-eval-card-list danger-card-list" *ngIf="selectedCandidate.json_analisis_ia.riesgo_menor_o_brecha">
-              <h5>Riesgo Menor / Brecha</h5>
-              <p>{{ selectedCandidate.json_analisis_ia.riesgo_menor_o_brecha }}</p>
-            </div>
-
-            <div class="ai-eval-card-list warning-card-list" *ngIf="selectedCandidate.json_analisis_ia.pregunta_clave_entrevista">
-              <h5>Pregunta Clave para Entrevista</h5>
-              <p>{{ selectedCandidate.json_analisis_ia.pregunta_clave_entrevista }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cargo Questions Answers (Show Prominently) -->
-        <div class="detail-section" *ngIf="selectedCandidate.preguntas_respondidas?.length">
-          <h4>Preguntas del Cargo Respondidas</h4>
-          <div class="questions-answers-container"
-            style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
-            <div class="qa-item-card" *ngFor="let q of selectedCandidate.preguntas_respondidas"
-              style="background: #fafafa; border: 1.5px solid #eee; border-radius: 8px; padding: 1.25rem;">
-
-              <div
-                style="font-weight: bold; color: var(--brand-navy, #16313a); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-                <span>[{{ q.categoria }}] {{ q.titulo }}</span>
-                <span *ngIf="q.obligatoria"
-                  style="font-size: 0.7rem; color: #c0392b; background: #fde8e8; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 600;">Obligatoria</span>
-              </div>
-
-              <p style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: #333; line-height: 1.4;">
-                <strong>Pregunta:</strong> {{ q.pregunta }}
-              </p>
-
-              <div
-                style="margin-bottom: 0.75rem; background: #fff; border-left: 3px solid var(--brand-navy, #16313a); padding: 0.5rem 0.75rem; border-radius: 0 4px 4px 0;">
-                <strong style="color: #555;">Respuesta del Candidato:</strong>
-                <p
-                  style="margin: 0.25rem 0 0 0; font-size: 0.95rem; white-space: pre-wrap; line-height: 1.4; color: #111;">
-                  {{ q.respuesta || '(Sin respuesta)' }}
-                </p>
-              </div>
-
-              <!-- Rubric Info (Criterios Ponderados - formato IA actual) -->
-              <div *ngIf="q.rubrica_criterios"
-                style="font-size: 0.85rem; color: #666; border-top: 1px dashed #eee; padding-top: 0.75rem; margin-top: 0.75rem;">
-                <strong style="display: block; margin-bottom: 0.35rem; color: #444;">Rúbrica de Evaluación para
-                  Calificar (Puntuación Máxima: {{ q.rubrica_criterios.puntuacion_maxima }}):</strong>
-                <ul style="margin: 0; padding-left: 1.1rem;">
-                  <li *ngFor="let crit of q.rubrica_criterios.criterios">
-                    {{ crit.descripcion }} <strong>(Peso: {{ crit.peso }})</strong>
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Rubric Info (formato manual clásico) -->
-              <div *ngIf="!q.rubrica_criterios && q.tipo === 'Abierta' && q.rubrica_evaluacion"
-                style="font-size: 0.85rem; color: #666; border-top: 1px dashed #eee; padding-top: 0.75rem; margin-top: 0.75rem;">
-                <strong style="display: block; margin-bottom: 0.35rem; color: #444;">Rúbrica de Evaluación para
-                  Calificar:</strong>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
-                  <div style="background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid #f9ebec;">
-                    <span
-                      style="color: #c0392b; font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem;">🔴
-                      Insuficiente</span>
-                    {{ q.rubrica_evaluacion.insuficiente || 'No definido' }}
-                  </div>
-                  <div style="background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid #fdf2e9;">
-                    <span
-                      style="color: #d35400; font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem;">
-                      Aceptable</span>
-                    {{ q.rubrica_evaluacion.aceptable || 'No definido' }}
-                  </div>
-                  <div style="background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid #edf8f1;">
-                    <span
-                      style="color: #27ae60; font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.2rem;">
-                      Excelente</span>
-                    {{ q.rubrica_evaluacion.excelente || 'No definido' }}
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 1: Experiences (Only show if not empty) -->
-        <div class="detail-section"
-          *ngIf="selectedCandidate.experiencias_json && selectedCandidate.experiencias_json.length > 0">
-          <h4>Sección 1: Experiencia Profesional</h4>
-          <div class="history-list">
-            <div class="history-item" *ngFor="let exp of selectedCandidate.experiencias_json">
-              <div class="history-meta">
-                <span class="history-period">
-                  {{ exp.fecha_inicio && exp.fecha_inicio.includes('-') ? (exp.fecha_inicio | date:'MM/yyyy') : cleanText(exp.fecha_inicio) }} -
-                  {{ exp.actualmente ? 'Actualidad' : (exp.fecha_fin && exp.fecha_fin.includes('-') ? (exp.fecha_fin | date:'MM/yyyy') : cleanText(exp.fecha_fin)) }}
-                </span>
-                <span class="history-company">{{ exp.empresa }}</span>
-              </div>
-              <div class="history-detail">
-                <strong class="history-title">{{ exp.cargo }} <span *ngIf="exp.tipo" style="font-weight: normal; font-size: 0.85em; color: #666;">({{ exp.tipo }})</span></strong>
-                <p class="history-desc">{{ cleanText(exp.descripcion) }}</p>
-                <p class="history-desc" *ngIf="exp.cargoEquivalente" style="font-style: italic; font-size: 0.9em; margin-top: 0.25rem;">Cargo equivalente: {{ exp.cargoEquivalente }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 3: Studies (Only show if not empty) -->
-        <div class="detail-section"
-          *ngIf="selectedCandidate.estudios_json && selectedCandidate.estudios_json.length > 0">
-          <h4>Sección 2: Estudios y Formación</h4>
-          <div class="history-list">
-            <div class="history-item" *ngFor="let est of selectedCandidate.estudios_json">
-              <div class="history-meta">
-                <span class="history-period">
-                  {{ est.fecha_inicio && est.fecha_inicio.includes('-') ? (est.fecha_inicio | date:'MM/yyyy') : cleanText(est.fecha_inicio) }}
-                </span>
-                <span class="history-company">{{ est.institucion }}</span>
-              </div>
-              <div class="history-detail">
-                <strong class="history-title">
-                  {{ est.nivel }} <span *ngIf="est.titulo" style="font-weight: 500;">- {{ est.titulo }}</span>
-                </strong>
-                <p class="history-desc" *ngIf="est.fecha_fin && !est.fecha_fin.includes('-')" style="margin-top: 0.25rem; font-size: 0.9em;">{{ est.fecha_fin }}</p>
-                <p class="history-desc" *ngIf="est.nucleo" style="font-size: 0.9em;">Área: {{ est.nucleo }} | Homologado: {{ est.homologado || 'No' }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 4: Languages (Only show if not empty) -->
-        <div class="detail-section" *ngIf="selectedCandidate.idiomas_json && selectedCandidate.idiomas_json.length > 0">
-          <h4>Sección 3: Idiomas</h4>
-          <div class="badges-row">
-            <span class="detail-tag language-tag" *ngFor="let lang of selectedCandidate.idiomas_json">
-              {{ lang.idioma }} ({{ lang.nivel }})
-            </span>
-          </div>
-        </div>
-
-        <!-- Section 5: Skills (Only show if tech/interpersonal/other skills contain items) -->
-        <div class="detail-section"
-          *ngIf="selectedCandidate.habilidades_json?.tecnicas?.length || selectedCandidate.habilidades_json?.interpersonales?.length || selectedCandidate.habilidades_json?.otros?.length">
-          <h4>Sección 4: Conocimientos y Habilidades</h4>
-
-          <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.tecnicas?.length">
-            <h5>Conocimientos Técnicos</h5>
-            <div class="badges-row">
-              <span class="detail-tag tech-tag" *ngFor="let hab of selectedCandidate.habilidades_json.tecnicas">
-                {{ hab }}
-              </span>
-            </div>
-          </div>
-
-          <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.interpersonales?.length">
-            <h5>Habilidades Interpersonales</h5>
-            <div class="badges-row">
-              <span class="detail-tag soft-tag" *ngFor="let hab of selectedCandidate.habilidades_json.interpersonales">
-                {{ hab }}
-              </span>
-            </div>
-          </div>
-
-          <div class="skills-block" *ngIf="selectedCandidate.habilidades_json?.otros?.length">
-            <h5>Otros Conocimientos</h5>
-            <div class="badges-row">
-              <span class="detail-tag other-tag" *ngFor="let hab of selectedCandidate.habilidades_json.otros">
-                {{ hab }}
-              </span>
-            </div>
-          </div>
-        </div>
-
+        <button class="btn-close" (click)="closeAgendarModal()">✕</button>
       </div>
 
-      <footer class="modal-footer">
-        <button class="btn btn-secondary" (click)="closeDetails()">Cerrar Vista</button>
-      </footer>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Fecha de la Entrevista *</label>
+            <input type="date" class="form-control" [(ngModel)]="datosEntrevista.fecha" (change)="updatePreviewLinks()" />
+          </div>
+          <div class="form-group col-6">
+            <label>Hora de la Entrevista *</label>
+            <input type="time" class="form-control" [(ngModel)]="datosEntrevista.hora" (change)="updatePreviewLinks()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Modalidad de la Entrevista *</label>
+            <select class="form-control" [(ngModel)]="datosEntrevista.modalidad" (change)="updatePreviewLinks()">
+              <option value="Presencial">Presencial en Sede Artdecon</option>
+              <option value="Microsoft Teams">Microsoft Teams (Videollamada)</option>
+              <option value="Google Meet">Google Meet (Videollamada)</option>
+              <option value="Telefónica">Entrevista Telefónica</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label>Duración Estimada (Minutos)</label>
+            <input type="number" class="form-control" [(ngModel)]="datosEntrevista.duracion_minutos" (change)="updatePreviewLinks()" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Lugar / Dirección o Enlace de Videollamada *</label>
+          <input type="text" class="form-control" [(ngModel)]="datosEntrevista.ubicacion_o_enlace" (input)="updatePreviewLinks()" placeholder="Ej: Sala de Juntas 2, Sede Principal o enlace https://teams.microsoft.com/..." />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Entrevistador(a) / Evaluador</label>
+            <input type="text" class="form-control" [(ngModel)]="datosEntrevista.entrevistador" (input)="updatePreviewLinks()" placeholder="Nombre del psicólogo o líder" />
+          </div>
+          <div class="form-group col-6">
+            <label>Enviar Notificación por Correo (Nodemailer)</label>
+            <div class="checkbox-wrap">
+              <input type="checkbox" id="chk_email" [(ngModel)]="datosEntrevista.enviar_email" />
+              <label for="chk_email">Enviar citación oficial al correo del candidato ({{ postulacionParaAgendar.correo }})</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Indicaciones Adicionales para el Candidato</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="datosEntrevista.notas" (input)="updatePreviewLinks()" placeholder="Ej: Presentar cédula de ciudadanía original, libreta militar, portafolio de trabajos..."></textarea>
+        </div>
+
+        <!-- Botones de Integración Directa (Google Calendar y WhatsApp) -->
+        <div class="integrations-box">
+          <span class="integrations-title">Enlaces Directos Generados Automáticamente:</span>
+          <div class="integrations-buttons">
+            <a [href]="datosEntrevista.google_calendar_url" target="_blank" class="btn-integration btn-gcal" *ngIf="datosEntrevista.google_calendar_url">
+              <span class="material-icons">calendar_month</span> Agregar a Google Calendar
+            </a>
+
+            <a [href]="datosEntrevista.whatsapp_url" target="_blank" class="btn-integration btn-wa" *ngIf="datosEntrevista.whatsapp_url">
+              <span class="material-icons">chat</span> Notificar vía WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeAgendarModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="confirmarAgendamiento()" [disabled]="agendandoSubmitting">
+          {{ agendandoSubmitting ? 'Guardando...' : 'Confirmar Citación' }}
+        </button>
+      </div>
     </div>
   </div>
 
+  <!-- MODAL: EVALUACIÓN PSICOLÓGICA Y EXPEDIENTE DE ENTREVISTA (FOR-TH-001) -->
+  <div class="custom-modal-backdrop" *ngIf="showEvaluacionModal && postulacionParaEvaluar">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="material-icons header-icon eval-icon">fact_check</span>
+          <div>
+            <h3>Expediente de Entrevista y Evaluación Psicológica</h3>
+            <p class="modal-subtitle">
+              Formato Institucional <strong>FOR-TH-001</strong> | Candidato: <strong>{{ postulacionParaEvaluar.nombre_completo }}</strong>
+            </p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeEvaluacionModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 1. Impresión General -->
+        <div class="eval-section">
+          <h4>1. Impresión General y Presentación Personal</h4>
+          <textarea class="form-control" rows="3" [(ngModel)]="datosEvaluacion.impresion_general"
+            placeholder="Puntualidad, postura, comunicación no verbal, presentación personal, tono de voz y disposición..."></textarea>
+        </div>
+
+        <!-- 2. Concepto Psicológico y Conductual -->
+        <div class="eval-section">
+          <h4>2. Concepto Psicológico y Conductual</h4>
+          <textarea class="form-control" rows="3" [(ngModel)]="datosEvaluacion.concepto_psicologico"
+            placeholder="Estabilidad emocional, tolerancia a la frustración, manejo del estrés, valores corporativos y adecuación al cargo..."></textarea>
+        </div>
+
+        <!-- 3. Matriz Cuantitativa de Evaluación (Escala 1 a 5) -->
+        <div class="eval-section">
+          <div class="matrix-card-header mb-3">
+            <div class="matrix-header-title">
+              <span class="material-icons star-gold">star</span>
+              <span>6. MATRIZ CUANTITATIVA DE EVALUACIÓN (ESCALA 1 A 5)</span>
+            </div>
+            <div class="matrix-header-score">
+              <span class="score-lbl">Promedio:</span>
+              <span class="score-val">{{ datosEvaluacion.promedio_competencias | number:'1.1-1' }}</span>
+            </div>
+          </div>
+
+          <div class="matrix-table-wrap">
+            <table class="matrix-eval-table">
+              <thead>
+                <tr>
+                  <th class="th-factor">FACTOR / COMPETENCIA OBSERVADA</th>
+                  <th class="th-rating text-center">1</th>
+                  <th class="th-rating text-center">2</th>
+                  <th class="th-rating text-center">3</th>
+                  <th class="th-rating text-center">4</th>
+                  <th class="th-rating text-center">5</th>
+                  <th class="th-obs">OBSERVACIONES CONDUCTUALES Y NOTAS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let comp of datosEvaluacion.matriz_competencias; let idx = index" [class.row-alt]="idx % 2 === 1">
+                  <td class="td-factor">
+                    <div class="factor-title">{{ comp.competencia }}</div>
+                    <div class="factor-desc">{{ comp.definicion }}</div>
+                  </td>
+                  <td class="td-rating text-center" *ngFor="let score of [1, 2, 3, 4, 5]">
+                    <button type="button" class="btn-matrix-score"
+                      [class.selected]="comp.puntuacion === score"
+                      (click)="setRating(comp, score)">
+                      {{ score }}
+                    </button>
+                  </td>
+                  <td class="td-obs">
+                    <input type="text" class="matrix-input-obs"
+                      placeholder="Nota conductual..."
+                      [(ngModel)]="comp.observaciones" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. Condiciones de Contratación -->
+        <div class="eval-section">
+          <h4>4. Aspiración Salarial y Disponibilidad</h4>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label>Aspiración Salarial Neta o Rango</label>
+              <input type="text" class="form-control" [(ngModel)]="datosEvaluacion.aspiracion_salarial" placeholder="Ej: $2.000.000 COP" />
+            </div>
+            <div class="form-group col-6">
+              <label>Disponibilidad de Incorporación</label>
+              <input type="text" class="form-control" [(ngModel)]="datosEvaluacion.disponibilidad_ingreso" placeholder="Ej: Inmediata, 15 días, 1 mes" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Decisión Final de Selección -->
+        <div class="eval-section decision-section">
+          <h4>5. Concepto y Decisión Final del Candidato</h4>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label>Estado Final en el Proceso *</label>
+              <select class="form-control decision-select" [(ngModel)]="datosEvaluacion.decision_final">
+                <option *ngFor="let est of estadosDecision" [value]="est.nombre">
+                  {{ (est.icono ? (est.icono + ' ') : '') + est.nombre + (est.descripcion ? (' (' + est.descripcion + ')') : '') }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label>Evaluador / Psicólogo Responsable</label>
+              <input type="text" class="form-control" [(ngModel)]="datosEvaluacion.evaluador_nombre" placeholder="Nombre completo del evaluador" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Observaciones Finales / Conclusión del Expediente</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="datosEvaluacion.observaciones_adicionales" placeholder="Comentarios finales para el informe de gerencia o talento humano..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEvaluacionModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="guardarEvaluacionEntrevista()" [disabled]="evaluacionSubmitting">
+          {{ evaluacionSubmitting ? 'Guardando Expediente...' : 'Guardar Expediente FOR-TH-001' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- DRAWER SLIDE-OVER: PANEL LATERAL DE EXPEDIENTE DEL CANDIDATO    -->
+  <!-- ============================================================== -->
+  <div class="drawer-backdrop" *ngIf="drawerOpen && drawerCandidate" (click)="closeDrawer()"></div>
+
+  <aside class="candidate-drawer" *ngIf="drawerOpen && drawerCandidate" [class.drawer-open]="drawerOpen">
+    <!-- Header del Drawer -->
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <div class="drawer-avatar">{{ getInitials(drawerCandidate.nombre_completo) }}</div>
+        <div>
+          <h2 class="drawer-candidate-name">{{ drawerCandidate.nombre_completo }}</h2>
+          <div class="drawer-subtitle">
+            <span class="drawer-cargo">💼 {{ drawerCandidate.vacante_titulo }}</span>
+            <span class="drawer-date">🗓️ Postulado: {{ drawerCandidate.fecha_postulacion | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-header-actions">
+        <button class="btn-drawer-doc" (click)="downloadHojaVidaCorporativa(drawerCandidate)" title="Descargar FTO-GH-001 (Word)">
+          <span class="material-icons">description</span> FTO-GH-001
+        </button>
+        <button class="btn-drawer-close" (click)="closeDrawer()" title="Cerrar panel">✕</button>
+      </div>
+    </div>
+
+    <!-- Barra de Navegación de Pestañas del Drawer -->
+    <nav class="drawer-tabs">
+      <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'perfil'" (click)="setActiveDrawerTab('perfil')">
+        <span class="material-icons">person</span> Perfil & FTO-GH-001
+      </button>
+      <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'cita'" (click)="setActiveDrawerTab('cita')">
+        <span class="material-icons">event</span> Citación
+        <span class="tab-badge" *ngIf="drawerCandidate.cita_entrevista_json?.fecha">✓</span>
+      </button>
+      <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'evaluacion'" (click)="setActiveDrawerTab('evaluacion')">
+        <span class="material-icons">fact_check</span> Evaluar FOR-TH-001
+        <span class="tab-badge score" *ngIf="drawerCandidate.evaluacion_entrevista_json?.promedio_competencias">
+          {{ drawerCandidate.evaluacion_entrevista_json?.promedio_competencias }}
+        </span>
+      </button>
+      <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'ia'" (click)="setActiveDrawerTab('ia')">
+        <span class="material-icons">auto_awesome</span> Análisis IA
+      </button>
+    </nav>
+
+    <!-- Cuerpo de Contenido del Drawer -->
+    <div class="drawer-body">
+      <!-- PESTAÑA 1: PERFIL Y CONTACTO -->
+      <div *ngIf="activeDrawerTab === 'perfil'" class="tab-pane">
+        <!-- Quick Contact Hub -->
+        <div class="contact-hub-card">
+          <div class="contact-hub-grid">
+            <div class="hub-item">
+              <span class="hub-label">Correo Electrónico</span>
+              <a [href]="'mailto:' + drawerCandidate.correo" class="hub-value link-email">
+                ✉️ {{ drawerCandidate.correo }}
+              </a>
+            </div>
+            <div class="hub-item">
+              <span class="hub-label">Teléfono / Móvil</span>
+              <div class="hub-phone-wrap">
+                <a [href]="'tel:' + drawerCandidate.telefono" class="hub-value link-tel">
+                  📞 {{ drawerCandidate.telefono || 'Sin registrar' }}
+                </a>
+                <a *ngIf="getWhatsAppDirectUrl(drawerCandidate.telefono, drawerCandidate.nombre_completo)"
+                  [href]="getWhatsAppDirectUrl(drawerCandidate.telefono, drawerCandidate.nombre_completo)"
+                  target="_blank" class="hub-wa-link" title="Escribir al WhatsApp">
+                  💬 WhatsApp
+                </a>
+              </div>
+            </div>
+            <div class="hub-item">
+              <span class="hub-label">Estado en Selección</span>
+              <select class="status-select drawer-status-select"
+                [ngModel]="drawerCandidate.estado_postulante"
+                (ngModelChange)="cambiarEstado(drawerCandidate, $event)"
+                [ngStyle]="getEstadoBadgeStyle(drawerCandidate.estado_postulante)">
+                <option *ngFor="let st of catalogoEstados" [value]="st.nombre">
+                  {{ (st.icono ? (st.icono + ' ') : '') + st.nombre }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Perfil del Cargo Solicitado / Contrastación -->
+        <div class="profile-section-card cargo-profile-card" *ngIf="drawerVacante || drawerCandidate.respuesta_ia?.cargo_evaluado">
+          <h4>
+            <span class="material-icons">badge</span>
+            Perfil del Cargo: {{ drawerVacante?.perfil_cargo || drawerCandidate.respuesta_ia?.cargo_evaluado || drawerCandidate.vacante_titulo }}
+          </h4>
+          <div class="cargo-profile-details">
+            <div class="cargo-meta-badge-row">
+              <span class="cargo-area-tag" *ngIf="drawerVacante?.perfil_area || drawerVacante?.seccion_area">
+                🏢 Área: <strong>{{ drawerVacante?.perfil_area || drawerVacante?.seccion_area }}</strong>
+              </span>
+              <span class="cargo-type-tag" *ngIf="drawerVacante?.tipo_requerimiento">
+                📌 {{ drawerVacante?.tipo_requerimiento }}
+              </span>
+            </div>
+
+            <p class="cargo-purpose" *ngIf="drawerVacante?.perfil_completo_json?.proposito || drawerVacante?.descripcion">
+              <strong>Propósito:</strong> {{ drawerVacante?.perfil_completo_json?.proposito || drawerVacante?.descripcion }}
+            </p>
+
+            <div class="cargo-requirements-grid" *ngIf="drawerVacante?.perfil_completo_json?.requisitos">
+              <div class="cargo-req-box" *ngIf="drawerVacante?.perfil_completo_json?.requisitos?.formacion">
+                <span class="req-title">🎓 Formación Requerida:</span>
+                <span class="req-desc">{{ drawerVacante?.perfil_completo_json?.requisitos?.formacion }}</span>
+              </div>
+              <div class="cargo-req-box" *ngIf="drawerVacante?.perfil_completo_json?.requisitos?.experiencia">
+                <span class="req-title">⏱️ Experiencia Requerida:</span>
+                <span class="req-desc">{{ drawerVacante?.perfil_completo_json?.requisitos?.experiencia }}</span>
+              </div>
+            </div>
+
+            <div class="cargo-functions-box" *ngIf="drawerVacante?.perfil_completo_json?.funciones?.length">
+              <span class="req-title">📋 Funciones Principales del Cargo:</span>
+              <ul class="cargo-func-list">
+                <li *ngFor="let func of drawerVacante?.perfil_completo_json?.funciones">{{ func }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen Profesional del Candidato -->
+        <div class="profile-section-card" *ngIf="drawerCandidate.perfil_profesional?.resumen">
+          <h4><span class="material-icons">account_circle</span> Resumen Profesional</h4>
+          <p class="candidate-summary-text">{{ drawerCandidate.perfil_profesional.resumen }}</p>
+        </div>
+
+        <!-- Habilidades del Candidato -->
+        <div class="profile-section-card" *ngIf="drawerCandidate.habilidades_json?.tecnicas?.length || drawerCandidate.habilidades_json?.interpersonales?.length">
+          <h4><span class="material-icons">psychology</span> Habilidades del Candidato</h4>
+          <div class="skills-chips-wrap">
+            <span class="skill-chip tech" *ngFor="let h of drawerCandidate.habilidades_json?.tecnicas">💻 {{ h }}</span>
+            <span class="skill-chip soft" *ngFor="let h of drawerCandidate.habilidades_json?.interpersonales">🤝 {{ h }}</span>
+            <span class="skill-chip other" *ngFor="let h of drawerCandidate.habilidades_json?.otros">⭐ {{ h }}</span>
+          </div>
+        </div>
+
+        <!-- Descargar CV Oficial -->
+        <div class="cv-download-card">
+          <div class="cv-text">
+            <strong>Hoja de Vida Oficial Artdecon (FTO-GH-001)</strong>
+            <p>Formato estándar corporativo con toda la información consolidada del aspirante.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" (click)="downloadHojaVidaCorporativa(drawerCandidate)">
+            <span class="material-icons">download</span> Descargar DOCX
+          </button>
+        </div>
+
+        <!-- Experiencia Laboral -->
+        <div class="profile-section-card">
+          <h4><span class="material-icons">work</span> Experiencia Laboral</h4>
+          <div *ngIf="!drawerCandidate.experiencias_json || drawerCandidate.experiencias_json.length === 0" class="empty-subtext">
+            No registra experiencia previa o no aplica.
+          </div>
+          <div class="timeline-list" *ngIf="drawerCandidate.experiencias_json && drawerCandidate.experiencias_json.length > 0">
+            <div class="timeline-item" *ngFor="let exp of drawerCandidate.experiencias_json">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <strong>{{ exp.cargo }}</strong>
+                <span class="timeline-company">{{ exp.empresa }}</span>
+                <span class="timeline-period">{{ exp.fecha_inicio }} – {{ exp.fecha_fin || 'Actualmente' }}</span>
+                <p class="timeline-desc" *ngIf="exp.funciones">{{ exp.funciones }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formación Académica -->
+        <div class="profile-section-card">
+          <h4><span class="material-icons">school</span> Educación y Formación</h4>
+          <div *ngIf="!drawerCandidate.estudios_json || drawerCandidate.estudios_json.length === 0" class="empty-subtext">
+            No registra estudios académicos adicionales.
+          </div>
+          <div class="timeline-list" *ngIf="drawerCandidate.estudios_json && drawerCandidate.estudios_json.length > 0">
+            <div class="timeline-item" *ngFor="let est of drawerCandidate.estudios_json">
+              <div class="timeline-marker school-marker"></div>
+              <div class="timeline-content">
+                <strong>{{ est.titulo || est.nivel }}</strong>
+                <span class="timeline-company">{{ est.institucion }}</span>
+                <span class="timeline-period">{{ est.fecha_inicio }} – {{ est.fecha_fin || 'Finalizado' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 2: CITACIÓN A ENTREVISTA -->
+      <div *ngIf="activeDrawerTab === 'cita'" class="tab-pane">
+        <div class="pane-intro">
+          <h4>Agendamiento de Entrevista y Citación</h4>
+          <p>Coordina la fecha, hora y modalidad. Podrás agregar el evento a Google Calendar y enviar la plantilla de WhatsApp.</p>
+        </div>
+
+        <div class="active-cita-banner" *ngIf="drawerCandidate.cita_entrevista_json?.fecha">
+          <span class="material-icons">check_circle</span>
+          <div>
+            <strong>Entrevista Agendada Actualmente:</strong>
+            <p>{{ drawerCandidate.cita_entrevista_json?.fecha }} a las {{ drawerCandidate.cita_entrevista_json?.hora }} | Modalidad: {{ drawerCandidate.cita_entrevista_json?.modalidad }}</p>
+            <small>{{ drawerCandidate.cita_entrevista_json?.ubicacion_o_enlace }}</small>
+          </div>
+        </div>
+
+        <div class="drawer-form-grid">
+          <div class="form-group">
+            <label>Fecha de la Entrevista *</label>
+            <input type="date" class="form-control" [(ngModel)]="datosEntrevista.fecha" (ngModelChange)="updatePreviewLinks()" />
+          </div>
+
+          <div class="form-group">
+            <label>Hora de Inicio *</label>
+            <input type="time" class="form-control" [(ngModel)]="datosEntrevista.hora" (ngModelChange)="updatePreviewLinks()" />
+          </div>
+
+          <div class="form-group">
+            <label>Duración Estimada</label>
+            <select class="form-control" [(ngModel)]="datosEntrevista.duracion_minutos" (ngModelChange)="updatePreviewLinks()">
+              <option [ngValue]="30">30 minutos</option>
+              <option [ngValue]="45">45 minutos</option>
+              <option [ngValue]="60">1 hora (Recomendado)</option>
+              <option [ngValue]="90">1 hora 30 minutos</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Modalidad de Entrevista *</label>
+            <select class="form-control" [(ngModel)]="datosEntrevista.modalidad" (ngModelChange)="updatePreviewLinks()">
+              <option value="Presencial">🏢 Presencial (Sede Corporativa)</option>
+              <option value="Virtual - Google Meet">💻 Virtual (Google Meet / Teams)</option>
+              <option value="Telefónica">📞 Telefónica</option>
+            </select>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label>Lugar o Enlace de Conexión *</label>
+            <input type="text" class="form-control" [(ngModel)]="datosEntrevista.ubicacion_o_enlace" (ngModelChange)="updatePreviewLinks()"
+              placeholder="Dirección física o URL de reunión..." />
+          </div>
+
+          <div class="form-group col-span-2">
+            <label>Entrevistador / Responsable</label>
+            <input type="text" class="form-control" [(ngModel)]="datosEntrevista.entrevistador" (ngModelChange)="updatePreviewLinks()"
+              placeholder="Nombre del entrevistador o psicólogo..." />
+          </div>
+
+          <div class="form-group col-span-2">
+            <label>Instrucciones y Requisitos para el Candidato</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="datosEntrevista.notas" (ngModelChange)="updatePreviewLinks()"
+              placeholder="Requisitos, documentos a llevar, presentación..."></textarea>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="datosEntrevista.enviar_email" />
+              <span>Despachar correo electrónico institucional de confirmación</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Botones de Integración Directa -->
+        <div class="direct-integration-box">
+          <span class="box-title">Enlaces Directos de Citación:</span>
+          <div class="integration-btns-row">
+            <a [href]="datosEntrevista.google_calendar_url" target="_blank" class="btn-integration btn-gcal" *ngIf="datosEntrevista.google_calendar_url">
+              <span class="material-icons">calendar_month</span> Agregar a Google Calendar
+            </a>
+            <a [href]="datosEntrevista.whatsapp_url" target="_blank" class="btn-integration btn-wa" *ngIf="datosEntrevista.whatsapp_url">
+              <span class="material-icons">chat</span> Notificar por WhatsApp (+57)
+            </a>
+          </div>
+        </div>
+
+        <div class="pane-action-bar">
+          <button class="btn btn-primary" (click)="confirmarAgendamiento()" [disabled]="agendandoSubmitting">
+            {{ agendandoSubmitting ? 'Guardando...' : 'Confirmar y Guardar Citación' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: EVALUACIÓN FOR-TH-001 (EXPEDIENTE OFICIAL) -->
+      <div *ngIf="activeDrawerTab === 'evaluacion'" class="tab-pane">
+        
+        <!-- ENCABEZADO Y PROMEDIO EVALUADO -->
+        <div class="matrix-card-header">
+          <div class="matrix-header-title">
+            <span class="material-icons star-gold">star</span>
+            <span>6. MATRIZ CUANTITATIVA DE EVALUACIÓN (ESCALA 1 A 5)</span>
+          </div>
+          <div class="matrix-header-score">
+            <span class="score-lbl">Promedio Evaluado:</span>
+            <span class="score-val">{{ datosEvaluacion.promedio_competencias | number:'1.1-1' }}</span>
+          </div>
+        </div>
+
+        <!-- TABLA DE LA MATRIZ CUANTITATIVA (10 FACTORES OFICIALES) -->
+        <div class="matrix-table-wrap">
+          <table class="matrix-eval-table">
+            <thead>
+              <tr>
+                <th class="th-factor">FACTOR / COMPETENCIA OBSERVADA</th>
+                <th class="th-rating text-center">1</th>
+                <th class="th-rating text-center">2</th>
+                <th class="th-rating text-center">3</th>
+                <th class="th-rating text-center">4</th>
+                <th class="th-rating text-center">5</th>
+                <th class="th-obs">OBSERVACIONES CONDUCTUALES Y NOTAS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let comp of datosEvaluacion.matriz_competencias; let idx = index" [class.row-alt]="idx % 2 === 1">
+                <td class="td-factor">
+                  <div class="factor-title">{{ comp.competencia }}</div>
+                  <div class="factor-desc">{{ comp.definicion }}</div>
+                </td>
+                
+                <td class="td-rating text-center" *ngFor="let score of [1, 2, 3, 4, 5]">
+                  <button type="button" class="btn-matrix-score"
+                    [class.selected]="comp.puntuacion === score"
+                    (click)="setRating(comp, score)">
+                    {{ score }}
+                  </button>
+                </td>
+
+                <td class="td-obs">
+                  <input type="text" class="matrix-input-obs"
+                    placeholder="Nota conductual..."
+                    [(ngModel)]="comp.observaciones" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 5. EVALUACIÓN DE COMPETENCIAS Y COMPORTAMIENTO (METODOLOGÍA STAR) -->
+        <div class="eval-section-container">
+          <div class="eval-section-header">
+            <span class="material-icons section-icon">psychology</span>
+            <span>5. EVALUACIÓN DE COMPETENCIAS Y COMPORTAMIENTO (METODOLOGÍA STAR)</span>
+          </div>
+          <p class="section-hint">Síntesis de conductas pasadas reales observadas (Situación, Tarea, Acción, Resultado).</p>
+
+          <div class="star-questions-list">
+            <div class="star-question-card" *ngFor="let star of preguntasSTAR">
+              <div class="star-card-top">
+                <strong class="star-title">{{ star.titulo }}</strong>
+                <span class="star-badge">{{ star.code }}</span>
+              </div>
+              <p class="star-prompt">{{ star.pregunta }}</p>
+              <textarea class="form-control star-textarea" rows="2"
+                [placeholder]="star.placeholder"
+                [(ngModel)]="respuestasSTAR[star.id]"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. CONCEPTO FINAL, CONCLUSIONES Y RECOMENDACIÓN -->
+        <div class="eval-section-container">
+          <div class="eval-section-header">
+            <span class="material-icons section-icon">gavel</span>
+            <span>7. CONCEPTO FINAL, CONCLUSIONES Y RECOMENDACIÓN</span>
+          </div>
+
+          <div class="conclusions-grid">
+            <div class="conclusion-col col-fortalezas">
+              <label class="lbl-emerald">Fortalezas Clave Identificadas</label>
+              <textarea class="form-control txt-emerald" rows="3"
+                placeholder="Puntos fuertes a nivel actitudinal, psicológico y competencias..."
+                [(ngModel)]="datosEvaluacion.fortalezas_clave"></textarea>
+            </div>
+
+            <div class="conclusion-col col-oportunidades">
+              <label class="lbl-amber">Oportunidades de Mejora / Aspectos a Validar</label>
+              <textarea class="form-control txt-amber" rows="3"
+                placeholder="Manejo de nervios, seguimiento en inducción, etc..."
+                [(ngModel)]="datosEvaluacion.oportunidades_mejora"></textarea>
+            </div>
+
+            <div class="conclusion-col col-cultura">
+              <label class="lbl-navy">Ajuste a la Cultura ARTDECON y del Cargo</label>
+              <textarea class="form-control txt-navy" rows="3"
+                placeholder="Compatibilidad demostrada con el equipo y ritmo de trabajo..."
+                [(ngModel)]="datosEvaluacion.ajuste_cultural"></textarea>
+            </div>
+          </div>
+
+          <!-- Dictamen Ejecutivo -->
+          <div class="executive-decision-box">
+            <div class="decision-meta">
+              <span class="decision-title">Dictamen / Concepto Ejecutivo del Candidato:</span>
+              <span class="decision-subtitle">Recomendación final emitida por Talento Humano</span>
+            </div>
+
+            <div class="decision-radios-row">
+              <label class="decision-radio-pill" [class.selected]="datosEvaluacion.decision_final === 'Aprobado'">
+                <input type="radio" name="decision_final_radio" [(ngModel)]="datosEvaluacion.decision_final" value="Aprobado" />
+                <span class="status-indicator dot-green"></span>
+                <span class="txt-decision">APTO / RECOMENDADO</span>
+              </label>
+
+              <label class="decision-radio-pill" [class.selected]="datosEvaluacion.decision_final === 'Aprobado con reservas'">
+                <input type="radio" name="decision_final_radio" [(ngModel)]="datosEvaluacion.decision_final" value="Aprobado con reservas" />
+                <span class="status-indicator dot-amber"></span>
+                <span class="txt-decision">APTO CON OBSERVACIONES</span>
+              </label>
+
+              <label class="decision-radio-pill" [class.selected]="datosEvaluacion.decision_final === 'Con observaciones'">
+                <input type="radio" name="decision_final_radio" [(ngModel)]="datosEvaluacion.decision_final" value="Con observaciones" />
+                <span class="status-indicator dot-orange"></span>
+                <span class="txt-decision">EN ESPERA / REVISIÓN</span>
+              </label>
+
+              <label class="decision-radio-pill" [class.selected]="datosEvaluacion.decision_final === 'No aprobado'">
+                <input type="radio" name="decision_final_radio" [(ngModel)]="datosEvaluacion.decision_final" value="No aprobado" />
+                <span class="status-indicator dot-red"></span>
+                <span class="txt-decision">NO APTO</span>
+              </label>
+            </div>
+
+            <div class="evaluator-signature-grid">
+              <div class="form-group">
+                <label>Evaluador / Psicólogo Responsable</label>
+                <input type="text" class="form-control" [(ngModel)]="datosEvaluacion.evaluador_nombre" placeholder="Nombre completo" />
+              </div>
+              <div class="form-group">
+                <label>Aspiración Salarial Neta</label>
+                <input type="text" class="form-control" [(ngModel)]="datosEvaluacion.aspiracion_salarial" placeholder="Ej: $2.000.000 COP" />
+              </div>
+              <div class="form-group">
+                <label>Disponibilidad de Ingreso</label>
+                <input type="text" class="form-control" [(ngModel)]="datosEvaluacion.disponibilidad_ingreso" placeholder="Ej: Inmediata" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Observaciones Adicionales / Conclusión</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="datosEvaluacion.observaciones_adicionales" placeholder="Notas finales del expediente..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-action-bar">
+          <button class="btn btn-primary btn-save-expediente" (click)="guardarEvaluacionEntrevista()" [disabled]="evaluacionSubmitting">
+            <span class="material-icons">save</span>
+            {{ evaluacionSubmitting ? 'Guardando Expediente...' : 'Guardar Expediente FOR-TH-001' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 4: ANÁLISIS IA -->
+      <div *ngIf="activeDrawerTab === 'ia'" class="tab-pane">
+        <div class="pane-intro">
+          <h4>Análisis Automatizado de Perfil con IA</h4>
+          <p>Evaluación semántica de la hoja de vida contrastada contra los requisitos del perfil de cargo.</p>
+        </div>
+
+        <div *ngIf="drawerCandidate.respuesta_ia; else noIaData">
+          <!-- Overview Card -->
+          <div class="ai-overview-card">
+            <div class="ai-overview-header">
+              <div class="ai-result-group">
+                <span class="ai-label">RESULTADO GENERAL:</span>
+                <span class="resultado-badge" [ngClass]="{
+                  'viable': drawerCandidate.respuesta_ia.resultado === 'VIABLE',
+                  'condicionado': drawerCandidate.respuesta_ia.resultado?.includes('CONDICIONADO') || drawerCandidate.respuesta_ia.resultado?.includes('Condicionado'),
+                  'no-viable': drawerCandidate.respuesta_ia.resultado === 'NO VIABLE' || drawerCandidate.respuesta_ia.resultado === 'NO_VIABLE' || drawerCandidate.respuesta_ia.resultado === 'DESCARTADO',
+                  'evaluando': !drawerCandidate.respuesta_ia.resultado
+                }">
+                  {{ drawerCandidate.respuesta_ia.resultado || 'PENDIENTE DE EVALUACIÓN' }}
+                </span>
+              </div>
+              <div class="ai-pts-badge" *ngIf="drawerCandidate.respuesta_ia.puntaje !== undefined">
+                <span class="pts-big">{{ drawerCandidate.respuesta_ia.puntaje }}</span>
+                <span class="pts-scale">/ 100 pts</span>
+              </div>
+            </div>
+
+            <!-- Dimensiones Evaluadas (Confiabilidad, Requisitos, Estabilidad, Fit Cultural) -->
+            <div class="ai-meta-dimensions" *ngIf="drawerCandidate.respuesta_ia.confiabilidad || drawerCandidate.respuesta_ia.cumplimiento_requisitos || drawerCandidate.respuesta_ia.estabilidad_laboral || drawerCandidate.respuesta_ia.fit_cultural">
+              <div class="ai-dim-pill" *ngIf="drawerCandidate.respuesta_ia.confiabilidad">
+                <span class="dim-label">Confiabilidad:</span>
+                <strong class="dim-val">{{ drawerCandidate.respuesta_ia.confiabilidad }}</strong>
+              </div>
+              <div class="ai-dim-pill" *ngIf="drawerCandidate.respuesta_ia.cumplimiento_requisitos">
+                <span class="dim-label">Requisitos:</span>
+                <strong class="dim-val">{{ drawerCandidate.respuesta_ia.cumplimiento_requisitos }}</strong>
+              </div>
+              <div class="ai-dim-pill" *ngIf="drawerCandidate.respuesta_ia.estabilidad_laboral">
+                <span class="dim-label">Estabilidad Laboral:</span>
+                <strong class="dim-val">{{ drawerCandidate.respuesta_ia.estabilidad_laboral }}</strong>
+              </div>
+              <div class="ai-dim-pill" *ngIf="drawerCandidate.respuesta_ia.fit_cultural">
+                <span class="dim-label">Fit Cultural:</span>
+                <strong class="dim-val">{{ drawerCandidate.respuesta_ia.fit_cultural }}</strong>
+              </div>
+            </div>
+
+            <!-- Dictamen de la IA -->
+            <div class="ai-justification" *ngIf="drawerCandidate.respuesta_ia.conclusion || drawerCandidate.respuesta_ia.justificacion">
+              <strong class="dictamen-title">Dictamen de la IA:</strong>
+              <p class="dictamen-text">{{ drawerCandidate.respuesta_ia.conclusion || drawerCandidate.respuesta_ia.justificacion }}</p>
+            </div>
+          </div>
+
+          <!-- 4 Rich Analysis Cards Grid (Experiencia Relevante, Fortalezas Documentales, Brechas y Riesgos, Validaciones Requeridas) -->
+          <div class="ai-cards-grid">
+            <!-- 1. EXPERIENCIA RELEVANTE -->
+            <div class="ai-detail-card exp-card" *ngIf="drawerCandidate.respuesta_ia.experiencia_relevante?.length">
+              <h5 class="ai-card-title exp-title">EXPERIENCIA RELEVANTE</h5>
+              <ul class="ai-bullet-list">
+                <li *ngFor="let item of drawerCandidate.respuesta_ia.experiencia_relevante">{{ item }}</li>
+              </ul>
+            </div>
+
+            <!-- 2. FORTALEZAS DOCUMENTALES -->
+            <div class="ai-detail-card fortalezas-card" *ngIf="drawerCandidate.respuesta_ia.fortalezas_documentales?.length">
+              <h5 class="ai-card-title fortalezas-title">FORTALEZAS DOCUMENTALES</h5>
+              <ul class="ai-bullet-list">
+                <li *ngFor="let item of drawerCandidate.respuesta_ia.fortalezas_documentales">{{ item }}</li>
+              </ul>
+            </div>
+
+            <!-- 3. BRECHAS Y RIESGOS -->
+            <div class="ai-detail-card brechas-card" *ngIf="drawerCandidate.respuesta_ia.brechas_riesgos?.length">
+              <h5 class="ai-card-title brechas-title">BRECHAS Y RIESGOS</h5>
+              <ul class="ai-bullet-list">
+                <li *ngFor="let item of drawerCandidate.respuesta_ia.brechas_riesgos">{{ item }}</li>
+              </ul>
+            </div>
+
+            <!-- 4. VALIDACIONES REQUERIDAS -->
+            <div class="ai-detail-card validaciones-card" *ngIf="drawerCandidate.respuesta_ia.validaciones_requeridas?.length">
+              <h5 class="ai-card-title validaciones-title">VALIDACIONES REQUERIDAS</h5>
+              <ul class="ai-bullet-list">
+                <li *ngFor="let item of drawerCandidate.respuesta_ia.validaciones_requeridas">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Fase 2 Comparativa (si existe) -->
+          <div class="ai-phase2-card" *ngIf="drawerCandidate.json_analisis_ia">
+            <h5 class="phase2-title">
+              <span class="material-icons">insights</span> Segunda Validación Comparativa
+            </h5>
+            <div class="phase2-grid">
+              <div class="phase2-item" *ngIf="drawerCandidate.json_analisis_ia.ventaja_competitiva">
+                <span class="phase2-label">Ventaja Competitiva:</span>
+                <p>{{ drawerCandidate.json_analisis_ia.ventaja_competitiva }}</p>
+              </div>
+              <div class="phase2-item" *ngIf="drawerCandidate.json_analisis_ia.diferenciador_tecnico">
+                <span class="phase2-label">Diferenciador Técnico:</span>
+                <p>{{ drawerCandidate.json_analisis_ia.diferenciador_tecnico }}</p>
+              </div>
+              <div class="phase2-item" *ngIf="drawerCandidate.json_analisis_ia.riesgo_menor_o_brecha">
+                <span class="phase2-label">Riesgo o Brecha Menor:</span>
+                <p>{{ drawerCandidate.json_analisis_ia.riesgo_menor_o_brecha }}</p>
+              </div>
+              <div class="phase2-item" *ngIf="drawerCandidate.json_analisis_ia.pregunta_clave_entrevista">
+                <span class="phase2-label">Pregunta Clave para Entrevista:</span>
+                <p class="highlight-q">{{ drawerCandidate.json_analisis_ia.pregunta_clave_entrevista }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noIaData>
+          <div class="empty-ai-state">
+            <span class="material-icons">hourglass_empty</span>
+            <h5>Sin análisis de IA disponible</h5>
+            <p>Esta postulación no cuenta con evaluación semántica automatizada o está en proceso.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </aside>
 </div>

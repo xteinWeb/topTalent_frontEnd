@@ -88,7 +88,7 @@ export class PerfilFormComponent implements OnInit {
         this.area = data.area;
         this.cargo = data.cargo;
 
-        const pj = data.perfil_json;
+        const pj = typeof data.perfil_json === 'string' ? JSON.parse(data.perfil_json) : (data.perfil_json || {});
         this.contractual = pj.contractual || '';
         this.reporta_a = pj.reporta_a || '';
         this.supervisa = pj.supervisa || '';

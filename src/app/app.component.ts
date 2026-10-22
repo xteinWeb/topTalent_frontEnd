@@ -17,7 +17,7 @@ export class AppComponent {
   title = 'frontend';
   showNavbar$: Observable<boolean>;
 
-  constructor(private authService: AuthService, private router: Router, seoService: SeoService) {
+  constructor(public authService: AuthService, private router: Router, seoService: SeoService) {
     seoService.init();
 
     const isNotPublicRoute$ = this.router.events.pipe(

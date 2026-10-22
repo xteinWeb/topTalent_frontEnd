@@ -5,6 +5,43 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
+export interface CitaEntrevista {
+  fecha: string;
+  hora: string;
+  duracion_minutos?: number;
+  modalidad: string;
+  ubicacion_o_enlace?: string;
+  entrevistador?: string;
+  notas?: string;
+  google_calendar_url?: string;
+  whatsapp_url?: string;
+  fecha_agendamiento?: string;
+}
+
+export interface CompetenciaEvaluada {
+  competencia: string;
+  definicion?: string;
+  puntuacion: number; // 1 a 5
+  observaciones?: string;
+}
+
+export interface EvaluacionEntrevista {
+  impresion_general?: string;
+  concepto_psicologico?: string;
+  matriz_competencias?: CompetenciaEvaluada[];
+  promedio_competencias?: number;
+  disponibilidad_ingreso?: string;
+  aspiracion_salarial?: string;
+  decision_final?: 'Aprobado' | 'Aprobado con reservas' | 'No aprobado' | 'Con observaciones' | string;
+  evaluador_nombre?: string;
+  observaciones_adicionales?: string;
+  fecha_evaluacion?: string;
+  fortalezas_clave?: string;
+  oportunidades_mejora?: string;
+  ajuste_cultural?: string;
+  respuestas_star?: { [key: string]: string };
+}
+
 export interface Postulacion {
   id?: string;
   vacante_id: string;
@@ -43,6 +80,7 @@ export interface Postulacion {
     fit_cultural?: string;
     validaciones_requeridas?: string[];
     conclusion?: string;
+    justificacion?: string;
   };
   estado_ia?: string;
   puntuacion_ia?: number;
@@ -57,6 +95,47 @@ export interface Postulacion {
     riesgo_menor_o_brecha?: string;
     pregunta_clave_entrevista?: string;
   };
+
+  // Estados oficiales y flujo de selección
+  estado_postulante?: 'Postulado' | 'Preseleccionado' | 'Citado a Entrevista' | 'Aprobado' | 'Aprobado con reservas' | 'No aprobado' | 'Con observaciones' | string;
+  cita_entrevista_json?: CitaEntrevista;
+  evaluacion_entrevista_json?: EvaluacionEntrevista;
+  matriz_competencias_json?: any;
+}
+
+function normalizePostulacion(p: any): Postulacion {
+  if (!p) return p;
+  if (typeof p.respuesta_ia === 'string') {
+    try { p.respuesta_ia = JSON.parse(p.respuesta_ia); } catch (e) {}
+  }
+  if (typeof p.json_analisis_ia === 'string') {
+    try { p.json_analisis_ia = JSON.parse(p.json_analisis_ia); } catch (e) {}
+  }
+  if (typeof p.cita_entrevista_json === 'string') {
+    try { p.cita_entrevista_json = JSON.parse(p.cita_entrevista_json); } catch (e) {}
+  }
+  if (typeof p.evaluacion_entrevista_json === 'string') {
+    try { p.evaluacion_entrevista_json = JSON.parse(p.evaluacion_entrevista_json); } catch (e) {}
+  }
+  if (typeof p.experiencias_json === 'string') {
+    try { p.experiencias_json = JSON.parse(p.experiencias_json); } catch (e) {}
+  }
+  if (typeof p.estudios_json === 'string') {
+    try { p.estudios_json = JSON.parse(p.estudios_json); } catch (e) {}
+  }
+  if (typeof p.idiomas_json === 'string') {
+    try { p.idiomas_json = JSON.parse(p.idiomas_json); } catch (e) {}
+  }
+  if (typeof p.habilidades_json === 'string') {
+    try { p.habilidades_json = JSON.parse(p.habilidades_json); } catch (e) {}
+  }
+  if (typeof p.preguntas_respondidas === 'string') {
+    try { p.preguntas_respondidas = JSON.parse(p.preguntas_respondidas); } catch (e) {}
+  }
+  if (typeof p.perfil_profesional === 'string') {
+    try { p.perfil_profesional = JSON.parse(p.perfil_profesional); } catch (e) {}
+  }
+  return p;
 }
 
 @Injectable({
@@ -116,14 +195,39 @@ export class PostulacionService {
       params = params.set('empresa_id', targetEmpresa);
     }
     return this.http.get<{ data: Postulacion[] }>(this.apiUrl, { params }).pipe(
-      map(res => res.data)
+      map(res => (res.data || []).map(normalizePostulacion))
     );
   }
 
   getPostulacionesPorVacante(vacanteId: string): Observable<Postulacion[]> {
     return this.http.get<{ data: Postulacion[] }>(`${this.apiUrl}/vacante/${vacanteId}`).pipe(
-      map(res => res.data)
+      map(res => (res.data || []).map(normalizePostulacion))
     );
+  }
+
+  cambiarEstado(id: string, estado_postulante: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}/estado`, { estado_postulante });
+  }
+
+  agendarEntrevista(id: string, payload: {
+    fecha: string;
+    hora: string;
+    duracion_minutos?: number;
+    modalidad?: string;
+    ubicacion_o_enlace?: string;
+    entrevistador?: string;
+    notas?: string;
+    enviar_email?: boolean;
+    candidato_nombre?: string;
+    candidato_correo?: string;
+    candidato_telefono?: string;
+    vacante_titulo?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/agendar-entrevista`, payload);
+  }
+
+  guardarEvaluacion(id: string, payload: EvaluacionEntrevista): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/evaluacion`, payload);
   }
 
   ejecutarValidacion(vacanteId: string): Observable<any> {
