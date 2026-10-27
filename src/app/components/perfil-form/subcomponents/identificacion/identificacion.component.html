@@ -30,5 +30,25 @@
       <input type="text" id="supervisa" name="supervisa" [ngModel]="supervisa"
         (ngModelChange)="supervisaChange.emit($event)" placeholder="No aplica / Asistente contable" />
     </div>
+
+    <div class="form-group">
+      <label for="grupoCargo">Grupo de cargo (matriz de competencias)</label>
+      <select id="grupoCargo" name="grupoCargo" [ngModel]="grupoCargo" (ngModelChange)="grupoCargoChange.emit($event || null)">
+        <option [ngValue]="null">Sin asignar</option>
+        <option *ngFor="let g of gruposCargo" [ngValue]="g.id">{{ g.nombre }}</option>
+      </select>
+      <small class="field-hint">Define las competencias, niveles y pesos que se evalúan en la entrevista.</small>
+    </div>
+
+    <div class="form-group full-width">
+      <label for="lider">Líder de área responsable</label>
+      <select id="lider" name="lider" [ngModel]="liderId" (ngModelChange)="liderIdChange.emit($event || null)">
+        <option [ngValue]="null">Sin asignar</option>
+        <option *ngFor="let lider of lideres" [ngValue]="lider.id">
+          {{ lider.nombre }}{{ lider.area ? ' — ' + lider.area : '' }}
+        </option>
+      </select>
+      <small class="field-hint">El líder asignado podrá solicitar vacantes de este cargo y ver a sus candidatos.</small>
+    </div>
   </div>
 </section>

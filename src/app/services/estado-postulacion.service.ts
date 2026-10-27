@@ -15,6 +15,8 @@ export interface EstadoPostulacion {
   orden?: number;
   mostrar_en_pipeline?: boolean;
   es_decision_final?: boolean;
+  // Al pasar a este estado se exige el motivo (catálogo MOTIVO_NO_APROBADO + "Otro")
+  requiere_motivo?: boolean;
   activo?: boolean;
 }
 

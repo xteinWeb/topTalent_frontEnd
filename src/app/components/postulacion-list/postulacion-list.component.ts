@@ -6,11 +6,23 @@ import { PostulacionService, Postulacion, CitaEntrevista, EvaluacionEntrevista, 
 import { VacanteService, Vacante } from '../../services/vacante.service';
 import { AuthService, UserSession } from '../../services/auth.service';
 import { EstadoPostulacionService, EstadoPostulacion } from '../../services/estado-postulacion.service';
+import { CatalogoService } from '../../services/catalogo.service';
+import { PrefiltroPanelComponent } from '../prefiltro-panel/prefiltro-panel.component';
+import { EvaluacionCompetenciasComponent } from '../evaluacion-competencias/evaluacion-competencias.component';
+import { CompetenciaService, GRUPOS_CARGO } from '../../services/competencia.service';
+
+import { guardarArchivoDescargado } from '../../utils/descargar-archivo';
+
+// Formato de las evaluaciones hechas con la matriz de competencias
+const FORMATO_MATRIZ = 'matriz_v1';
+
+// Opción fija al final del catálogo MOTIVO_NO_APROBADO: exige describir el motivo
+export const MOTIVO_OTRO = 'Otro';
 
 @Component({
   selector: 'app-postulacion-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, PrefiltroPanelComponent, EvaluacionCompetenciasComponent],
   templateUrl: './postulacion-list.component.html',
   styleUrls: ['./postulacion-list.component.css']
 })
@@ -27,44 +39,36 @@ export class PostulacionListComponent implements OnInit {
   validacionErrorMsg: string = '';
   currentUser: UserSession | null = null;
 
-  // Catálogo dinámico de estados desde BD
-  catalogoEstados: EstadoPostulacion[] = [
-    { nombre: 'Postulado', icono: '📥', color_texto: '#1d4ed8', color_fondo: '#eff6ff', color_borde: '#bfdbfe', mostrar_en_pipeline: true, es_decision_final: false },
-    { nombre: 'Preseleccionado', icono: '⭐', color_texto: '#7e22ce', color_fondo: '#faf5ff', color_borde: '#e9d5ff', mostrar_en_pipeline: true, es_decision_final: false },
-    { nombre: 'Citado a Entrevista', icono: '📅', color_texto: '#b45309', color_fondo: '#fffbeb', color_borde: '#fde68a', mostrar_en_pipeline: true, es_decision_final: false },
-    { nombre: 'Aprobado', icono: '🟢', color_texto: '#15803d', color_fondo: '#f0fdf4', color_borde: '#bbf7d0', mostrar_en_pipeline: true, es_decision_final: true, descripcion: 'Apto para contratación' },
-    { nombre: 'Aprobado con reservas', icono: '🟡', color_texto: '#0f766e', color_fondo: '#f0fdfa', color_borde: '#99f6e4', mostrar_en_pipeline: false, es_decision_final: true, descripcion: 'Apto con plan de inducción específico' },
-    { nombre: 'Con observaciones', icono: '🟠', color_texto: '#c2410c', color_fondo: '#fff7ed', color_borde: '#fed7aa', mostrar_en_pipeline: false, es_decision_final: true, descripcion: 'Pendiente validación de referencias o pruebas' },
-    { nombre: 'No aprobado', icono: '🔴', color_texto: '#b91c1c', color_fondo: '#fef2f2', color_borde: '#fecaca', mostrar_en_pipeline: false, es_decision_final: true, descripcion: 'No se ajusta al perfil requerido' }
-  ];
-  estadosPipeline: EstadoPostulacion[] = [
-    { nombre: 'Postulado', icono: '📥', color_texto: '#1d4ed8', color_fondo: '#eff6ff', color_borde: '#bfdbfe', mostrar_en_pipeline: true },
-    { nombre: 'Preseleccionado', icono: '⭐', color_texto: '#7e22ce', color_fondo: '#faf5ff', color_borde: '#e9d5ff', mostrar_en_pipeline: true },
-    { nombre: 'Citado a Entrevista', icono: '📅', color_texto: '#b45309', color_fondo: '#fffbeb', color_borde: '#fde68a', mostrar_en_pipeline: true },
-    { nombre: 'Aprobado', icono: '🟢', color_texto: '#15803d', color_fondo: '#f0fdf4', color_borde: '#bbf7d0', mostrar_en_pipeline: true }
-  ];
-  estadosDecision: EstadoPostulacion[] = [
-    { nombre: 'Aprobado', icono: '🟢', descripcion: 'Apto para contratación' },
-    { nombre: 'Aprobado con reservas', icono: '🟡', descripcion: 'Apto con plan de inducción específico' },
-    { nombre: 'Con observaciones', icono: '🟠', descripcion: 'Pendiente validación de referencias o pruebas' },
-    { nombre: 'No aprobado', icono: '🔴', descripcion: 'No se ajusta al perfil requerido' }
-  ];
+  // Motivos (catálogo de BD + "Otro") y modal que los pide al pasar a un estado que los requiere
+  readonly MOTIVO_OTRO = MOTIVO_OTRO;
+  motivosNoAprobado: string[] = [];
+  motivoModal: { postulacion: Postulacion; estado: string; estadoAnterior?: string; select?: HTMLSelectElement } | null = null;
+  motivoSeleccionado = '';
+  motivoDetalle = '';
+  motivoError = '';
+  guardandoMotivo = false;
 
-  // Nombres de estados para filtros/selects
-  estadosOficiales: string[] = [
-    'Postulado',
-    'Preseleccionado',
-    'Citado a Entrevista',
-    'Aprobado',
-    'Aprobado con reservas',
-    'No aprobado',
-    'Con observaciones'
+  // Prueba psicotécnica adjunta en el detalle del candidato
+  subiendoPrueba = false;
+
+  // Catálogo de estados del flujo del postulante (tabla estados_postulacion)
+  catalogoEstados: EstadoPostulacion[] = [];
+  estadosPipeline: EstadoPostulacion[] = [];
+  estadosOficiales: string[] = [];
+
+  // Concepto de la entrevista (FOR-TH-001). Es parte de la evaluación y no cambia el estado del postulante.
+  // Los valores se conservan como antes para que las evaluaciones guardadas sigan mostrando su concepto.
+  readonly conceptosEvaluacion = [
+    { valor: 'Aprobado', etiqueta: 'Apto', descripcion: 'Apto para contratación' },
+    { valor: 'Aprobado con reservas', etiqueta: 'Apto con reservas', descripcion: 'Apto con plan de inducción específico' },
+    { valor: 'Con observaciones', etiqueta: 'En espera / revisión', descripcion: 'Pendiente validación de referencias o pruebas' },
+    { valor: 'No aprobado', etiqueta: 'No apto', descripcion: 'No se ajusta al perfil requerido' }
   ];
 
   // Drawer Slide-over
   drawerOpen: boolean = false;
   drawerCandidate: Postulacion | null = null;
-  activeDrawerTab: 'perfil' | 'cita' | 'evaluacion' | 'ia' = 'perfil';
+  activeDrawerTab: 'perfil' | 'prefiltro' | 'cita' | 'evaluacion' | 'ia' = 'perfil';
 
   // Modal / Detail view
   selectedCandidate?: Postulacion;
@@ -102,21 +106,16 @@ export class PostulacionListComponent implements OnInit {
     observaciones_adicionales: ''
   };
 
-  // 10 Factores de Evaluación Cuantitativa Oficiales (FOR-TH-001)
-  competenciasBase: Array<{ id: string; competencia: string; definicion: string }> = [
-    { id: 'f1', competencia: '1. Presentación, Actitud y Postura', definicion: 'Aseo personal, lenguaje corporal y cortesía' },
-    { id: 'f2', competencia: '2. Comunicación y Fluidez Verbal', definicion: 'Articulación de ideas, claridad y vocabulario' },
-    { id: 'f3', competencia: '3. Seguridad, Autocontrol y Manejo de Nervios', definicion: 'Confianza en sí mismo y entereza' },
-    { id: 'f4', competencia: '4. Puntualidad y Cumplimiento', definicion: 'Asistencia a tiempo a la convocatoria' },
-    { id: 'f5', competencia: '5. Integridad y Rectitud (Valores)', definicion: 'Alineación ética, apego a normas y honestidad' },
-    { id: 'f6', competencia: '6. Relaciones Interpersonales y Trabajo en Equipo', definicion: 'Empatía, capacidad colaborativa y cordialidad' },
-    { id: 'f7', competencia: '7. Resiliencia y Tolerancia a la Frustración', definicion: 'Manejo del estrés y superación de errores' },
-    { id: 'f8', competencia: '8. Sentido de Propiedad (\'Ponerse la Camiseta\')', definicion: 'Compromiso, proactividad y entrega' },
-    { id: 'f9', competencia: '9. Adaptabilidad y Fit Cultural ARTDECON', definicion: 'Alineación a los valores y dinamismo de la empresa' },
-    { id: 'f10', competencia: '10. Organización y Atención al Detalle', definicion: 'Estructura mental, análisis y cuidado de procesos' }
-  ];
+  // Evaluación por la matriz de competencias del grupo de cargo (las 5 de mayor peso son principales)
+  readonly gruposCargo = GRUPOS_CARGO;
+  grupoEvaluacion = '';
+  competenciasOpcionales: CompetenciaEvaluada[] = [];
+  cargandoMatriz = false;
+  errorMatriz = '';
+  // true = evaluación guardada antes de la matriz (10 factores fijos + STAR): se muestra tal como quedó
+  evaluacionLegada = false;
 
-  // Preguntas Metodología STAR oficiales
+  // Preguntas Metodología STAR (solo se muestran en evaluaciones antiguas)
   respuestasSTAR: { [key: string]: string } = {};
   preguntasSTAR = [
     { id: 'star1', code: 'STAR-1', titulo: 'A. Autoconocimiento, Fortalezas y Oportunidades de Mejora', pregunta: '"Cuéntame un poco sobre ti profesionalmente. ¿Cuáles son tus mayores virtudes y qué aspecto personal estás trabajando para mejorar?"', placeholder: 'Registrar respuesta y observaciones conductuales del entrevistador...' },
@@ -132,12 +131,21 @@ export class PostulacionListComponent implements OnInit {
     private postulacionService: PostulacionService,
     private vacanteService: VacanteService,
     private estadoPostulacionService: EstadoPostulacionService,
+    private catalogoService: CatalogoService,
+    private competenciaService: CompetenciaService,
     public authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.loadEstados();
+    this.catalogoService.getByTipo('MOTIVO_NO_APROBADO').subscribe({
+      next: (motivos) => this.motivosNoAprobado = [...(motivos || []), MOTIVO_OTRO],
+      error: (err) => {
+        console.error('Error cargando motivos de no aprobación:', err);
+        this.motivosNoAprobado = [MOTIVO_OTRO];
+      }
+    });
     this.loadVacantes();
 
     this.route.params.subscribe(params => {
@@ -151,15 +159,13 @@ export class PostulacionListComponent implements OnInit {
   loadEstados(): void {
     this.estadoPostulacionService.getEstados().subscribe({
       next: (estados) => {
-        if (estados && estados.length > 0) {
-          this.catalogoEstados = estados;
-          this.estadosOficiales = estados.map(e => e.nombre);
-          this.estadosPipeline = estados.filter(e => e.mostrar_en_pipeline);
-          this.estadosDecision = estados.filter(e => e.es_decision_final);
-        }
+        this.catalogoEstados = estados || [];
+        this.estadosOficiales = this.catalogoEstados.map(e => e.nombre);
+        this.estadosPipeline = this.catalogoEstados.filter(e => e.mostrar_en_pipeline);
       },
       error: (err) => {
-        console.warn('Error al cargar catálogo de estados desde BD, se usan predeterminados:', err);
+        console.error('Error al cargar el catálogo de estados:', err);
+        this.errorMsg = 'No se pudo cargar el catálogo de estados. Recargue la página.';
       }
     });
   }
@@ -241,19 +247,139 @@ export class PostulacionListComponent implements OnInit {
     this.loadPostulaciones();
   }
 
-  cambiarEstado(postulacion: Postulacion, nuevoEstado: string): void {
+  // Estados marcados en el catálogo como "requiere motivo" (Descartado, No aprobó Pruebas, Reserva)
+  requiereMotivo(estado?: string | null): boolean {
+    return !!this.catalogoEstados.find(e => e.nombre === estado)?.requiere_motivo;
+  }
+
+  textoMotivo(p?: Postulacion | null): string {
+    if (!p?.motivo_no_aprobado) return '';
+    return p.motivo_no_aprobado === MOTIVO_OTRO ? (p.motivo_no_aprobado_detalle || MOTIVO_OTRO) : p.motivo_no_aprobado;
+  }
+
+  cambiarEstado(postulacion: Postulacion, nuevoEstado: string, select?: HTMLSelectElement): void {
     if (!postulacion.id || postulacion.estado_postulante === nuevoEstado) return;
 
-    this.postulacionService.cambiarEstado(postulacion.id, nuevoEstado).subscribe({
+    // Los estados que exigen motivo lo piden en un modal antes de guardar
+    if (this.requiereMotivo(nuevoEstado)) {
+      this.motivoModal = { postulacion, estado: nuevoEstado, estadoAnterior: postulacion.estado_postulante, select };
+      this.motivoSeleccionado = '';
+      this.motivoDetalle = '';
+      this.motivoError = '';
+      return;
+    }
+
+    this.guardarEstado(postulacion, nuevoEstado, undefined, select);
+  }
+
+  private guardarEstado(postulacion: Postulacion, nuevoEstado: string, motivo?: { motivo_no_aprobado: string; motivo_no_aprobado_detalle?: string }, select?: HTMLSelectElement): void {
+    this.postulacionService.cambiarEstado(postulacion.id!, nuevoEstado, motivo).subscribe({
       next: () => {
-        postulacion.estado_postulante = nuevoEstado;
-        if (this.drawerCandidate && this.drawerCandidate.id === postulacion.id) {
-          this.drawerCandidate.estado_postulante = nuevoEstado;
+        this.aplicarEstado(postulacion.id!, nuevoEstado, motivo);
+        if (this.motivoModal) {
+          this.guardandoMotivo = false;
+          this.motivoModal = null;
         }
       },
       error: (err) => {
-        alert('Error al actualizar estado: ' + err.message);
+        const mensaje = err.error?.error || err.message;
+        if (this.motivoModal) {
+          this.guardandoMotivo = false;
+          this.motivoError = mensaje;
+        } else {
+          alert('Error al actualizar estado: ' + mensaje);
+          this.revertirSelect(select, postulacion.estado_postulante);
+        }
       }
+    });
+  }
+
+  // Actualiza el estado (y el motivo) en la fila, el detalle abierto y la lista
+  private aplicarEstado(id: string, estado: string, motivo?: { motivo_no_aprobado: string; motivo_no_aprobado_detalle?: string }): void {
+    const destinos = [this.postulaciones.find(p => p.id === id), this.drawerCandidate?.id === id ? this.drawerCandidate : undefined];
+    for (const p of destinos) {
+      if (!p) continue;
+      p.estado_postulante = estado;
+      p.motivo_no_aprobado = motivo?.motivo_no_aprobado || null;
+      p.motivo_no_aprobado_detalle = motivo?.motivo_no_aprobado_detalle || null;
+    }
+  }
+
+  // El <select> ya muestra la opción elegida aunque el modelo no cambió (ngModel de una vía):
+  // se devuelve el DOM al estado guardado, que es el que el modelo sigue teniendo
+  private revertirSelect(select: HTMLSelectElement | undefined, estado?: string): void {
+    if (select && estado !== undefined) {
+      select.value = estado;
+    }
+  }
+
+  confirmarMotivo(): void {
+    if (!this.motivoModal) return;
+    if (!this.motivoSeleccionado) {
+      this.motivoError = 'Seleccione el motivo.';
+      return;
+    }
+    if (this.motivoSeleccionado === MOTIVO_OTRO && !this.motivoDetalle.trim()) {
+      this.motivoError = 'Describa el motivo.';
+      return;
+    }
+
+    this.guardandoMotivo = true;
+    this.motivoError = '';
+    this.guardarEstado(this.motivoModal.postulacion, this.motivoModal.estado, {
+      motivo_no_aprobado: this.motivoSeleccionado,
+      motivo_no_aprobado_detalle: this.motivoDetalle.trim() || undefined
+    }, this.motivoModal.select);
+  }
+
+  cancelarMotivo(): void {
+    if (!this.motivoModal) return;
+    const { select, estadoAnterior } = this.motivoModal;
+    this.motivoModal = null;
+    this.revertirSelect(select, estadoAnterior);
+  }
+
+  // --- PRUEBA PSICOTÉCNICA ---
+  onPruebaSeleccionada(event: Event, postulacion: Postulacion): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo || !postulacion.id) return;
+
+    if (!archivo.name.toLowerCase().endsWith('.pdf')) {
+      alert('La prueba psicotécnica debe adjuntarse en PDF.');
+      return;
+    }
+    if (archivo.size > 10 * 1024 * 1024) {
+      alert('El archivo supera el tamaño máximo de 10 MB.');
+      return;
+    }
+
+    this.subiendoPrueba = true;
+    this.postulacionService.subirPruebaPsicotecnica(postulacion.id, archivo).subscribe({
+      next: () => {
+        this.subiendoPrueba = false;
+        const ahora = new Date().toISOString();
+        const destinos = [postulacion, this.postulaciones.find(p => p.id === postulacion.id)];
+        for (const p of destinos) {
+          if (!p) continue;
+          p.prueba_psicotecnica_nombre = archivo.name;
+          p.prueba_psicotecnica_fecha = ahora;
+          p.tiene_prueba_psicotecnica = 1;
+        }
+      },
+      error: (err) => {
+        this.subiendoPrueba = false;
+        alert('Error al adjuntar la prueba psicotécnica: ' + (err.error?.error || err.message));
+      }
+    });
+  }
+
+  descargarPrueba(postulacion: Postulacion): void {
+    if (!postulacion.id) return;
+    this.postulacionService.descargarPruebaPsicotecnica(postulacion.id).subscribe({
+      next: (res) => guardarArchivoDescargado(res, postulacion.prueba_psicotecnica_nombre || 'prueba_psicotecnica.pdf'),
+      error: (err) => alert('Error al descargar la prueba psicotécnica: ' + (err.status === 404 ? 'archivo no encontrado' : err.message))
     });
   }
 
@@ -288,8 +414,14 @@ export class PostulacionListComponent implements OnInit {
     this.drawerCandidate = null;
   }
 
-  setActiveDrawerTab(tab: 'perfil' | 'cita' | 'evaluacion' | 'ia'): void {
+  setActiveDrawerTab(tab: 'perfil' | 'prefiltro' | 'cita' | 'evaluacion' | 'ia'): void {
     this.activeDrawerTab = tab;
+  }
+
+  onResultadoPrefiltro(postulacion: Postulacion, resultado: string | null): void {
+    for (const p of [postulacion, this.postulaciones.find(x => x.id === postulacion.id)]) {
+      if (p) p.prefiltro_json = { ...(p.prefiltro_json || {}), resultado };
+    }
   }
 
   get drawerVacante(): Vacante | undefined {
@@ -370,13 +502,12 @@ export class PostulacionListComponent implements OnInit {
 
     this.postulacionService.agendarEntrevista(target.id, payload).subscribe({
       next: (res) => {
+        // Agendar no cambia el estado: Talento Humano lo pasa a mano (p. ej. a "Entrevista TH Agendada")
         alert(res.message || 'Entrevista agendada exitosamente.');
-        target.estado_postulante = 'Citado a Entrevista';
         target.cita_entrevista_json = res.data?.appointment;
-        
+
         const inList = this.postulaciones.find(p => p.id === target.id);
         if (inList) {
-          inList.estado_postulante = 'Citado a Entrevista';
           inList.cita_entrevista_json = res.data?.appointment;
         }
 
@@ -395,28 +526,19 @@ export class PostulacionListComponent implements OnInit {
     this.postulacionParaEvaluar = postulacion;
     const prevEval = postulacion.evaluacion_entrevista_json;
 
-    let matrix: CompetenciaEvaluada[] = [];
-    if (prevEval?.matriz_competencias && prevEval.matriz_competencias.length >= 10) {
-      matrix = prevEval.matriz_competencias;
-    } else {
-      matrix = this.competenciasBase.map(c => {
-        const found = prevEval?.matriz_competencias?.find(m => 
-          m.competencia === c.competencia || m.competencia.includes(c.competencia.split('.')[1]?.trim() || '')
-        );
-        return {
-          competencia: c.competencia,
-          definicion: c.definicion,
-          puntuacion: found?.puntuacion !== undefined ? found.puntuacion : 3,
-          observaciones: found?.observaciones || ''
-        };
-      });
-    }
+    // Evaluaciones guardadas antes de la matriz (10 factores fijos + STAR) se muestran tal como quedaron
+    this.evaluacionLegada = !!prevEval?.matriz_competencias?.length && prevEval.formato !== FORMATO_MATRIZ;
+    this.competenciasOpcionales = [];
+    this.errorMatriz = '';
+    this.grupoEvaluacion = prevEval?.grupo_cargo || postulacion.perfil_grupo_cargo || '';
 
     this.datosEvaluacion = {
       impresion_general: prevEval?.impresion_general || '',
       concepto_psicologico: prevEval?.concepto_psicologico || '',
-      matriz_competencias: matrix,
-      promedio_competencias: prevEval?.promedio_competencias || 3.0,
+      matriz_competencias: this.evaluacionLegada || prevEval?.formato === FORMATO_MATRIZ ? [...(prevEval?.matriz_competencias || [])] : [],
+      promedio_competencias: prevEval?.promedio_competencias || 0,
+      formato: this.evaluacionLegada ? prevEval?.formato : FORMATO_MATRIZ,
+      grupo_cargo: this.grupoEvaluacion || undefined,
       disponibilidad_ingreso: prevEval?.disponibilidad_ingreso || 'Inmediata',
       aspiracion_salarial: prevEval?.aspiracion_salarial || '',
       decision_final: prevEval?.decision_final || postulacion.estado_postulante || 'Aprobado',
@@ -425,10 +547,85 @@ export class PostulacionListComponent implements OnInit {
       fortalezas_clave: prevEval?.fortalezas_clave || '',
       oportunidades_mejora: prevEval?.oportunidades_mejora || '',
       ajuste_cultural: prevEval?.ajuste_cultural || '',
-      respuestas_star: prevEval?.respuestas_star || {}
+      respuestas_star: prevEval?.respuestas_star || {},
+      motivo_no_aprobado: postulacion.motivo_no_aprobado || '',
+      motivo_no_aprobado_detalle: postulacion.motivo_no_aprobado_detalle || ''
     };
 
     this.respuestasSTAR = { ...(prevEval?.respuestas_star || {}) };
+    this.calcularPromedioCompetencias();
+    if (!this.evaluacionLegada) {
+      this.cargarCompetenciasMatriz(prevEval?.formato === FORMATO_MATRIZ);
+    }
+  }
+
+  // Trae de la matriz las competencias del grupo del cargo: las principales entran a la evaluación y el resto
+  // queda como opcional. Si la evaluación ya existía, se conservan sus calificaciones y solo se recalculan las opcionales.
+  cargarCompetenciasMatriz(conservarGuardadas = false): void {
+    this.competenciasOpcionales = [];
+    if (!this.grupoEvaluacion) {
+      this.datosEvaluacion.matriz_competencias = [];
+      this.calcularPromedioCompetencias();
+      return;
+    }
+
+    this.cargandoMatriz = true;
+    this.errorMatriz = '';
+    this.competenciaService.getParaEntrevista(this.grupoEvaluacion).subscribe({
+      next: (res) => {
+        this.cargandoMatriz = false;
+        const items: CompetenciaEvaluada[] = res.competencias.map(c => ({
+          competencia_id: c.id,
+          competencia: c.nombre,
+          categoria: c.categoria,
+          definicion: c.definicion,
+          pregunta: c.pregunta_seleccion,
+          conductas: c.conductas_observables,
+          criterio: c.criterio_evaluacion,
+          nivel_requerido: c.nivel_requerido,
+          peso: c.peso,
+          principal: c.principal,
+          puntuacion: null,
+          observaciones: ''
+        }));
+
+        if (conservarGuardadas && this.datosEvaluacion.matriz_competencias?.length) {
+          const ya = new Set(this.datosEvaluacion.matriz_competencias.map(m => m.competencia_id));
+          this.competenciasOpcionales = items.filter(i => !ya.has(i.competencia_id));
+        } else {
+          this.datosEvaluacion.matriz_competencias = items.filter(i => i.principal);
+          this.competenciasOpcionales = items.filter(i => !i.principal);
+        }
+        this.datosEvaluacion.grupo_cargo = this.grupoEvaluacion;
+        this.calcularPromedioCompetencias();
+      },
+      error: (err) => {
+        this.cargandoMatriz = false;
+        this.errorMatriz = err.error?.error || 'No se pudo cargar la matriz de competencias.';
+      }
+    });
+  }
+
+  cambiarGrupoEvaluacion(grupo: string): void {
+    const calificadas = (this.datosEvaluacion.matriz_competencias || []).some(c => c.puntuacion);
+    if (calificadas && !confirm('Cambiar el grupo de cargo reinicia las calificaciones de esta evaluación. ¿Continuar?')) {
+      return;
+    }
+    this.grupoEvaluacion = grupo;
+    this.cargarCompetenciasMatriz(false);
+  }
+
+  agregarCompetenciaOpcional(item: CompetenciaEvaluada): void {
+    this.datosEvaluacion.matriz_competencias = [...(this.datosEvaluacion.matriz_competencias || []), item];
+    this.competenciasOpcionales = this.competenciasOpcionales.filter(o => o !== item);
+    this.calcularPromedioCompetencias();
+  }
+
+  quitarCompetenciaOpcional(item: CompetenciaEvaluada): void {
+    this.datosEvaluacion.matriz_competencias = (this.datosEvaluacion.matriz_competencias || []).filter(c => c !== item);
+    item.puntuacion = null;
+    item.observaciones = '';
+    this.competenciasOpcionales = [...this.competenciasOpcionales, item].sort((a, b) => (b.peso || 0) - (a.peso || 0));
     this.calcularPromedioCompetencias();
   }
 
@@ -447,19 +644,49 @@ export class PostulacionListComponent implements OnInit {
     this.calcularPromedioCompetencias();
   }
 
+  // Con la matriz: promedio ponderado por el peso del grupo sobre las competencias calificadas.
+  // Evaluaciones antiguas: promedio simple, como se calculaba antes.
   calcularPromedioCompetencias(): void {
     const list = this.datosEvaluacion.matriz_competencias || [];
-    if (list.length === 0) {
+    const calificadas = list.filter(c => Number(c.puntuacion) > 0);
+    this.datosEvaluacion.brechas = calificadas.filter(c => c.nivel_requerido !== undefined && Number(c.puntuacion) < c.nivel_requerido).length;
+
+    if (calificadas.length === 0) {
       this.datosEvaluacion.promedio_competencias = 0;
       return;
     }
-    const sum = list.reduce((acc, c) => acc + (Number(c.puntuacion) || 0), 0);
-    this.datosEvaluacion.promedio_competencias = Math.round((sum / list.length) * 10) / 10;
+    if (calificadas.every(c => c.peso !== undefined)) {
+      const pesoTotal = calificadas.reduce((acc, c) => acc + (c.peso || 0), 0);
+      const suma = calificadas.reduce((acc, c) => acc + (c.peso || 0) * Number(c.puntuacion), 0);
+      this.datosEvaluacion.promedio_competencias = pesoTotal > 0 ? Math.round((suma / pesoTotal) * 10) / 10 : 0;
+      return;
+    }
+    const sum = calificadas.reduce((acc, c) => acc + Number(c.puntuacion), 0);
+    this.datosEvaluacion.promedio_competencias = Math.round((sum / calificadas.length) * 10) / 10;
+  }
+
+  get competenciasSinCalificar(): number {
+    return (this.datosEvaluacion.matriz_competencias || []).filter(c => c.principal && !c.puntuacion).length;
   }
 
   guardarEvaluacionEntrevista(): void {
     const target = this.drawerCandidate || this.postulacionParaEvaluar;
     if (!target?.id) return;
+
+    if (!this.evaluacionLegada) {
+      if (!this.grupoEvaluacion) {
+        alert('Seleccione el grupo de cargo para evaluar con la matriz de competencias.');
+        return;
+      }
+      if (this.competenciasSinCalificar > 0) {
+        alert(`Califique las ${this.competenciasSinCalificar} competencia(s) principal(es) pendiente(s).`);
+        return;
+      }
+    }
+
+    // El concepto de la entrevista no mueve el estado ni pide motivo (eso se hace al cambiar el estado)
+    delete this.datosEvaluacion.motivo_no_aprobado;
+    delete this.datosEvaluacion.motivo_no_aprobado_detalle;
 
     this.evaluacionSubmitting = true;
     this.datosEvaluacion.respuestas_star = { ...this.respuestasSTAR };
@@ -467,16 +694,10 @@ export class PostulacionListComponent implements OnInit {
       next: (res) => {
         alert(res.message || 'Evaluación de entrevista guardada exitosamente.');
         target.evaluacion_entrevista_json = res.data;
-        if (this.datosEvaluacion.decision_final) {
-          target.estado_postulante = this.datosEvaluacion.decision_final;
-        }
 
         const inList = this.postulaciones.find(p => p.id === target.id);
         if (inList) {
           inList.evaluacion_entrevista_json = res.data;
-          if (this.datosEvaluacion.decision_final) {
-            inList.estado_postulante = this.datosEvaluacion.decision_final;
-          }
         }
 
         this.evaluacionSubmitting = false;
@@ -507,18 +728,22 @@ export class PostulacionListComponent implements OnInit {
 
   downloadResume(filename: string | undefined): void {
     if (!filename) return;
-    const url = this.postulacionService.getDownloadUrl(filename);
-    window.open(url, '_blank');
+    this.postulacionService.descargarHojaVida(filename).subscribe({
+      next: (res) => guardarArchivoDescargado(res, filename),
+      error: (err) => alert('Error al descargar la hoja de vida: ' + (err.status === 404 ? 'archivo no encontrado' : err.message))
+    });
   }
 
   downloadHojaVidaCorporativa(postulacion: Postulacion): void {
     if (!postulacion.candidato_id) return;
-    const url = this.postulacionService.getHojaVidaCorporativaUrl(
+    this.postulacionService.descargarHojaVidaCorporativa(
       postulacion.candidato_id,
       postulacion.vacante_titulo || '',
       postulacion.fecha_postulacion || ''
-    );
-    window.open(url, '_blank');
+    ).subscribe({
+      next: (res) => guardarArchivoDescargado(res, 'HOJA_DE_VIDA.docx'),
+      error: (err) => alert('Error al generar la hoja de vida corporativa: ' + err.message)
+    });
   }
 
   ejecutarValidacion(): void {

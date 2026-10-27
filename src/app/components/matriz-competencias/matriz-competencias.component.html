@@ -1,0 +1,162 @@
+<div class="mc-container">
+  <header class="mc-header">
+    <div>
+      <h1>Matriz de Competencias</h1>
+      <p class="mc-sub">
+        Nivel requerido (1 a 5) y peso de cada competencia por grupo de cargo. En la entrevista se preguntan las
+        {{ principales }} de mayor peso del grupo del cargo (★); las demás son opcionales.
+      </p>
+    </div>
+    <div class="mc-header-acciones" *ngIf="puedeEditar">
+      <ng-container *ngIf="!editando">
+        <button class="mc-btn primario" (click)="activarEdicion()" [disabled]="cargando">Editar matriz</button>
+      </ng-container>
+      <ng-container *ngIf="editando">
+        <button class="mc-btn" (click)="nuevaCompetencia()">+ Competencia</button>
+        <button class="mc-btn" (click)="cancelarEdicion()" [disabled]="guardando">Cancelar</button>
+        <button class="mc-btn primario" (click)="guardar()" [disabled]="guardando || !cambiosPendientes">
+          {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </ng-container>
+    </div>
+  </header>
+
+  <p class="mc-mensaje" *ngIf="mensaje">{{ mensaje }}</p>
+  <p class="mc-error" *ngIf="error" role="alert">{{ error }}</p>
+  <div *ngIf="cargando" class="mc-vacio">Cargando matriz...</div>
+
+  <ng-container *ngIf="!cargando && filas.length > 0">
+    <nav class="mc-grupos" aria-label="Grupo de cargo">
+      <button *ngFor="let g of grupos" class="mc-grupo" [class.activo]="grupoActivo === g.id" (click)="grupoActivo = g.id">
+        {{ g.nombre }}
+        <span class="mc-suma" [class.mal]="!sumaCorrecta(g.id)">{{ sumaPesos(g.id) }} %</span>
+      </button>
+    </nav>
+
+    <div class="mc-tabla-wrap">
+      <table class="mc-tabla">
+        <thead>
+          <tr>
+            <th class="col-estrella" aria-label="Se pregunta en la entrevista"></th>
+            <th>Competencia</th>
+            <th>Categoría</th>
+            <th class="num">Nivel requerido</th>
+            <th class="num">Peso</th>
+            <th>Pregunta para la entrevista</th>
+            <th *ngIf="editando"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of filas" [class.inactiva]="!f.activo" [class.principal]="principalesDelGrupo.has(f)">
+            <td class="col-estrella">
+              <span *ngIf="principalesDelGrupo.has(f)" title="Se pregunta en la entrevista de {{ nombreGrupo(grupoActivo) }}">★</span>
+            </td>
+            <td>
+              <button class="mc-link" (click)="abrirDetalle(f)">{{ f.nombre }}</button>
+              <span class="mc-tag" *ngIf="!f.activo">Inactiva</span>
+            </td>
+            <td><span class="mc-cat" [attr.data-cat]="f.categoria">{{ nombreCategoria(f.categoria) }}</span></td>
+            <td class="num">
+              <input *ngIf="editando; else nivelTexto" type="number" min="1" max="5" step="0.5" class="mc-num"
+                [(ngModel)]="f.grupos[grupoActivo].nivel_requerido" (ngModelChange)="marcarCambio()"
+                [attr.aria-label]="'Nivel requerido de ' + f.nombre" />
+              <ng-template #nivelTexto>{{ f.grupos[grupoActivo].nivel_requerido }}</ng-template>
+            </td>
+            <td class="num">
+              <input *ngIf="editando; else pesoTexto" type="number" min="0" max="100" step="0.5" class="mc-num"
+                [(ngModel)]="f.grupos[grupoActivo].peso_pct" (ngModelChange)="marcarCambio()"
+                [attr.aria-label]="'Peso de ' + f.nombre" />
+              <ng-template #pesoTexto>{{ f.grupos[grupoActivo].peso_pct }} %</ng-template>
+            </td>
+            <td class="mc-pregunta">{{ f.pregunta_seleccion }}</td>
+            <td *ngIf="editando">
+              <label class="mc-activo">
+                <input type="checkbox" [(ngModel)]="f.activo" (ngModelChange)="marcarCambio()" /> Activa
+              </label>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td colspan="3">Suma de pesos — {{ nombreGrupo(grupoActivo) }}</td>
+            <td class="num" [class.mal]="!sumaCorrecta(grupoActivo)">{{ sumaPesos(grupoActivo) }} %</td>
+            <td [attr.colspan]="editando ? 2 : 1"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </ng-container>
+
+  <div *ngIf="!cargando && filas.length === 0 && !error" class="mc-vacio">La matriz aún no tiene competencias.</div>
+</div>
+
+<!-- Detalle de una competencia -->
+<div class="mc-modal-fondo" *ngIf="detalle" (click)="detalleEsNueva ? descartarNueva() : cerrarDetalle()">
+  <div class="mc-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" [attr.aria-label]="detalle.nombre || 'Nueva competencia'">
+    <div class="mc-modal-head">
+      <h2>{{ detalleEsNueva ? 'Nueva competencia' : detalle.nombre }}</h2>
+      <button class="mc-cerrar" (click)="detalleEsNueva ? descartarNueva() : cerrarDetalle()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="mc-modal-body" *ngIf="editando; else detalleLectura">
+      <div class="mc-campo-fila">
+        <label class="mc-campo">Nombre *
+          <input type="text" [(ngModel)]="detalle.nombre" maxlength="150" />
+        </label>
+        <label class="mc-campo">Categoría
+          <select [(ngModel)]="detalle.categoria">
+            <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
+          </select>
+        </label>
+      </div>
+      <label class="mc-campo">Definición corporativa <textarea rows="3" [(ngModel)]="detalle.definicion"></textarea></label>
+      <label class="mc-campo">Conductas observables <textarea rows="3" [(ngModel)]="detalle.conductas_observables"></textarea></label>
+      <label class="mc-campo">Pregunta / caso para la entrevista <textarea rows="3" [(ngModel)]="detalle.pregunta_seleccion"></textarea></label>
+      <label class="mc-campo">Criterio de evaluación <textarea rows="2" [(ngModel)]="detalle.criterio_evaluacion"></textarea></label>
+      <label class="mc-campo">Justificación del peso <textarea rows="2" [(ngModel)]="detalle.justificacion_peso"></textarea></label>
+      <label class="mc-campo">Riesgo organizacional <textarea rows="2" [(ngModel)]="detalle.riesgo_organizacional"></textarea></label>
+
+      <h3>Nivel y peso por grupo</h3>
+      <div class="mc-grupos-grid">
+        <div *ngFor="let g of grupos" class="mc-grupo-celda">
+          <strong>{{ g.nombre }}</strong>
+          <label>Nivel <input type="number" min="1" max="5" step="0.5" [(ngModel)]="detalle.grupos[g.id].nivel_requerido" /></label>
+          <label>Peso % <input type="number" min="0" max="100" step="0.5" [(ngModel)]="detalle.grupos[g.id].peso_pct" /></label>
+        </div>
+      </div>
+      <p class="mc-nota" *ngIf="detalleEsNueva">Recuerda ajustar los pesos de las demás competencias para que cada grupo siga sumando 100 %.</p>
+
+      <div class="mc-modal-acciones">
+        <button class="mc-btn" *ngIf="detalleEsNueva" (click)="descartarNueva()">Descartar</button>
+        <button class="mc-btn primario" (click)="cerrarDetalle()" [disabled]="detalleEsNueva && !detalle.nombre.trim()">
+          {{ detalleEsNueva ? 'Agregar a la matriz' : 'Listo' }}
+        </button>
+      </div>
+    </div>
+
+    <ng-template #detalleLectura>
+      <div class="mc-modal-body">
+        <p class="mc-cat-linea"><span class="mc-cat" [attr.data-cat]="detalle!.categoria">{{ nombreCategoria(detalle!.categoria) }}</span></p>
+        <dl class="mc-detalle">
+          <dt>Definición corporativa</dt><dd>{{ detalle!.definicion || '—' }}</dd>
+          <dt>Conductas observables</dt><dd>{{ detalle!.conductas_observables || '—' }}</dd>
+          <dt>Pregunta / caso para la entrevista</dt><dd>{{ detalle!.pregunta_seleccion || '—' }}</dd>
+          <dt>Criterio de evaluación</dt><dd>{{ detalle!.criterio_evaluacion || '—' }}</dd>
+          <dt>Justificación del peso</dt><dd>{{ detalle!.justificacion_peso || '—' }}</dd>
+          <dt>Riesgo organizacional</dt><dd>{{ detalle!.riesgo_organizacional || '—' }}</dd>
+        </dl>
+        <table class="mc-tabla mini">
+          <thead><tr><th>Grupo</th><th class="num">Nivel requerido</th><th class="num">Peso</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let g of grupos">
+              <td>{{ g.nombre }}</td>
+              <td class="num">{{ detalle!.grupos[g.id].nivel_requerido }}</td>
+              <td class="num">{{ detalle!.grupos[g.id].peso_pct }} %</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-template>
+  </div>
+</div>

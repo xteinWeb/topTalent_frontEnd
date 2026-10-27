@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface UserSession {
@@ -12,6 +12,13 @@ export interface UserSession {
   empresa_nombre?: string;
   role: string;
   area?: string;
+}
+
+export interface LiderArea {
+  id: string;
+  nombre: string;
+  area?: string;
+  email?: string;
 }
 
 export interface LoginResponse {
@@ -92,6 +99,28 @@ export class AuthService {
     const current = this.getCurrentUser() || {} as UserSession;
     const merged = { ...current, ...updatedUser };
     localStorage.setItem('auth_user', JSON.stringify(merged));
+  }
+
+  getLideres(): Observable<LiderArea[]> {
+    return this.http.get<{ data: LiderArea[] }>(`${this.baseAuthUrl}/lideres`).pipe(
+      map(res => res.data || [])
+    );
+  }
+
+  solicitarRecuperacion(usuario: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.baseAuthUrl}/recuperar`, { usuario });
+  }
+
+  restablecerPassword(usuario: string, codigo: string, passwordNuevo: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.baseAuthUrl}/restablecer`, { usuario, codigo, password_nuevo: passwordNuevo }).pipe(
+      tap(res => {
+        if (res && res.token) {
+          localStorage.setItem('auth_token', res.token);
+          localStorage.setItem('auth_user', JSON.stringify(res.user));
+          this.loggedInSubject.next(true);
+        }
+      })
+    );
   }
 
   logout(): void {

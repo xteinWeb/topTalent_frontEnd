@@ -6,6 +6,8 @@
 
 .page-header {
   display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
   justify-content: space-between;
   align-items: center;
   background: white;
@@ -166,6 +168,7 @@
 
 .search-input {
   width: 100%;
+  box-sizing: border-box;
   padding: 0.75rem 1rem;
   border: 1px solid var(--brand-beige-dark, #D9C5B2);
   border-radius: 8px;
@@ -181,7 +184,7 @@
 /* Solicitudes Grid */
 .solicitudes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr));
   gap: 1.25rem;
 }
 
@@ -717,4 +720,39 @@
   color: inherit;
   font-weight: bold;
   cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    padding: 1.25rem;
+  }
+
+  .header-content {
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .header-icon-wrap {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  .page-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .header-actions,
+  .btn-solicitar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Formulario de solicitud: todas las columnas a lo ancho */
+  .col-8,
+  .col-6,
+  .col-4,
+  .col-3 {
+    grid-column: span 12;
+  }
 }

@@ -109,19 +109,10 @@
           </td>
           <td>
             <div class="status-cell-wrap" (click)="$event.stopPropagation()">
-              <select class="status-select"
+              <select class="status-select" #estadoSelect
                 [ngModel]="item.estado_postulante"
-                (ngModelChange)="cambiarEstado(item, $event)"
-                [ngStyle]="getEstadoBadgeStyle(item.estado_postulante)"
-                [ngClass]="{
-                  'status-postulado': item.estado_postulante === 'Postulado',
-                  'status-preseleccionado': item.estado_postulante === 'Preseleccionado',
-                  'status-citado': item.estado_postulante === 'Citado a Entrevista',
-                  'status-aprobado': item.estado_postulante === 'Aprobado',
-                  'status-reservas': item.estado_postulante === 'Aprobado con reservas',
-                  'status-no-aprobado': item.estado_postulante === 'No aprobado',
-                  'status-observaciones': item.estado_postulante === 'Con observaciones'
-                }">
+                (ngModelChange)="cambiarEstado(item, $event, estadoSelect)"
+                [ngStyle]="getEstadoBadgeStyle(item.estado_postulante)">
                 <option *ngFor="let st of catalogoEstados" [value]="st.nombre">
                   {{ (st.icono ? (st.icono + ' ') : '') + st.nombre }}
                 </option>
@@ -250,6 +241,48 @@
     </div>
   </div>
 
+  <!-- MODAL: MOTIVO (obligatorio al pasar a un estado que lo requiere: Descartado, Reserva, No aprobó Pruebas) -->
+  <div class="custom-modal-backdrop motivo-backdrop" *ngIf="motivoModal">
+    <div class="modal-card modal-motivo">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="material-icons header-icon">block</span>
+          <div>
+            <h3>Motivo para "{{ motivoModal.estado }}"</h3>
+            <p class="modal-subtitle">
+              Candidato: <strong>{{ motivoModal.postulacion.nombre_completo }}</strong> | Vacante: <strong>{{ motivoModal.postulacion.vacante_titulo }}</strong>
+            </p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="cancelarMotivo()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="motivo-opciones" role="radiogroup" aria-label="Motivo del cambio de estado">
+          <label class="motivo-opcion" *ngFor="let motivo of motivosNoAprobado" [class.selected]="motivoSeleccionado === motivo">
+            <input type="radio" name="motivo_no_aprobado" [value]="motivo" [(ngModel)]="motivoSeleccionado" (ngModelChange)="motivoError = ''" />
+            <span>{{ motivo }}</span>
+          </label>
+        </div>
+
+        <div class="form-group" *ngIf="motivoSeleccionado === MOTIVO_OTRO">
+          <label for="motivoDetalle">Describe el motivo *</label>
+          <textarea id="motivoDetalle" class="form-control" rows="3" [(ngModel)]="motivoDetalle" (ngModelChange)="motivoError = ''"
+            placeholder="Explica brevemente por qué el candidato no continúa en el proceso..."></textarea>
+        </div>
+
+        <p class="motivo-error" *ngIf="motivoError">{{ motivoError }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelarMotivo()" [disabled]="guardandoMotivo">Cancelar</button>
+        <button class="btn btn-primary" (click)="confirmarMotivo()" [disabled]="guardandoMotivo">
+          {{ guardandoMotivo ? 'Guardando...' : 'Guardar como "' + motivoModal.estado + '"' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: EVALUACIÓN PSICOLÓGICA Y EXPEDIENTE DE ENTREVISTA (FOR-TH-001) -->
   <div class="custom-modal-backdrop" *ngIf="showEvaluacionModal && postulacionParaEvaluar">
     <div class="modal-card modal-lg">
@@ -286,49 +319,15 @@
           <div class="matrix-card-header mb-3">
             <div class="matrix-header-title">
               <span class="material-icons star-gold">star</span>
-              <span>6. MATRIZ CUANTITATIVA DE EVALUACIÓN (ESCALA 1 A 5)</span>
+              <span>{{ evaluacionLegada ? '6. MATRIZ CUANTITATIVA DE EVALUACIÓN (ESCALA 1 A 5)' : 'MATRIZ DE COMPETENCIAS DEL CARGO (ESCALA 1 A 5)' }}</span>
             </div>
             <div class="matrix-header-score">
-              <span class="score-lbl">Promedio:</span>
+              <span class="score-lbl">{{ evaluacionLegada ? 'Promedio:' : 'Puntaje ponderado:' }}</span>
               <span class="score-val">{{ datosEvaluacion.promedio_competencias | number:'1.1-1' }}</span>
             </div>
           </div>
 
-          <div class="matrix-table-wrap">
-            <table class="matrix-eval-table">
-              <thead>
-                <tr>
-                  <th class="th-factor">FACTOR / COMPETENCIA OBSERVADA</th>
-                  <th class="th-rating text-center">1</th>
-                  <th class="th-rating text-center">2</th>
-                  <th class="th-rating text-center">3</th>
-                  <th class="th-rating text-center">4</th>
-                  <th class="th-rating text-center">5</th>
-                  <th class="th-obs">OBSERVACIONES CONDUCTUALES Y NOTAS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let comp of datosEvaluacion.matriz_competencias; let idx = index" [class.row-alt]="idx % 2 === 1">
-                  <td class="td-factor">
-                    <div class="factor-title">{{ comp.competencia }}</div>
-                    <div class="factor-desc">{{ comp.definicion }}</div>
-                  </td>
-                  <td class="td-rating text-center" *ngFor="let score of [1, 2, 3, 4, 5]">
-                    <button type="button" class="btn-matrix-score"
-                      [class.selected]="comp.puntuacion === score"
-                      (click)="setRating(comp, score)">
-                      {{ score }}
-                    </button>
-                  </td>
-                  <td class="td-obs">
-                    <input type="text" class="matrix-input-obs"
-                      placeholder="Nota conductual..."
-                      [(ngModel)]="comp.observaciones" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <ng-container *ngTemplateOutlet="matrizEvaluacion"></ng-container>
         </div>
 
         <!-- 4. Condiciones de Contratación -->
@@ -351,12 +350,11 @@
           <h4>5. Concepto y Decisión Final del Candidato</h4>
           <div class="form-row">
             <div class="form-group col-6">
-              <label>Estado Final en el Proceso *</label>
+              <label>Concepto de la entrevista *</label>
               <select class="form-control decision-select" [(ngModel)]="datosEvaluacion.decision_final">
-                <option *ngFor="let est of estadosDecision" [value]="est.nombre">
-                  {{ (est.icono ? (est.icono + ' ') : '') + est.nombre + (est.descripcion ? (' (' + est.descripcion + ')') : '') }}
-                </option>
+                <option *ngFor="let c of conceptosEvaluacion" [value]="c.valor">{{ c.etiqueta }} ({{ c.descripcion }})</option>
               </select>
+              <small class="concepto-nota">El concepto no cambia el estado del candidato; ese se cambia en la lista o en el detalle.</small>
             </div>
             <div class="form-group col-6">
               <label>Evaluador / Psicólogo Responsable</label>
@@ -412,6 +410,12 @@
       <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'perfil'" (click)="setActiveDrawerTab('perfil')">
         <span class="material-icons">person</span> Perfil & FTO-GH-001
       </button>
+      <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'prefiltro'" (click)="setActiveDrawerTab('prefiltro')">
+        <span class="material-icons">phone_in_talk</span> Prefiltro
+        <span class="tab-badge" *ngIf="drawerCandidate.prefiltro_json?.resultado">
+          {{ drawerCandidate.prefiltro_json?.resultado === 'Pasa' ? '✓' : '✕' }}
+        </span>
+      </button>
       <button class="drawer-tab-btn" [class.active]="activeDrawerTab === 'cita'" (click)="setActiveDrawerTab('cita')">
         <span class="material-icons">event</span> Citación
         <span class="tab-badge" *ngIf="drawerCandidate.cita_entrevista_json?.fecha">✓</span>
@@ -455,14 +459,47 @@
             </div>
             <div class="hub-item">
               <span class="hub-label">Estado en Selección</span>
-              <select class="status-select drawer-status-select"
+              <select class="status-select drawer-status-select" #estadoDrawerSelect
                 [ngModel]="drawerCandidate.estado_postulante"
-                (ngModelChange)="cambiarEstado(drawerCandidate, $event)"
+                (ngModelChange)="cambiarEstado(drawerCandidate, $event, estadoDrawerSelect)"
                 [ngStyle]="getEstadoBadgeStyle(drawerCandidate.estado_postulante)">
                 <option *ngFor="let st of catalogoEstados" [value]="st.nombre">
                   {{ (st.icono ? (st.icono + ' ') : '') + st.nombre }}
                 </option>
               </select>
+              <span class="motivo-resumen" *ngIf="requiereMotivo(drawerCandidate.estado_postulante) && drawerCandidate.motivo_no_aprobado">
+                Motivo: {{ textoMotivo(drawerCandidate) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resultado de la prueba psicotécnica (PDF) -->
+        <div class="profile-section-card prueba-psico-card">
+          <h4>
+            <span class="material-icons">psychology</span>
+            Prueba psicotécnica
+          </h4>
+          <div class="prueba-psico-body">
+            <div *ngIf="drawerCandidate.tiene_prueba_psicotecnica; else sinPrueba" class="prueba-psico-info">
+              <span class="prueba-psico-nombre">📄 {{ drawerCandidate.prueba_psicotecnica_nombre || 'prueba_psicotecnica.pdf' }}</span>
+              <span class="prueba-psico-fecha" *ngIf="drawerCandidate.prueba_psicotecnica_fecha">
+                Adjuntada el {{ drawerCandidate.prueba_psicotecnica_fecha | date:'dd/MM/yyyy HH:mm' }}
+              </span>
+            </div>
+            <ng-template #sinPrueba>
+              <span class="prueba-psico-vacia">Aún no se ha adjuntado el resultado de la prueba.</span>
+            </ng-template>
+
+            <div class="prueba-psico-acciones">
+              <button class="btn btn-secondary btn-sm" *ngIf="drawerCandidate.tiene_prueba_psicotecnica" (click)="descargarPrueba(drawerCandidate)">
+                Descargar
+              </button>
+              <label class="btn btn-primary btn-sm" *ngIf="authService.isTalentoHumano()" [class.disabled]="subiendoPrueba">
+                {{ subiendoPrueba ? 'Subiendo...' : (drawerCandidate.tiene_prueba_psicotecnica ? 'Reemplazar PDF' : 'Adjuntar PDF') }}
+                <input type="file" accept="application/pdf,.pdf" hidden [disabled]="subiendoPrueba"
+                  (change)="onPruebaSeleccionada($event, drawerCandidate)" />
+              </label>
             </div>
           </div>
         </div>
@@ -572,6 +609,15 @@
         </div>
       </div>
 
+      <!-- PESTAÑA: PREFILTRO (LLAMADA O FORMULARIO POR WHATSAPP) -->
+      <div *ngIf="activeDrawerTab === 'prefiltro'" class="tab-pane">
+        <app-prefiltro-panel
+          [postulacionId]="drawerCandidate.id"
+          [puedeEditar]="authService.isTalentoHumano()"
+          (resultadoCambio)="onResultadoPrefiltro(drawerCandidate, $event)">
+        </app-prefiltro-panel>
+      </div>
+
       <!-- PESTAÑA 2: CITACIÓN A ENTREVISTA -->
       <div *ngIf="activeDrawerTab === 'cita'" class="tab-pane">
         <div class="pane-intro">
@@ -671,55 +717,19 @@
         <div class="matrix-card-header">
           <div class="matrix-header-title">
             <span class="material-icons star-gold">star</span>
-            <span>6. MATRIZ CUANTITATIVA DE EVALUACIÓN (ESCALA 1 A 5)</span>
+            <span>{{ evaluacionLegada ? '6. MATRIZ CUANTITATIVA DE EVALUACIÓN (ESCALA 1 A 5)' : 'MATRIZ DE COMPETENCIAS DEL CARGO (ESCALA 1 A 5)' }}</span>
           </div>
           <div class="matrix-header-score">
-            <span class="score-lbl">Promedio Evaluado:</span>
+            <span class="score-lbl">{{ evaluacionLegada ? 'Promedio Evaluado:' : 'Puntaje ponderado:' }}</span>
             <span class="score-val">{{ datosEvaluacion.promedio_competencias | number:'1.1-1' }}</span>
           </div>
         </div>
 
-        <!-- TABLA DE LA MATRIZ CUANTITATIVA (10 FACTORES OFICIALES) -->
-        <div class="matrix-table-wrap">
-          <table class="matrix-eval-table">
-            <thead>
-              <tr>
-                <th class="th-factor">FACTOR / COMPETENCIA OBSERVADA</th>
-                <th class="th-rating text-center">1</th>
-                <th class="th-rating text-center">2</th>
-                <th class="th-rating text-center">3</th>
-                <th class="th-rating text-center">4</th>
-                <th class="th-rating text-center">5</th>
-                <th class="th-obs">OBSERVACIONES CONDUCTUALES Y NOTAS</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let comp of datosEvaluacion.matriz_competencias; let idx = index" [class.row-alt]="idx % 2 === 1">
-                <td class="td-factor">
-                  <div class="factor-title">{{ comp.competencia }}</div>
-                  <div class="factor-desc">{{ comp.definicion }}</div>
-                </td>
-                
-                <td class="td-rating text-center" *ngFor="let score of [1, 2, 3, 4, 5]">
-                  <button type="button" class="btn-matrix-score"
-                    [class.selected]="comp.puntuacion === score"
-                    (click)="setRating(comp, score)">
-                    {{ score }}
-                  </button>
-                </td>
+        <!-- COMPETENCIAS DE LA MATRIZ DEL GRUPO DE CARGO -->
+        <ng-container *ngTemplateOutlet="matrizEvaluacion"></ng-container>
 
-                <td class="td-obs">
-                  <input type="text" class="matrix-input-obs"
-                    placeholder="Nota conductual..."
-                    [(ngModel)]="comp.observaciones" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 5. EVALUACIÓN DE COMPETENCIAS Y COMPORTAMIENTO (METODOLOGÍA STAR) -->
-        <div class="eval-section-container">
+        <!-- 5. EVALUACIÓN DE COMPETENCIAS Y COMPORTAMIENTO (METODOLOGÍA STAR): solo evaluaciones antiguas -->
+        <div class="eval-section-container" *ngIf="evaluacionLegada">
           <div class="eval-section-header">
             <span class="material-icons section-icon">psychology</span>
             <span>5. EVALUACIÓN DE COMPETENCIAS Y COMPORTAMIENTO (METODOLOGÍA STAR)</span>
@@ -802,6 +812,7 @@
                 <span class="txt-decision">NO APTO</span>
               </label>
             </div>
+            <small class="concepto-nota">El concepto no cambia el estado del candidato; ese se cambia en la lista o en el detalle.</small>
 
             <div class="evaluator-signature-grid">
               <div class="form-group">
@@ -960,3 +971,37 @@
     </div>
   </aside>
 </div>
+
+<!-- Competencias a calificar en la entrevista (matriz del grupo de cargo; o los 10 factores en evaluaciones antiguas) -->
+<ng-template #matrizEvaluacion>
+  <div class="matriz-eval-config" *ngIf="!evaluacionLegada">
+    <label for="grupoEvaluacion">Grupo de cargo</label>
+    <select id="grupoEvaluacion" class="form-control" [ngModel]="grupoEvaluacion" (ngModelChange)="cambiarGrupoEvaluacion($event)">
+      <option value="" disabled>Seleccione el grupo...</option>
+      <option *ngFor="let g of gruposCargo" [value]="g.id">{{ g.nombre }}</option>
+    </select>
+    <span class="matriz-eval-hint" *ngIf="!postulacionParaEvaluar?.perfil_grupo_cargo && !drawerCandidate?.perfil_grupo_cargo">
+      El perfil de cargo no tiene grupo asignado; elígelo aquí o asígnalo en el perfil.
+    </span>
+    <span class="matriz-eval-resumen" *ngIf="datosEvaluacion.matriz_competencias?.length">
+      {{ competenciasSinCalificar > 0 ? competenciasSinCalificar + ' principal(es) sin calificar' : 'Principales calificadas' }}
+      <ng-container *ngIf="datosEvaluacion.brechas"> · {{ datosEvaluacion.brechas }} brecha(s) frente al nivel requerido</ng-container>
+    </span>
+  </div>
+
+  <p class="matriz-eval-estado" *ngIf="cargandoMatriz">Cargando competencias de la matriz...</p>
+  <p class="matriz-eval-estado error" *ngIf="errorMatriz">{{ errorMatriz }}</p>
+  <p class="matriz-eval-estado" *ngIf="!evaluacionLegada && !grupoEvaluacion && !cargandoMatriz">
+    Selecciona el grupo de cargo para cargar las competencias a evaluar.
+  </p>
+
+  <app-evaluacion-competencias
+    *ngIf="!cargandoMatriz && (evaluacionLegada || grupoEvaluacion)"
+    [items]="datosEvaluacion.matriz_competencias || []"
+    [opcionales]="competenciasOpcionales"
+    [editable]="authService.isTalentoHumano()"
+    (cambio)="calcularPromedioCompetencias()"
+    (agregar)="agregarCompetenciaOpcional($event)"
+    (quitar)="quitarCompetenciaOpcional($event)">
+  </app-evaluacion-competencias>
+</ng-template>

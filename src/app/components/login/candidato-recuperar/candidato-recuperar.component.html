@@ -1,0 +1,101 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-negro).png" alt="ARTDECON Logo" class="brand-logo" onerror="this.style.display='none'">
+      <h2>Recuperar Contraseña</h2>
+      <p class="subtitle">Te enviaremos un código a tu correo para crear una nueva contraseña</p>
+    </div>
+
+    <!-- Paso 1: Correo -->
+    <form *ngIf="!showCodigoStep" (ngSubmit)="solicitarCodigo()" #emailForm="ngForm" class="login-form">
+      <div *ngIf="errorMessage" class="error-alert">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">{{ errorMessage }}</span>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Correo Electrónico</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          required
+          placeholder="correo@ejemplo.com"
+          autocomplete="email"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-login" [disabled]="loading || !email">
+        {{ loading ? 'Enviando...' : 'Enviar código' }}
+      </button>
+    </form>
+
+    <!-- Paso 2: Código y nueva contraseña -->
+    <form *ngIf="showCodigoStep" (ngSubmit)="restablecer()" #resetForm="ngForm" class="login-form">
+      <div *ngIf="errorMessage" class="error-alert">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">{{ errorMessage }}</span>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 1rem;">
+        <p style="font-size: 0.9rem; color: #475569; line-height: 1.4;">{{ infoMessage }} Correo: <strong style="color: var(--brand-navy, #16313A);">{{ email }}</strong></p>
+        <p style="font-size: 0.8rem; color: #64748b;">El código vence en 15 minutos.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="codigo" style="text-align: center; display: block; font-weight: 700; letter-spacing: 0.5px;">Código de Recuperación</label>
+        <input
+          type="text"
+          id="codigo"
+          name="codigo"
+          [(ngModel)]="codigo"
+          required
+          maxlength="6"
+          placeholder="000000"
+          style="text-align: center; font-size: 1.5rem; letter-spacing: 6px; font-weight: 700; padding: 0.5rem;"
+          autocomplete="one-time-code"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Nueva Contraseña</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          minlength="6"
+          placeholder="Mínimo 6 caracteres"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar Contraseña</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          required
+          placeholder="Repite la nueva contraseña"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-login" [disabled]="loading || codigo.trim().length !== 6 || !password || !confirmPassword">
+        {{ loading ? 'Guardando...' : 'Cambiar contraseña e ingresar' }}
+      </button>
+
+      <button type="button" class="btn" style="background: transparent; color: #64748b; border: 1px solid #cbd5e1; margin-top: 0.75rem; width: 100%;" (click)="volver()">
+        Atrás
+      </button>
+    </form>
+
+    <div class="register-prompt">
+      <p>¿Recordaste tu contraseña? <a routerLink="/candidato/login" [queryParams]="{ returnUrl: returnUrl }">Inicia sesión</a></p>
+    </div>
+  </div>
+</div>

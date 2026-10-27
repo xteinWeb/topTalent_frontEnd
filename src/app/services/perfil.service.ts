@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -41,6 +41,9 @@ export interface PerfilCargo {
   cargo: string;
   perfil_json: PerfilJson;
   matriz_competencias_json?: any;
+  lider_id?: string | null;
+  lider_nombre?: string;
+  grupo_cargo?: string | null;
   fecha_creacion?: string;
   fecha_actualizacion?: string;
 }
@@ -112,6 +115,10 @@ export class PerfilService {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${id}`).pipe(
       map(res => res.data)
     );
+  }
+
+  descargarDocx(id: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/${id}/docx`, { observe: 'response', responseType: 'blob' });
   }
 
   generateQuestions(id: string | undefined, area: string, cargo: string, perfilJson: PerfilJson): Observable<any> {

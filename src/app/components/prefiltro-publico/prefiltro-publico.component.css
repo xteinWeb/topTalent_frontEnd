@@ -1,0 +1,155 @@
+.pp-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  background: linear-gradient(160deg, var(--brand-navy, #16313A), #0f232a);
+  box-sizing: border-box;
+}
+
+.pp-card {
+  width: 100%;
+  max-width: 560px;
+  background: #f8f9f8;
+  border-radius: 1rem;
+  padding: 2rem 1.75rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.pp-brand {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.pp-logo {
+  max-width: 170px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  color: var(--brand-navy, #16313A);
+  margin: 0 0 0.5rem;
+}
+
+.pp-intro {
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.pp-pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.pp-label {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.pp-req {
+  color: #b91c1c;
+}
+
+.pp-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pp-opciones.columna {
+  flex-direction: column;
+}
+
+.pp-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.6rem;
+  background: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  min-width: 96px;
+}
+
+.pp-opcion.selected {
+  border-color: var(--brand-gold, #B39C70);
+  background: var(--brand-gold-soft, #FAF4E8);
+}
+
+.pp-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.6rem;
+  font: inherit;
+  font-size: 1rem;
+  background: white;
+}
+
+.pp-input:focus {
+  outline: none;
+  border-color: var(--brand-gold, #B39C70);
+  box-shadow: 0 0 0 3px rgba(179, 156, 112, 0.2);
+}
+
+.pp-btn {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: var(--brand-navy, #16313A);
+  color: white;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.pp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pp-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.pp-sub {
+  color: #64748b;
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 0.9rem 0 0;
+}
+
+.pp-centro {
+  text-align: center;
+  color: #475569;
+}
+
+.pp-check {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

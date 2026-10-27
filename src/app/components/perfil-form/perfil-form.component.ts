@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PerfilService, PerfilCargo, PerfilJson } from '../../services/perfil.service';
-import { environment } from '../../../environments/environment';
+import { AuthService, LiderArea } from '../../services/auth.service';
+import { guardarArchivoDescargado } from '../../utils/descargar-archivo';
 
 import { PerfilIdentificacionComponent } from './subcomponents/identificacion/identificacion.component';
 import { PerfilPropositoComponent } from './subcomponents/proposito/proposito.component';
@@ -38,6 +39,9 @@ export class PerfilFormComponent implements OnInit {
   // Form Fields
   area: string = '';
   cargo: string = '';
+  liderId: string | null = null;
+  lideres: LiderArea[] = [];
+  grupoCargo: string | null = null;
 
   // JSON Structure fields
   contractual: string = '';
@@ -67,11 +71,17 @@ export class PerfilFormComponent implements OnInit {
 
   constructor(
     private perfilService: PerfilService,
+    private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
+    this.authService.getLideres().subscribe({
+      next: (lideres) => this.lideres = lideres,
+      error: (err) => console.error('Error cargando líderes de área:', err)
+    });
+
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.isEditMode = true;
@@ -87,6 +97,8 @@ export class PerfilFormComponent implements OnInit {
       next: (data) => {
         this.area = data.area;
         this.cargo = data.cargo;
+        this.liderId = data.lider_id || null;
+        this.grupoCargo = data.grupo_cargo || null;
 
         const pj = typeof data.perfil_json === 'string' ? JSON.parse(data.perfil_json) : (data.perfil_json || {});
         this.contractual = pj.contractual || '';
@@ -186,7 +198,9 @@ Reglas del contenido:
     const payload: PerfilCargo = {
       area: this.area,
       cargo: this.cargo,
-      perfil_json: perfilJson
+      perfil_json: perfilJson,
+      lider_id: this.liderId,
+      grupo_cargo: this.grupoCargo
     };
 
     const request$ = this.isEditMode
@@ -217,7 +231,10 @@ Reglas del contenido:
 
   downloadWord(): void {
     if (!this.id) return;
-    window.location.href = `${environment.apiUrl}/perfiles/${this.id}/docx`;
+    this.perfilService.descargarDocx(this.id).subscribe({
+      next: (res) => guardarArchivoDescargado(res, `PERFIL_${this.cargo || 'CARGO'}.docx`),
+      error: (err) => alert('Error al descargar el perfil en Word: ' + err.message)
+    });
   }
 
   generateQuestionsWithAI(): void {

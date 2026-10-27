@@ -1,0 +1,64 @@
+<div class="pp-wrapper">
+  <main class="pp-card">
+    <div class="pp-brand">
+      <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-negro).png" alt="ARTDECON" class="pp-logo" onerror="this.style.display='none'">
+    </div>
+
+    <p *ngIf="cargando" class="pp-centro">Cargando...</p>
+
+    <div *ngIf="!cargando && errorEnlace" class="pp-centro">
+      <h1>Enlace no disponible</h1>
+      <p>{{ errorEnlace }}</p>
+    </div>
+
+    <div *ngIf="enviado" class="pp-centro">
+      <div class="pp-check" aria-hidden="true">✓</div>
+      <h1>¡Respuestas enviadas!</h1>
+      <p>{{ mensajeFinal }}</p>
+      <p class="pp-sub">Ya puedes cerrar esta página.</p>
+    </div>
+
+    <form *ngIf="!cargando && datos && !errorEnlace && !enviado" (ngSubmit)="enviar()" class="pp-form">
+      <h1>Hola{{ datos.nombre ? ', ' + datos.nombre : '' }} 👋</h1>
+      <p class="pp-intro">
+        Gracias por postularte a <strong>{{ datos.vacante_titulo }}</strong> en {{ datos.empresa_nombre }}.
+        Responde estas preguntas cortas para continuar con tu proceso. Te tomará unos 2 minutos.
+      </p>
+
+      <div class="pp-pregunta" *ngFor="let p of preguntasVisibles; let n = index">
+        <label class="pp-label" [for]="'pp-' + p.id">
+          {{ n + 1 }}. {{ p.texto }} <span *ngIf="esObligatoria(p)" class="pp-req">*</span>
+        </label>
+
+        <div class="pp-opciones" *ngIf="p.tipo === 'si_no'">
+          <label class="pp-opcion" [class.selected]="respuestas[p.id] === 'Si'">
+            <input type="radio" [name]="p.id" [attr.name]="p.id" value="Si" [(ngModel)]="respuestas[p.id]" /> Sí
+          </label>
+          <label class="pp-opcion" [class.selected]="respuestas[p.id] === 'No'">
+            <input type="radio" [name]="p.id" [attr.name]="p.id" value="No" [(ngModel)]="respuestas[p.id]" /> No
+          </label>
+        </div>
+
+        <div class="pp-opciones columna" *ngIf="p.tipo === 'opcion'">
+          <label class="pp-opcion" *ngFor="let o of p.opciones" [class.selected]="respuestas[p.id] === o">
+            <input type="radio" [name]="p.id" [attr.name]="p.id" [value]="o" [(ngModel)]="respuestas[p.id]" /> {{ o }}
+          </label>
+        </div>
+
+        <input *ngIf="p.tipo === 'numero'" [id]="'pp-' + p.id" [name]="p.id" class="pp-input" type="number" inputmode="numeric"
+          min="0" step="50000" [(ngModel)]="respuestas[p.id]" placeholder="Ej: 1800000" />
+
+        <input *ngIf="p.tipo === 'texto'" [id]="'pp-' + p.id" [name]="p.id" class="pp-input" type="text"
+          [attr.maxlength]="p.max" [(ngModel)]="respuestas[p.id]" />
+
+        <textarea *ngIf="p.tipo === 'texto_largo'" [id]="'pp-' + p.id" [name]="p.id" class="pp-input" rows="3"
+          [attr.maxlength]="p.max" [(ngModel)]="respuestas[p.id]"></textarea>
+      </div>
+
+      <p class="pp-error" *ngIf="error" role="alert">{{ error }}</p>
+
+      <button type="submit" class="pp-btn" [disabled]="enviando">{{ enviando ? 'Enviando...' : 'Enviar respuestas' }}</button>
+      <p class="pp-sub">Tus respuestas se usan solo para tu proceso de selección en Artdecon.</p>
+    </form>
+  </main>
+</div>

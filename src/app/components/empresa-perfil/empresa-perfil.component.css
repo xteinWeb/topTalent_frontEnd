@@ -438,3 +438,24 @@ h1 {
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 640px) {
+  .perfil-empresa-container {
+    margin-top: 1.25rem;
+    padding: 0 1rem 2rem;
+  }
+
+  .title-group {
+    align-items: flex-start;
+  }
+
+  .icon-circle {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+}
