@@ -44,6 +44,7 @@
     </form>
 
     <div class="register-prompt">
+      <p><a routerLink="/candidato/recuperar" [queryParams]="{ returnUrl: returnUrl, email: email || null }">¿Olvidaste tu contraseña?</a></p>
       <p>¿No tienes cuenta? <a routerLink="/candidato/registro" [queryParams]="{ returnUrl: returnUrl }">Regístrate aquí</a></p>
     </div>
   </div>

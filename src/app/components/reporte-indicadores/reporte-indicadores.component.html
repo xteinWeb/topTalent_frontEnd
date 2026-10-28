@@ -1,0 +1,169 @@
+<div class="ri-container">
+  <header class="ri-header">
+    <div>
+      <h1>Reporte de indicadores</h1>
+      <p class="ri-sub">Embudo de selección, tiempos del proceso y motivos de salida, por {{ filtros.agrupar === 'lider' ? 'líder' : 'área' }}.</p>
+    </div>
+    <button class="ri-btn primario" (click)="descargarExcel()" [disabled]="descargando || cargando || !reporte">
+      {{ descargando ? 'Generando...' : 'Descargar Excel' }}
+    </button>
+  </header>
+
+  <!-- Filtros: una sola fila sobre las gráficas -->
+  <section class="ri-filtros" aria-label="Filtros del reporte">
+    <div class="ri-atajos" role="group" aria-label="Período">
+      <button *ngFor="let a of atajos" class="ri-chip" (click)="aplicarAtajo(a.dias)">{{ a.etiqueta }}</button>
+    </div>
+    <label class="ri-campo">Desde <input type="date" [(ngModel)]="filtros.desde" (change)="cargar()" /></label>
+    <label class="ri-campo">Hasta <input type="date" [(ngModel)]="filtros.hasta" (change)="cargar()" /></label>
+    <div class="ri-segmento" role="group" aria-label="Agrupar por">
+      <button [class.activo]="filtros.agrupar === 'area'" (click)="cambiarAgrupacion('area')">Por área</button>
+      <button [class.activo]="filtros.agrupar === 'lider'" (click)="cambiarAgrupacion('lider')">Por líder</button>
+    </div>
+  </section>
+
+  <p class="ri-error" *ngIf="error" role="alert">{{ error }}</p>
+  <div class="ri-vacio" *ngIf="cargando && !reporte">Calculando indicadores...</div>
+
+  <ng-container *ngIf="reporte as r">
+    <div [class.ri-cargando]="cargando">
+      <!-- Indicadores principales -->
+      <section class="ri-kpis">
+        <div class="ri-kpi"><span class="ri-kpi-valor">{{ r.resumen.postulaciones }}</span><span class="ri-kpi-label">Postulaciones</span></div>
+        <div class="ri-kpi"><span class="ri-kpi-valor">{{ r.resumen.vacantes }}</span><span class="ri-kpi-label">Vacantes solicitadas</span></div>
+        <div class="ri-kpi"><span class="ri-kpi-valor">{{ r.resumen.en_proceso }}</span><span class="ri-kpi-label">En proceso</span></div>
+        <div class="ri-kpi"><span class="ri-kpi-valor">{{ r.resumen.contratados }}</span><span class="ri-kpi-label">Contratados</span></div>
+        <div class="ri-kpi"><span class="ri-kpi-valor">{{ r.resumen.tasa_contratacion }} %</span><span class="ri-kpi-label">Tasa de contratación</span></div>
+        <div class="ri-kpi"><span class="ri-kpi-valor">{{ r.resumen.salidas }}</span><span class="ri-kpi-label">Fuera del flujo</span></div>
+      </section>
+
+      <div class="ri-grid">
+        <!-- Embudo -->
+        <section class="ri-card">
+          <h2>Embudo del período</h2>
+          <p class="ri-nota">Candidatos que llegaron a cada etapa o más allá.</p>
+          <div class="ri-barras">
+            <div class="ri-barra-fila" *ngFor="let e of r.resumen.embudo" [attr.data-tip]="e.nombre + ': ' + e.n + ' (' + e.pct + ' %)'">
+              <span class="ri-barra-label">{{ e.nombre }}</span>
+              <span class="ri-barra-pista"><span class="ri-barra" [style.width.%]="ancho(e.n, r.resumen.embudo[0].n)"></span></span>
+              <span class="ri-barra-valor">{{ e.n }} <small>{{ e.pct }} %</small></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tiempos -->
+        <section class="ri-card">
+          <h2>Tiempos del proceso</h2>
+          <div class="ri-tiempos">
+            <div class="ri-tiempo">
+              <span class="ri-tiempo-valor">{{ textoTiempo(r.tiempos.solicitud_a_autorizacion) }}</span>
+              <span class="ri-tiempo-label">Solicitud → autorización de Gerencia</span>
+              <span class="ri-tiempo-n">{{ textoMediciones(r.tiempos.solicitud_a_autorizacion, 'vacante(s)') }}</span>
+            </div>
+            <div class="ri-tiempo">
+              <span class="ri-tiempo-valor">{{ textoTiempo(r.tiempos.autorizacion_a_publicacion) }}</span>
+              <span class="ri-tiempo-label">Autorización → publicación</span>
+              <span class="ri-tiempo-n">{{ textoMediciones(r.tiempos.autorizacion_a_publicacion, 'vacante(s)') }}</span>
+            </div>
+            <div class="ri-tiempo">
+              <span class="ri-tiempo-valor">{{ textoTiempo(r.tiempos.postulacion_a_contratacion) }}</span>
+              <span class="ri-tiempo-label">Postulación → contratación</span>
+              <span class="ri-tiempo-n">{{ textoMediciones(r.tiempos.postulacion_a_contratacion, 'contratación(es)') }}</span>
+            </div>
+          </div>
+          <p class="ri-nota">La fecha de publicación y el historial de estados se registran desde el 26/10/2026; los períodos anteriores no tienen esos datos.</p>
+        </section>
+      </div>
+
+      <!-- Motivos -->
+      <section class="ri-card">
+        <h2>Motivos de salida del proceso</h2>
+        <p class="ri-nota">Descartados, en reserva y que no aprobaron pruebas, según el motivo registrado.</p>
+        <div class="ri-barras" *ngIf="r.motivos.length > 0; else sinMotivos">
+          <div class="ri-barra-fila" *ngFor="let m of r.motivos" [attr.data-tip]="m.motivo + ': ' + m.n + ' (' + m.pct + ' %)'">
+            <span class="ri-barra-label">{{ m.motivo }}</span>
+            <span class="ri-barra-pista"><span class="ri-barra" [style.width.%]="ancho(m.n, maxMotivo)"></span></span>
+            <span class="ri-barra-valor">{{ m.n }} <small>{{ m.pct }} %</small></span>
+          </div>
+        </div>
+        <ng-template #sinMotivos><p class="ri-vacio-inline">No hay salidas con motivo registrado en el período.</p></ng-template>
+      </section>
+
+      <!-- Por área / líder -->
+      <section class="ri-card">
+        <h2>Por {{ r.agrupar === 'lider' ? 'líder' : 'área' }}</h2>
+        <div class="ri-tabla-wrap" *ngIf="r.grupos.length > 0; else sinDatos">
+          <table class="ri-tabla">
+            <thead>
+              <tr>
+                <th>{{ r.agrupar_nombre }}</th>
+                <th class="num">Vacantes</th>
+                <th class="num">Postulaciones</th>
+                <th class="num">Prefiltro aprobado</th>
+                <th class="num">En entrevista TH</th>
+                <th class="num">Aprob. gerencia</th>
+                <th class="num">Contratados</th>
+                <th class="num">Fuera del flujo</th>
+                <th class="num">Tasa contratación</th>
+                <th class="num">Días solicitud → autorización</th>
+                <th>Motivo más frecuente</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let g of r.grupos">
+                <td class="ri-grupo">{{ g.grupo }}</td>
+                <td class="num">{{ g.vacantes }}</td>
+                <td class="num">{{ g.postulaciones }}</td>
+                <td class="num">{{ etapa(g, 'prefiltro') }}</td>
+                <td class="num">{{ etapa(g, 'entrevista') }}</td>
+                <td class="num">{{ etapa(g, 'gerencia') }}</td>
+                <td class="num">{{ g.contratados }}</td>
+                <td class="num">{{ g.salidas }}</td>
+                <td class="num">{{ g.tasa_contratacion }} %</td>
+                <td class="num">{{ g.tiempos.solicitud_a_autorizacion.promedio_dias !== null ? (g.tiempos.solicitud_a_autorizacion.promedio_dias | number:'1.0-1') : '—' }}</td>
+                <td>{{ g.motivos[0] ? g.motivos[0].motivo + ' (' + g.motivos[0].n + ')' : '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Por vacante -->
+      <section class="ri-card">
+        <h2>Por vacante</h2>
+        <div class="ri-tabla-wrap" *ngIf="r.vacantes.length > 0; else sinDatos">
+          <table class="ri-tabla">
+            <thead>
+              <tr>
+                <th>Vacante</th>
+                <th>Área</th>
+                <th>Líder</th>
+                <th class="num">Postulaciones</th>
+                <th class="num">Prefiltro aprobado</th>
+                <th class="num">En entrevista TH</th>
+                <th class="num">Contratados</th>
+                <th class="num">Fuera del flujo</th>
+                <th class="num">Días solicitud → autorización</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of r.vacantes">
+                <td class="ri-grupo">{{ v.vacante }} <span class="ri-tag" *ngIf="v.estado_vacante">{{ v.estado_vacante | titlecase }}</span></td>
+                <td>{{ v.area }}</td>
+                <td>{{ v.lider }}</td>
+                <td class="num">{{ v.postulaciones }}</td>
+                <td class="num">{{ etapa(v, 'prefiltro') }}</td>
+                <td class="num">{{ etapa(v, 'entrevista') }}</td>
+                <td class="num">{{ v.contratados }}</td>
+                <td class="num">{{ v.salidas }}</td>
+                <td class="num">{{ v.dias_solicitud_a_autorizacion !== null ? (v.dias_solicitud_a_autorizacion | number:'1.0-1') : '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+
+  <ng-template #sinDatos><p class="ri-vacio-inline">No hay datos en el período seleccionado.</p></ng-template>
+</div>

@@ -1,0 +1,192 @@
+.prefiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pf-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.pf-card h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--brand-navy, #16313A);
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+}
+
+.pf-canal {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.pf-estado {
+  margin-bottom: 0.75rem;
+}
+
+.pf-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pf-badge.pasa { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+.pf-badge.no-pasa { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.pf-badge.pendiente { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+
+.pf-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.pf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid #cbd5e1;
+  background: white;
+  color: #334155;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pf-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.pf-btn.primario { background: var(--brand-navy, #16313A); border-color: var(--brand-navy, #16313A); color: white; }
+.pf-btn.whatsapp { background: #16a34a; border-color: #16a34a; color: white; }
+
+.pf-enlace {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-radius: 0.5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  font-size: 0.85rem;
+  color: #166534;
+}
+
+.pf-enlace p { margin: 0 0 0.5rem; }
+
+.pf-enlace-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.pf-enlace-fila input {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  background: white;
+}
+
+.pf-pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.pf-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.pf-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pf-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.pf-opcion.selected { border-color: var(--brand-navy, #16313A); background: var(--brand-navy-soft, #EBF1F3); }
+.pf-opcion.selected.pasa { border-color: #15803d; background: #f0fdf4; }
+.pf-opcion.selected.no-pasa { border-color: #b91c1c; background: #fef2f2; }
+
+.pf-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.pf-respuestas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.pf-respuestas dt { color: #64748b; }
+.pf-respuestas dd { margin: 0; font-weight: 600; color: var(--brand-navy, #16313A); word-break: break-word; }
+
+.pf-historial {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.pf-historial li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 0.4rem;
+}
+
+.pf-historial-meta { color: #64748b; font-size: 0.8rem; }
+.pf-nota { display: block; margin-top: 0.5rem; color: #64748b; font-size: 0.8rem; }
+.pf-mensaje { margin: 0; padding: 0.6rem 0.85rem; border-radius: 0.5rem; background: #f0fdf4; color: #15803d; font-size: 0.85rem; }
+.pf-error { margin: 0; color: #b91c1c; font-size: 0.85rem; }
+.pf-vacio { padding: 1.5rem; text-align: center; color: #64748b; }
+
+@media (max-width: 560px) {
+  .pf-respuestas { grid-template-columns: 1fr; }
+  .pf-respuestas dd { margin-bottom: 0.4rem; }
+}

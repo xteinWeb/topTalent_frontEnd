@@ -1,0 +1,151 @@
+<div class="prefiltro">
+  <div *ngIf="cargando" class="pf-vacio">Cargando prefiltro...</div>
+
+  <ng-container *ngIf="!cargando && detalle">
+    <p class="pf-mensaje" *ngIf="mensaje">{{ mensaje }}</p>
+    <p class="pf-error" *ngIf="error">{{ error }}</p>
+
+    <!-- Estado general -->
+    <section class="pf-card">
+      <h4>Estado del prefiltro</h4>
+      <div class="pf-estado">
+        <span class="pf-badge pasa" *ngIf="detalle.prefiltro.resultado === 'Pasa'">✅ Pasa el prefiltro</span>
+        <span class="pf-badge no-pasa" *ngIf="detalle.prefiltro.resultado === 'No pasa'">⛔ No pasa el prefiltro</span>
+        <span class="pf-badge pendiente" *ngIf="!detalle.prefiltro.resultado && tieneRespuestas">🕓 Respuestas recibidas: falta la decisión</span>
+        <span class="pf-badge pendiente" *ngIf="!tieneRespuestas && detalle.enlace_expira">
+          💬 Enlace enviado, esperando respuesta (vence {{ detalle.enlace_expira | date:'dd/MM/yyyy HH:mm' }})
+        </span>
+        <span class="pf-badge" *ngIf="!tieneRespuestas && !detalle.enlace_expira">Sin prefiltro todavía</span>
+      </div>
+
+      <!-- Acciones para obtener las respuestas -->
+      <div class="pf-acciones" *ngIf="puedeEditar && !tieneRespuestas && !registrandoLlamada">
+        <button class="pf-btn primario" (click)="iniciarLlamada()" [disabled]="guardando">📞 Registrar llamada</button>
+        <button class="pf-btn whatsapp" (click)="enviarPorWhatsApp()" [disabled]="guardando">
+          💬 {{ detalle.enlace_expira ? 'Reenviar enlace por WhatsApp' : 'Enviar por WhatsApp' }}
+        </button>
+      </div>
+
+      <div class="pf-enlace" *ngIf="enlace">
+        <p>Se abrió WhatsApp con el mensaje listo; solo falta enviarlo. Si no se abrió, usa este enlace:</p>
+        <div class="pf-enlace-fila">
+          <input type="text" [value]="enlace" readonly aria-label="Enlace del formulario" />
+          <button class="pf-btn" (click)="copiarEnlace()">{{ enlaceCopiado ? 'Copiado' : 'Copiar' }}</button>
+          <a class="pf-btn whatsapp" *ngIf="enlaceWhatsApp" [href]="enlaceWhatsApp" target="_blank" rel="noopener">Abrir WhatsApp</a>
+        </div>
+        <small>Al generar un enlace nuevo, el anterior deja de funcionar.</small>
+      </div>
+    </section>
+
+    <!-- Registro de la llamada -->
+    <section class="pf-card" *ngIf="registrandoLlamada">
+      <h4>Registrar llamada</h4>
+      <div class="pf-pregunta">
+        <label class="pf-label">¿El candidato contestó? *</label>
+        <div class="pf-opciones">
+          <label class="pf-opcion" [class.selected]="contesto === true">
+            <input type="radio" name="contesto" [value]="true" [(ngModel)]="contesto" /> Sí
+          </label>
+          <label class="pf-opcion" [class.selected]="contesto === false">
+            <input type="radio" name="contesto" [value]="false" [(ngModel)]="contesto" /> No contestó
+          </label>
+        </div>
+      </div>
+
+      <ng-container *ngIf="contesto === true">
+        <div class="pf-pregunta" *ngFor="let p of preguntas">
+          <label class="pf-label" [for]="'pf-' + p.id">{{ p.texto }}{{ esObligatoria(p) ? ' *' : '' }}</label>
+
+          <div class="pf-opciones" *ngIf="p.tipo === 'si_no'">
+            <label class="pf-opcion" [class.selected]="respuestas[p.id] === 'Si'">
+              <input type="radio" [name]="'pf-' + p.id" [attr.name]="'pf-' + p.id" value="Si" [(ngModel)]="respuestas[p.id]" /> Sí
+            </label>
+            <label class="pf-opcion" [class.selected]="respuestas[p.id] === 'No'">
+              <input type="radio" [name]="'pf-' + p.id" [attr.name]="'pf-' + p.id" value="No" [(ngModel)]="respuestas[p.id]" /> No
+            </label>
+          </div>
+
+          <select *ngIf="p.tipo === 'opcion'" [id]="'pf-' + p.id" class="pf-input" [(ngModel)]="respuestas[p.id]">
+            <option [ngValue]="undefined">Seleccione...</option>
+            <option *ngFor="let o of p.opciones" [value]="o">{{ o }}</option>
+          </select>
+
+          <input *ngIf="p.tipo === 'numero'" [id]="'pf-' + p.id" class="pf-input" type="number" min="0" step="50000"
+            [(ngModel)]="respuestas[p.id]" placeholder="Ej: 1800000" />
+
+          <input *ngIf="p.tipo === 'texto'" [id]="'pf-' + p.id" class="pf-input" type="text" [attr.maxlength]="p.max"
+            [(ngModel)]="respuestas[p.id]" />
+
+          <textarea *ngIf="p.tipo === 'texto_largo'" [id]="'pf-' + p.id" class="pf-input" rows="2" [attr.maxlength]="p.max"
+            [(ngModel)]="respuestas[p.id]"></textarea>
+        </div>
+      </ng-container>
+
+      <div class="pf-acciones">
+        <button class="pf-btn" (click)="cancelarLlamada()" [disabled]="guardando">Cancelar</button>
+        <button class="pf-btn primario" (click)="guardarLlamada()" [disabled]="guardando || contesto === null">
+          {{ guardando ? 'Guardando...' : (contesto ? 'Guardar respuestas' : 'Guardar intento') }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Respuestas recibidas -->
+    <section class="pf-card" *ngIf="tieneRespuestas">
+      <h4>
+        Respuestas
+        <span class="pf-canal">
+          {{ detalle.prefiltro.canal === 'whatsapp' ? '💬 Por WhatsApp' : '📞 Por teléfono' }} ·
+          {{ detalle.prefiltro.respondido_fecha | date:'dd/MM/yyyy HH:mm' }}
+        </span>
+      </h4>
+      <dl class="pf-respuestas">
+        <ng-container *ngFor="let p of preguntas">
+          <dt>{{ p.texto }}</dt>
+          <dd>{{ formatear(p, detalle.prefiltro.respuestas?.[p.id]) }}</dd>
+        </ng-container>
+      </dl>
+    </section>
+
+    <!-- Decisión -->
+    <section class="pf-card" *ngIf="tieneRespuestas">
+      <h4>Decisión del prefiltro</h4>
+      <ng-container *ngIf="puedeEditar; else soloLectura">
+        <div class="pf-opciones">
+          <label class="pf-opcion" *ngFor="let r of detalle.resultados" [class.selected]="resultado === r"
+            [class.pasa]="r === 'Pasa'" [class.no-pasa]="r === 'No pasa'">
+            <input type="radio" name="pf-resultado" [value]="r" [(ngModel)]="resultado" /> {{ r }}
+          </label>
+        </div>
+        <textarea class="pf-input" rows="2" [(ngModel)]="observaciones" maxlength="2000"
+          placeholder="Observaciones (opcional)"></textarea>
+        <div class="pf-acciones">
+          <button class="pf-btn primario" (click)="guardarResultado()" [disabled]="guardando || !resultado">
+            {{ guardando ? 'Guardando...' : 'Guardar decisión' }}
+          </button>
+        </div>
+        <small class="pf-nota" *ngIf="resultado === 'No pasa'">
+          Si el candidato no continúa, recuerda cambiar su estado a "Descartado" e indicar el motivo.
+        </small>
+      </ng-container>
+      <ng-template #soloLectura>
+        <p>{{ detalle.prefiltro.resultado || 'Pendiente' }}{{ detalle.prefiltro.observaciones ? ' — ' + detalle.prefiltro.observaciones : '' }}</p>
+      </ng-template>
+      <small class="pf-nota" *ngIf="detalle.prefiltro.resultado_por">
+        Decidido por {{ detalle.prefiltro.resultado_por }} el {{ detalle.prefiltro.resultado_fecha | date:'dd/MM/yyyy HH:mm' }}
+      </small>
+    </section>
+
+    <!-- Historial -->
+    <section class="pf-card" *ngIf="intentos.length > 0">
+      <h4>Historial</h4>
+      <ul class="pf-historial">
+        <li *ngFor="let i of intentos">
+          <span>{{ textoIntento(i) }}</span>
+          <span class="pf-historial-meta">{{ i.fecha | date:'dd/MM/yyyy HH:mm' }}{{ i.registrado_por ? ' · ' + i.registrado_por : '' }}</span>
+        </li>
+      </ul>
+    </section>
+  </ng-container>
+
+  <div *ngIf="!cargando && !detalle && error" class="pf-vacio pf-error">{{ error }}</div>
+</div>

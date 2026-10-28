@@ -1,0 +1,86 @@
+<div class="lider-container">
+  <header class="page-header">
+    <div>
+      <h1>Mi Panel</h1>
+      <p class="subtitle">
+        Hola, {{ currentUser?.nombre || currentUser?.username }}. Estos son los candidatos de tus vacantes y en qué etapa del proceso van.
+      </p>
+    </div>
+    <a class="btn-solicitar" routerLink="/solicitudes-vacantes">Mis solicitudes de personal</a>
+  </header>
+
+  <div *ngIf="loading" class="estado-vacio">Cargando candidatos...</div>
+
+  <div *ngIf="!loading && errorMsg" class="estado-vacio error">
+    {{ errorMsg }}
+    <button class="btn-link" (click)="cargar()">Reintentar</button>
+  </div>
+
+  <ng-container *ngIf="!loading && !errorMsg">
+    <div *ngIf="postulaciones.length === 0" class="estado-vacio">
+      <p><strong>Aún no hay candidatos en tus vacantes.</strong></p>
+      <p>Aquí verás a los postulantes de las vacantes que solicites y de los perfiles de cargo que Talento Humano te asigne.</p>
+    </div>
+
+    <ng-container *ngIf="postulaciones.length > 0">
+      <section class="kpis">
+        <button class="kpi" [class.activo]="!filtroEstado" (click)="filtroEstado = ''">
+          <span class="kpi-valor">{{ totalBase }}</span>
+          <span class="kpi-label">Total candidatos</span>
+        </button>
+        <button *ngFor="let item of conteoEstados" class="kpi" [class.activo]="filtroEstado === item.estado.nombre"
+          [ngStyle]="filtroEstado === item.estado.nombre ? estiloEstado(item.estado.nombre) : {}"
+          (click)="alternarFiltroEstado(item.estado.nombre)">
+          <span class="kpi-valor">{{ item.total }}</span>
+          <span class="kpi-label">{{ item.estado.icono }} {{ item.estado.nombre }}</span>
+        </button>
+      </section>
+
+      <section class="filtros">
+        <select [(ngModel)]="filtroVacante" aria-label="Filtrar por vacante">
+          <option value="">Todas mis vacantes ({{ postulaciones.length }})</option>
+          <option *ngFor="let v of vacantes" [value]="v.id">{{ v.titulo }} ({{ v.total }})</option>
+        </select>
+        <input type="search" [(ngModel)]="busqueda" placeholder="Buscar candidato o vacante..." aria-label="Buscar" />
+      </section>
+
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Candidato</th>
+              <th>Vacante</th>
+              <th>Fecha de postulación</th>
+              <th>Puntaje IA</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of filtradas">
+              <td>
+                <div class="candidato-nombre">{{ p.nombre_completo || 'Sin nombre' }}</div>
+                <div class="candidato-sub" *ngIf="p.cita_entrevista_json?.fecha">
+                  Entrevista: {{ p.cita_entrevista_json?.fecha }} {{ p.cita_entrevista_json?.hora }}
+                </div>
+              </td>
+              <td>{{ p.vacante_titulo }}</td>
+              <td>{{ p.fecha_postulacion | date:'dd/MM/yyyy' }}</td>
+              <td>{{ p.puntuacion_ia ?? '—' }}</td>
+              <td>
+                <span class="badge-estado" [ngStyle]="estiloEstado(estadoDe(p))">
+                  {{ iconoEstado(estadoDe(p)) }} {{ estadoDe(p) }}
+                </span>
+                <div class="candidato-sub" *ngIf="p.motivo_no_aprobado">
+                  Motivo: {{ p.motivo_no_aprobado === 'Otro' ? p.motivo_no_aprobado_detalle : p.motivo_no_aprobado }}
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filtradas.length === 0">
+              <td colspan="5" class="sin-resultados">No hay candidatos que coincidan con el filtro.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

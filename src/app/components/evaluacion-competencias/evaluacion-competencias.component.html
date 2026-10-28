@@ -1,0 +1,65 @@
+<div class="ec-wrap">
+  <table class="ec-tabla">
+    <thead>
+      <tr>
+        <th class="ec-col-comp">Competencia</th>
+        <th *ngIf="conMatriz" class="ec-num">Requerido</th>
+        <th class="ec-escala" colspan="5">Calificación (1 a 5)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let item of items; let i = index">
+        <tr [class.ec-alt]="i % 2 === 1" [class.ec-brecha]="tieneBrecha(item)">
+          <td class="ec-col-comp">
+            <div class="ec-nombre">
+              {{ item.competencia }}
+              <span class="ec-badge principal" *ngIf="item.principal">★ Principal</span>
+              <span class="ec-badge" *ngIf="conMatriz && !item.principal">Opcional</span>
+            </div>
+            <div class="ec-meta" *ngIf="conMatriz">Peso {{ pesoPct(item) }}</div>
+            <p class="ec-pregunta" *ngIf="item.pregunta">{{ item.pregunta }}</p>
+            <div class="ec-desc" *ngIf="!item.pregunta && item.definicion">{{ item.definicion }}</div>
+            <div class="ec-acciones-fila">
+              <button type="button" class="ec-link" *ngIf="item.conductas || item.criterio" (click)="alternarGuia(item)">
+                {{ abiertas.has(item) ? 'Ocultar guía' : 'Ver guía de evaluación' }}
+              </button>
+              <button type="button" class="ec-link ec-quitar" *ngIf="editable && conMatriz && !item.principal" (click)="quitar.emit(item)">Quitar</button>
+            </div>
+            <textarea class="ec-obs" rows="2" [(ngModel)]="item.observaciones" [disabled]="!editable"
+              [attr.aria-label]="'Observaciones de ' + item.competencia"
+              placeholder="Observaciones: situación, acción y resultado observados..."></textarea>
+          </td>
+          <td *ngIf="conMatriz" class="ec-num">
+            {{ item.nivel_requerido }}
+            <span class="ec-alerta" *ngIf="tieneBrecha(item)" title="Calificación por debajo del nivel requerido">▼ brecha</span>
+          </td>
+          <td class="ec-punto" *ngFor="let p of escala">
+            <button type="button" class="ec-btn-punto" [class.selected]="item.puntuacion === p"
+              [class.bajo-req]="item.nivel_requerido !== undefined && p < item.nivel_requerido"
+              [disabled]="!editable" (click)="calificar(item, p)" [attr.aria-label]="item.competencia + ': ' + p">
+              {{ p }}
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="abiertas.has(item)" class="ec-guia">
+          <td [attr.colspan]="conMatriz ? 7 : 6">
+            <div *ngIf="item.definicion"><strong>Definición:</strong> {{ item.definicion }}</div>
+            <div *ngIf="item.conductas"><strong>Conductas observables:</strong> {{ item.conductas }}</div>
+            <div *ngIf="item.criterio"><strong>Criterio de evaluación:</strong> {{ item.criterio }}</div>
+          </td>
+        </tr>
+      </ng-container>
+      <tr *ngIf="items.length === 0">
+        <td [attr.colspan]="conMatriz ? 7 : 6" class="ec-vacio">No hay competencias para evaluar.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="ec-agregar" *ngIf="editable && opcionales.length > 0">
+    <select [(ngModel)]="seleccionOpcional" aria-label="Agregar competencia opcional">
+      <option value="">Agregar competencia opcional...</option>
+      <option *ngFor="let o of opcionales" [value]="o.competencia_id">{{ o.competencia }} ({{ pesoPct(o) }})</option>
+    </select>
+    <button type="button" class="ec-btn" (click)="agregarOpcional()" [disabled]="!seleccionOpcional">Agregar</button>
+  </div>
+</div>

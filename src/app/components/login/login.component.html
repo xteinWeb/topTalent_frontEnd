@@ -42,5 +42,9 @@
         {{ loading ? 'Iniciando sesión...' : 'Ingresar' }}
       </button>
     </form>
+
+    <div class="login-links">
+      <a routerLink="/recuperar-password" [queryParams]="{ usuario: username || null }">¿Olvidaste tu contraseña?</a>
+    </div>
   </div>
 </div>

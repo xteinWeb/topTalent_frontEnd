@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -39,13 +39,6 @@ export class CandidatoService {
     return !!localStorage.getItem('candidato_token');
   }
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('candidato_token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-  }
-
   registro(email: string, password: string, aceptoTratamientoDatos: boolean): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/registro`, { email, password, acepto_tratamiento_datos: aceptoTratamientoDatos });
   }
@@ -64,6 +57,22 @@ export class CandidatoService {
 
   login(email: string, password: string): Observable<CandidatoResponse> {
     return this.http.post<CandidatoResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
+      tap(res => {
+        if (res && res.token) {
+          localStorage.setItem('candidato_token', res.token);
+          localStorage.setItem('candidato_user', JSON.stringify(res.user));
+          this.loggedInSubject.next(true);
+        }
+      })
+    );
+  }
+
+  solicitarRecuperacion(email: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/recuperar`, { email });
+  }
+
+  restablecerPassword(email: string, codigo: string, passwordNuevo: string): Observable<CandidatoResponse> {
+    return this.http.post<CandidatoResponse>(`${this.apiUrl}/restablecer`, { email, codigo, password_nuevo: passwordNuevo }).pipe(
       tap(res => {
         if (res && res.token) {
           localStorage.setItem('candidato_token', res.token);
@@ -99,7 +108,7 @@ export class CandidatoService {
   }
 
   getPerfil(): Observable<CandidatoPerfil> {
-    return this.http.get<{ data: CandidatoPerfil }>(`${this.apiUrl}/perfil`, { headers: this.getHeaders() }).pipe(
+    return this.http.get<{ data: CandidatoPerfil }>(`${this.apiUrl}/perfil`).pipe(
       map(res => res.data)
     );
   }
@@ -110,6 +119,6 @@ export class CandidatoService {
     if (archivo) {
       formData.append('hv_archivo', archivo, archivo.name);
     }
-    return this.http.put(`${this.apiUrl}/perfil`, formData, { headers: this.getHeaders() });
+    return this.http.put(`${this.apiUrl}/perfil`, formData);
   }
 }

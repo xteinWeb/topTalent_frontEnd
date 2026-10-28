@@ -1,0 +1,122 @@
+<div class="ua-container">
+  <header class="ua-header">
+    <div>
+      <h1>Usuarios</h1>
+      <p class="ua-sub">Cree los accesos de líderes de área, Talento Humano y Gerencia de su empresa.</p>
+    </div>
+    <button class="ua-btn primario" (click)="abrirNuevo()">
+      <span class="material-icons">person_add</span> Nuevo usuario
+    </button>
+  </header>
+
+  <section class="ua-filtros" aria-label="Filtros">
+    <input class="ua-buscar" type="search" [(ngModel)]="busqueda" placeholder="Buscar por nombre, usuario, correo o área" />
+    <select [(ngModel)]="filtroRol" aria-label="Filtrar por rol">
+      <option value="">Todos los roles</option>
+      <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
+    </select>
+    <label class="ua-check" *ngIf="totalInactivos > 0">
+      <input type="checkbox" [(ngModel)]="verInactivos" /> Ver inactivos ({{ totalInactivos }})
+    </label>
+  </section>
+
+  <p class="ua-aviso" *ngIf="aviso" role="status">{{ aviso }} <button (click)="aviso = ''" aria-label="Cerrar">×</button></p>
+  <p class="ua-error" *ngIf="error" role="alert">{{ error }}</p>
+
+  <section class="ua-card">
+    <div class="ua-vacio" *ngIf="cargando && usuarios.length === 0">Cargando usuarios...</div>
+    <div class="ua-tabla-wrap" *ngIf="!cargando || usuarios.length > 0">
+      <table class="ua-tabla">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Área</th>
+            <th>Estado</th>
+            <th class="acciones"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usuariosFiltrados" [class.inactivo]="!u.activo">
+            <td class="ua-nombre">{{ u.nombre }} <span class="ua-yo" *ngIf="esYo(u)">Tú</span></td>
+            <td class="ua-mono">{{ u.username }}</td>
+            <td>{{ u.email || '—' }}</td>
+            <td><span class="ua-rol" [attr.data-rol]="u.rol">{{ nombreRol(u.rol) }}</span></td>
+            <td>{{ u.area || '—' }}</td>
+            <td>
+              <span class="ua-estado" [class.on]="u.activo">
+                <span class="punto"></span>{{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="acciones">
+              <ng-container *ngIf="puedeGestionar(u)">
+                <button class="ua-link" (click)="abrirEdicion(u)">Editar</button>
+                <button class="ua-link" [class.peligro]="u.activo" *ngIf="!esYo(u)" (click)="cambiarActivo(u)">
+                  {{ u.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="usuariosFiltrados.length === 0">
+            <td colspan="7" class="ua-vacio">No hay usuarios que coincidan con la búsqueda.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Crear / editar usuario -->
+<div class="ua-backdrop" *ngIf="formAbierto" (click)="cerrarForm()">
+  <form class="ua-modal" (click)="$event.stopPropagation()" (ngSubmit)="guardar()" autocomplete="off">
+    <div class="ua-modal-header">
+      <h2>{{ editando ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+      <button type="button" class="ua-cerrar" (click)="cerrarForm()" aria-label="Cerrar"><span class="material-icons">close</span></button>
+    </div>
+
+    <div class="ua-modal-body">
+      <label class="ua-campo completo">Nombre completo
+        <input name="nombre" [(ngModel)]="form.nombre" (blur)="sugerirUsuario()" required maxlength="150" />
+      </label>
+
+      <label class="ua-campo">Usuario
+        <input name="username" [(ngModel)]="form.username" [disabled]="!!editando" required maxlength="50" placeholder="nombre.apellido" />
+        <small *ngIf="!editando">Letras, números, punto o guion. Con él inicia sesión.</small>
+        <small *ngIf="editando">El usuario no se puede cambiar.</small>
+      </label>
+
+      <label class="ua-campo">Correo electrónico
+        <input name="email" type="email" [(ngModel)]="form.email" required maxlength="250" />
+        <small>Se usa para recuperar la contraseña.</small>
+      </label>
+
+      <label class="ua-campo">Rol
+        <select name="rol" [(ngModel)]="form.rol" [disabled]="!!editando && esYo(editando)">
+          <option *ngFor="let r of rolesAsignables" [value]="r.id">{{ r.nombre }}</option>
+        </select>
+        <small *ngIf="editando && esYo(editando)">No puede cambiar su propio rol.</small>
+      </label>
+
+      <label class="ua-campo">Área <span *ngIf="form.rol === 'LIDER_AREA'" class="req">*</span>
+        <input name="area" [(ngModel)]="form.area" list="ua-areas" maxlength="150" placeholder="Ej: Planta de Producción" />
+        <datalist id="ua-areas"><option *ngFor="let a of areasConocidas" [value]="a"></option></datalist>
+      </label>
+
+      <label class="ua-campo completo">{{ editando ? 'Nueva contraseña (opcional)' : 'Contraseña inicial' }}
+        <input name="password" type="password" [(ngModel)]="form.password" autocomplete="new-password" minlength="6" />
+        <small>{{ editando ? 'Déjela vacía para no cambiarla.' : 'Mínimo 6 caracteres. Compártala con la persona; podrá cambiarla luego.' }}</small>
+      </label>
+
+      <p class="ua-error completo" *ngIf="errorForm" role="alert">{{ errorForm }}</p>
+    </div>
+
+    <div class="ua-modal-footer">
+      <button type="button" class="ua-btn" (click)="cerrarForm()" [disabled]="guardando">Cancelar</button>
+      <button type="submit" class="ua-btn primario" [disabled]="guardando">
+        {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Crear usuario') }}
+      </button>
+    </div>
+  </form>
+</div>

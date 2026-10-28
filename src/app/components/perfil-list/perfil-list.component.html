@@ -104,7 +104,7 @@
 
       <div class="stage-step stage-2">
         <div class="stage-number">Etapa 2</div>
-        <div class="stage-name">Preseleccionados</div>
+        <div class="stage-name">Prefiltro aprobado</div>
         <div class="stage-count">{{ kpis.candidatosPreseleccionados }}</div>
         <div class="stage-pct" *ngIf="kpis.totalPostulaciones > 0">
           {{ (kpis.candidatosPreseleccionados / kpis.totalPostulaciones) * 100 | number:'1.0-0' }}% de avance
@@ -115,7 +115,7 @@
 
       <div class="stage-step stage-3">
         <div class="stage-number">Etapa 3</div>
-        <div class="stage-name">Citados a Entrevista</div>
+        <div class="stage-name">En entrevista TH</div>
         <div class="stage-count">{{ kpis.candidatosCitados }}</div>
         <div class="stage-pct" *ngIf="kpis.totalPostulaciones > 0">
           {{ (kpis.candidatosCitados / kpis.totalPostulaciones) * 100 | number:'1.0-0' }}% convocados
@@ -126,7 +126,7 @@
 
       <div class="stage-step stage-4">
         <div class="stage-number">Etapa 4</div>
-        <div class="stage-name">Aprobados / Aptos</div>
+        <div class="stage-name">Aprobados por gerencia</div>
         <div class="stage-count highlight">{{ kpis.candidatosAprobados }}</div>
         <div class="stage-pct" *ngIf="kpis.totalPostulaciones > 0">
           {{ (kpis.candidatosAprobados / kpis.totalPostulaciones) * 100 | number:'1.0-0' }}% finalizados
@@ -202,14 +202,23 @@
           </div>
         </div>
 
+        <div class="meta-req-line">
+          <span class="material-icons meta-icon">supervisor_account</span>
+          <span><strong>Líder:</strong> {{ perfil.lider_nombre || 'Sin asignar' }}</span>
+        </div>
+
         <div class="profile-tags-row">
           <span class="tag-pill" *ngIf="perfil.perfil_json?.funciones?.length">
             <span class="material-icons" style="font-size: 0.85rem;">checklist</span>
             {{ perfil.perfil_json?.funciones?.length }} Funciones Clave
           </span>
-          <span class="competencies-count-pill" *ngIf="perfil.matriz_competencias_json">
+          <span class="competencies-count-pill" *ngIf="perfil.grupo_cargo">
             <span class="material-icons" style="font-size: 0.85rem;">analytics</span>
-            Matriz de Competencias Configurada
+            Matriz: {{ nombreGrupoCargo(perfil.grupo_cargo) }}
+          </span>
+          <span class="tag-pill" *ngIf="!perfil.grupo_cargo" title="Asigne el grupo de cargo para evaluar la entrevista con la matriz de competencias">
+            <span class="material-icons" style="font-size: 0.85rem;">warning</span>
+            Sin grupo de cargo
           </span>
         </div>
       </div>

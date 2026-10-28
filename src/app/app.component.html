@@ -1,31 +1,58 @@
 <header class="app-navbar" *ngIf="showNavbar$ | async">
   <div class="nav-container">
-    <div class="nav-brand" [routerLink]="authService.isLiderArea() ? '/solicitudes-vacantes' : '/dashboard'">
+    <div class="nav-brand" [routerLink]="authService.isLiderArea() ? '/mi-panel' : '/dashboard'">
       <img src="images/Logo-ARTDECON-HD-fondo-transparente-(logo-blanco).png" alt="Artdecon Logo">
     </div>
-    <nav class="nav-links">
+
+    <button class="nav-toggle" type="button" (click)="menuAbierto = !menuAbierto" [attr.aria-expanded]="menuAbierto" aria-label="Abrir menú">
+      <span class="material-icons">{{ menuAbierto ? 'close' : 'menu' }}</span>
+    </button>
+
+    <nav class="nav-links" [class.abierto]="menuAbierto" (click)="menuAbierto = false">
       <!-- Menú para Talento Humano / Gerencia / Superadmin -->
       <ng-container *ngIf="!authService.isLiderArea()">
         <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
         <a routerLink="/vacantes" routerLinkActive="active">Vacantes</a>
-        <a routerLink="/solicitudes-vacantes" routerLinkActive="active">Solicitudes de Personal</a>
+        <a routerLink="/solicitudes-vacantes" routerLinkActive="active" title="Solicitudes de personal">Solicitudes</a>
         <a routerLink="/postulaciones" routerLinkActive="active">Postulaciones</a>
+        <a routerLink="/matriz-competencias" routerLinkActive="active" title="Matriz de competencias">Competencias</a>
+        <a routerLink="/reportes" routerLinkActive="active" *ngIf="authService.isTalentoHumano() || authService.isGerencia()">Reportes</a>
       </ng-container>
 
       <!-- Menú para Líderes de Área -->
       <ng-container *ngIf="authService.isLiderArea()">
-        <a routerLink="/solicitudes-vacantes" routerLinkActive="active">Mis Solicitudes de Personal</a>
+        <a routerLink="/mi-panel" routerLinkActive="active">Mi Panel</a>
+        <a routerLink="/solicitudes-vacantes" routerLinkActive="active" title="Mis solicitudes de personal">Mis Solicitudes</a>
       </ng-container>
-
-      <a routerLink="/empresa/perfil" routerLinkActive="active-profile" class="nav-user-info" *ngIf="currentUser" title="Configuración de Empresa y Credenciales">
-        <span class="nav-empresa-tag" [title]="currentUser.empresa_nombre || 'Empresa'">
-          {{ currentUser.empresa_nombre || currentUser.empresa_id || 'ARTDECON' }}
-        </span>
-        <span class="nav-user-tag">{{ currentUser.nombre || currentUser.username }}</span>
-        <span class="nav-settings-icon">⚙️</span>
-      </a>
-      <button (click)="logout()" class="nav-logout-btn">Cerrar Sesión</button>
     </nav>
+
+    <!-- Menú de usuario: empresa, rol, configuración y salida -->
+    <div class="nav-user" *ngIf="currentUser" (click)="$event.stopPropagation()">
+      <button class="nav-user-btn" type="button" (click)="userMenuAbierto = !userMenuAbierto" [attr.aria-expanded]="userMenuAbierto" aria-haspopup="menu">
+        <span class="nav-avatar">{{ iniciales }}</span>
+        <span class="nav-user-texto">
+          <span class="nav-user-nombre">{{ currentUser.nombre || currentUser.username }}</span>
+          <span class="nav-user-rol">{{ rolLegible }}</span>
+        </span>
+        <span class="material-icons nav-caret">expand_more</span>
+      </button>
+
+      <div class="nav-user-menu" *ngIf="userMenuAbierto" role="menu">
+        <div class="nav-user-cabecera">
+          <span class="nav-user-empresa">{{ currentUser.empresa_nombre || 'ARTDECON' }}</span>
+          <span class="nav-user-correo">{{ currentUser.email || currentUser.username }}</span>
+        </div>
+        <a routerLink="/empresa/perfil" role="menuitem" (click)="userMenuAbierto = false">
+          <span class="material-icons">settings</span> Empresa y credenciales
+        </a>
+        <a routerLink="/usuarios" role="menuitem" *ngIf="authService.isTalentoHumano()" (click)="userMenuAbierto = false">
+          <span class="material-icons">group</span> Usuarios
+        </a>
+        <button type="button" role="menuitem" class="nav-salir" (click)="logout()">
+          <span class="material-icons">logout</span> Cerrar sesión
+        </button>
+      </div>
+    </div>
   </div>
 </header>
 

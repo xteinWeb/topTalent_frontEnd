@@ -6,6 +6,16 @@ import { PerfilService, PerfilCargo } from '../../services/perfil.service';
 import { VacanteService, Vacante } from '../../services/vacante.service';
 import { PostulacionService, Postulacion } from '../../services/postulacion.service';
 import { AuthService, UserSession } from '../../services/auth.service';
+import { nombreGrupoCargo } from '../../services/competencia.service';
+import { EstadoPostulacionService, EstadoPostulacion } from '../../services/estado-postulacion.service';
+import { forkJoin } from 'rxjs';
+
+// Estado que marca el inicio de cada etapa del embudo (flujo del postulante ARTDECON)
+const ETAPAS_EMBUDO = {
+  prefiltro: 'Prefiltro Aprobado',
+  entrevista: 'Entrevista TH Agendada',
+  aprobados: 'Aprobado por gerencia'
+};
 
 @Component({
   selector: 'app-perfil-list',
@@ -24,6 +34,7 @@ export class PerfilListComponent implements OnInit {
   currentUser: UserSession | null = null;
   searchTerm: string = '';
   loading: boolean = true;
+  readonly nombreGrupoCargo = nombreGrupoCargo;
   errorMsg: string = '';
 
   // KPIs
@@ -38,10 +49,13 @@ export class PerfilListComponent implements OnInit {
     tasaConversion: 0
   };
 
+  estados: EstadoPostulacion[] = [];
+
   constructor(
     private perfilService: PerfilService,
     private vacanteService: VacanteService,
     private postulacionService: PostulacionService,
+    private estadoPostulacionService: EstadoPostulacionService,
     public authService: AuthService
   ) {}
 
@@ -82,10 +96,14 @@ export class PerfilListComponent implements OnInit {
       error: (err) => console.error('Error cargando pendientes:', err)
     });
 
-    // Load Postulaciones & Embudo
-    this.postulacionService.getPostulaciones().subscribe({
-      next: (postulaciones) => {
+    // Load Postulaciones & Embudo (el embudo usa el orden del catálogo de estados)
+    forkJoin({
+      postulaciones: this.postulacionService.getPostulaciones(),
+      estados: this.estadoPostulacionService.getEstados()
+    }).subscribe({
+      next: ({ postulaciones, estados }) => {
         this.postulaciones = postulaciones;
+        this.estados = estados;
         this.calculateFunnel(postulaciones);
         this.loading = false;
       },
@@ -96,25 +114,22 @@ export class PerfilListComponent implements OnInit {
     });
   }
 
+  // Cuántos candidatos llegaron al estado indicado o a uno posterior del flujo.
+  // Los que salieron del flujo (Descartado, Reserva, No aprobó Pruebas) no avanzan en el embudo.
+  private alcanzaron(list: Postulacion[], estadoUmbral: string): number {
+    const umbral = this.estados.find(e => e.nombre === estadoUmbral)?.orden;
+    if (umbral === undefined) return 0;
+    return list.filter(p => {
+      const estado = this.estados.find(e => e.nombre === p.estado_postulante);
+      return !!estado && !estado.requiere_motivo && (estado.orden ?? 0) >= umbral;
+    }).length;
+  }
+
   calculateFunnel(list: Postulacion[]): void {
     this.kpis.totalPostulaciones = list.length;
-    this.kpis.candidatosPreseleccionados = list.filter(p =>
-      p.estado_postulante === 'Preseleccionado' ||
-      p.estado_postulante === 'Citado a Entrevista' ||
-      p.estado_postulante === 'Aprobado' ||
-      p.estado_postulante === 'Aprobado con reservas'
-    ).length;
-
-    this.kpis.candidatosCitados = list.filter(p =>
-      p.estado_postulante === 'Citado a Entrevista' ||
-      p.estado_postulante === 'Aprobado' ||
-      p.estado_postulante === 'Aprobado con reservas'
-    ).length;
-
-    this.kpis.candidatosAprobados = list.filter(p =>
-      p.estado_postulante === 'Aprobado' ||
-      p.estado_postulante === 'Aprobado con reservas'
-    ).length;
+    this.kpis.candidatosPreseleccionados = this.alcanzaron(list, ETAPAS_EMBUDO.prefiltro);
+    this.kpis.candidatosCitados = this.alcanzaron(list, ETAPAS_EMBUDO.entrevista);
+    this.kpis.candidatosAprobados = this.alcanzaron(list, ETAPAS_EMBUDO.aprobados);
 
     if (this.kpis.totalPostulaciones > 0) {
       this.kpis.tasaConversion = Math.round((this.kpis.candidatosAprobados / this.kpis.totalPostulaciones) * 100);

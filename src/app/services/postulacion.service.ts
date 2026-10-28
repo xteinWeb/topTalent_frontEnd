@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -21,8 +21,17 @@ export interface CitaEntrevista {
 export interface CompetenciaEvaluada {
   competencia: string;
   definicion?: string;
-  puntuacion: number; // 1 a 5
+  puntuacion: number | null; // 1 a 5 (null = sin calificar)
   observaciones?: string;
+  // Solo en evaluaciones con la matriz de competencias (formato 'matriz_v1')
+  competencia_id?: string;
+  categoria?: string;
+  pregunta?: string;
+  conductas?: string;
+  criterio?: string;
+  nivel_requerido?: number;
+  peso?: number;
+  principal?: boolean;
 }
 
 export interface EvaluacionEntrevista {
@@ -40,6 +49,13 @@ export interface EvaluacionEntrevista {
   oportunidades_mejora?: string;
   ajuste_cultural?: string;
   respuestas_star?: { [key: string]: string };
+  // 'matriz_v1': evaluada con la matriz de competencias del grupo de cargo; sin formato = 10 factores fijos (antiguas)
+  formato?: string;
+  grupo_cargo?: string;
+  brechas?: number;
+  // Obligatorio si decision_final es "No aprobado" (se guarda en la postulación, no en la evaluación)
+  motivo_no_aprobado?: string;
+  motivo_no_aprobado_detalle?: string;
 }
 
 export interface Postulacion {
@@ -97,10 +113,31 @@ export interface Postulacion {
   };
 
   // Estados oficiales y flujo de selección
-  estado_postulante?: 'Postulado' | 'Preseleccionado' | 'Citado a Entrevista' | 'Aprobado' | 'Aprobado con reservas' | 'No aprobado' | 'Con observaciones' | string;
+  estado_postulante?: string; // nombre de un estado del catálogo estados_postulacion
   cita_entrevista_json?: CitaEntrevista;
   evaluacion_entrevista_json?: EvaluacionEntrevista;
   matriz_competencias_json?: any;
+
+  // Motivo obligatorio en los estados que lo requieren, p. ej. Descartado ("Otro" usa el detalle)
+  motivo_no_aprobado?: string | null;
+  motivo_no_aprobado_detalle?: string | null;
+
+  // Resultado de la prueba psicotécnica adjunto (PDF)
+  prueba_psicotecnica_nombre?: string | null;
+  prueba_psicotecnica_fecha?: string | null;
+  tiene_prueba_psicotecnica?: number | boolean;
+
+  // Prefiltro (llamada o formulario por WhatsApp); el detalle completo lo carga PrefiltroService
+  prefiltro_json?: { resultado?: string | null; [k: string]: any } | null;
+  prefiltro_enlace_expira?: string | null;
+
+  // Grupo de cargo del perfil (matriz de competencias)
+  perfil_grupo_cargo?: string | null;
+}
+
+export interface MotivoNoAprobado {
+  motivo_no_aprobado: string;
+  motivo_no_aprobado_detalle?: string;
 }
 
 function normalizePostulacion(p: any): Postulacion {
@@ -178,9 +215,7 @@ export class PostulacionService {
     formData.append('habilidades_json', JSON.stringify(postulacion.habilidades_json));
     formData.append('preguntas_respondidas_json', JSON.stringify(postulacion.preguntas_respondidas || []));
     formData.append('acepto_tratamiento_datos', postulacion.acepto_tratamiento_datos ? 'true' : 'false');
-    if (postulacion.candidato_id) {
-      formData.append('candidato_id', postulacion.candidato_id);
-    }
+    // La cuenta del candidato la identifica el backend por el token de sesión (interceptor)
     if (archivo) {
       formData.append('hv_archivo', archivo, archivo.name);
     }
@@ -205,8 +240,18 @@ export class PostulacionService {
     );
   }
 
-  cambiarEstado(id: string, estado_postulante: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}/estado`, { estado_postulante });
+  cambiarEstado(id: string, estado_postulante: string, motivo?: MotivoNoAprobado): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}/estado`, { estado_postulante, ...(motivo || {}) });
+  }
+
+  subirPruebaPsicotecnica(id: string, archivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('prueba_archivo', archivo, archivo.name);
+    return this.http.post<any>(`${this.apiUrl}/${id}/prueba-psicotecnica`, formData);
+  }
+
+  descargarPruebaPsicotecnica(id: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/${id}/prueba-psicotecnica`, { observe: 'response', responseType: 'blob' });
   }
 
   agendarEntrevista(id: string, payload: {
@@ -234,12 +279,21 @@ export class PostulacionService {
     return this.http.post<any>(`${this.apiUrl}/vacante/${vacanteId}/validar`, {});
   }
 
-  getDownloadUrl(filename: string): string {
-    return `${this.apiUrl}/download/${filename}`;
+  descargarHojaVida(filename: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/download/${encodeURIComponent(filename)}`, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 
-  getHojaVidaCorporativaUrl(candidatoId: string, vacanteTitulo: string, fechaPostulacion: string): string {
-    const params = new URLSearchParams({ vacante: vacanteTitulo || '', fecha: fechaPostulacion || '' });
-    return `${this.apiUrl}/candidato/${candidatoId}/hoja-vida-docx?${params.toString()}`;
+  descargarHojaVidaCorporativa(candidatoId: string, vacanteTitulo: string, fechaPostulacion: string): Observable<HttpResponse<Blob>> {
+    const params = new HttpParams()
+      .set('vacante', vacanteTitulo || '')
+      .set('fecha', fechaPostulacion || '');
+    return this.http.get(`${this.apiUrl}/candidato/${candidatoId}/hoja-vida-docx`, {
+      params,
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 }

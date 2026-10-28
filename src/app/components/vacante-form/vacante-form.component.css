@@ -63,7 +63,7 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
 }
 
@@ -187,4 +187,27 @@ select.form-control {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .form-container {
+    padding: 1.25rem 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .form-group.full-width {
+    grid-column: auto;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }

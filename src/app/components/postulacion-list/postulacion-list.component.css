@@ -916,7 +916,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(720px, 94vw);
+  width: min(1100px, 96vw);
   background: white;
   z-index: 1001;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
@@ -2590,4 +2590,224 @@
   margin: 0.3rem 0;
   font-size: 0.85rem;
   color: #334155;
+}
+/* --- Motivo de no aprobación --- */
+.motivo-backdrop {
+  z-index: 10001; /* por encima del detalle del candidato */
+}
+
+.modal-motivo {
+  max-width: 560px;
+}
+
+.modal-motivo textarea,
+.motivo-evaluacion textarea {
+  font-family: inherit;
+}
+
+.motivo-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.motivo-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.motivo-opcion:hover {
+  border-color: var(--brand-gold, #B39C70);
+}
+
+.motivo-opcion.selected {
+  border-color: #b91c1c;
+  background-color: #fef2f2;
+}
+
+.motivo-error {
+  color: #b91c1c;
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+}
+
+.motivo-resumen {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+.motivo-evaluacion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.motivo-evaluacion label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+/* --- Prueba psicotécnica --- */
+.prueba-psico-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.prueba-psico-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.prueba-psico-nombre {
+  font-weight: 600;
+  color: var(--brand-navy, #16313A);
+  word-break: break-all;
+}
+
+.prueba-psico-fecha,
+.prueba-psico-vacia {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.prueba-psico-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.prueba-psico-acciones label.btn {
+  cursor: pointer;
+  margin: 0;
+}
+
+.prueba-psico-acciones label.btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* --- Evaluación con la matriz de competencias --- */
+.matriz-eval-config {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.matriz-eval-config label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--brand-navy, #16313A);
+}
+
+.matriz-eval-config select {
+  max-width: 220px;
+}
+
+.matriz-eval-hint {
+  font-size: 0.8rem;
+  color: #b45309;
+}
+
+.matriz-eval-resumen {
+  font-size: 0.82rem;
+  color: #475569;
+  margin-left: auto;
+}
+
+.matriz-eval-estado {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0.5rem 0;
+}
+
+.matriz-eval-estado.error {
+  color: #b91c1c;
+}
+
+.concepto-nota {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* Panel del candidato en celular: ocupa toda la pantalla y el encabezado no aprieta el nombre */
+@media (max-width: 640px) {
+  .candidate-drawer {
+    width: 100vw;
+  }
+
+  .drawer-header {
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .drawer-header-left {
+    flex: 1;
+    min-width: 0;
+    gap: 0.75rem;
+  }
+
+  .drawer-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .drawer-candidate-name {
+    font-size: 1.05rem;
+    line-height: 1.25;
+  }
+
+  .drawer-subtitle {
+    gap: 0.25rem 0.75rem;
+  }
+
+  .drawer-header-actions {
+    flex-shrink: 0;
+  }
+
+  .btn-drawer-doc {
+    white-space: nowrap;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .drawer-tabs {
+    padding: 0 0.75rem;
+  }
+
+  .drawer-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Solo el icono del documento; el título del botón conserva el nombre */
+  .btn-drawer-doc {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .btn-drawer-doc .material-icons {
+    font-size: 1.15rem;
+  }
 }
